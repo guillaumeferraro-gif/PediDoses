@@ -3,145 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PédiaUrg - Expert</title>
+    <title>PédiaUrg PRO - Complet</title>
     <style>
         :root {
-            --primary: #2c3e50;
-            --accent: #3498db;
-            --danger: #e74c3c;
-            --bg: #f4f7f6;
-            /* Couleurs Catégories */
-            --color-acr: #000000;
-            --color-antibio: #27ae60;
-            --color-cardio: #8e44ad;
-            --color-sedation: #f39c12;
-            --color-neuro: #2980b9;
-            --color-antidote: #16a085;
-            --color-traumato: #d35400;
-            --color-perf: #7f8c8d;
+            --primary: #2c3e50; --accent: #3498db; --danger: #e74c3c; --bg: #f4f7f6;
+            --cat-acr: #000000; --cat-antibio: #27ae60; --cat-cardio: #8e44ad;
+            --cat-sedation: #f39c12; --cat-neuro: #2980b9; --cat-antidote: #16a085;
+            --cat-traumato: #d35400; --cat-perf: #7f8c8d;
         }
 
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding: 10px; padding-bottom: 50px; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
         
-        .header { text-align: center; padding: 10px; background: var(--primary); color: white; border-radius: 10px; margin-bottom: 10px; }
-        
-        .weight-card { 
-            background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-            margin-bottom: 15px; text-align: center; border: 2px solid var(--accent);
-            position: sticky; top: 10px; z-index: 100;
+        .sticky-header {
+            position: sticky; top: 0; background: var(--bg); z-index: 1000;
+            padding: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .weight-card input { width: 80%; padding: 10px; font-size: 2rem; border-radius: 10px; border: 1px solid #ccc; text-align: center; }
 
-        /* Barre de navigation scrollable */
-        .tabs-container {
-            overflow-x: auto;
-            white-space: nowrap;
-            display: flex;
-            gap: 8px;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-            -webkit-overflow-scrolling: touch;
-        }
-        .tabs-container::-webkit-scrollbar { display: none; } /* Cache la scrollbar */
+        .top-bar { text-align: center; background: var(--primary); color: white; padding: 5px; border-radius: 8px; font-weight: bold; margin-bottom: 8px; }
 
-        .tab-btn { 
-            display: inline-block;
-            padding: 10px 20px; border: none; border-radius: 20px; background: #dcdde1; 
-            font-weight: bold; cursor: pointer; color: var(--primary);
+        .input-group { display: flex; gap: 10px; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .weight-input { 
+            width: 120px; padding: 12px; font-size: 2rem; border-radius: 12px; 
+            border: 3px solid var(--accent); text-align: center; font-weight: bold;
         }
+        .btn-clear { background: var(--danger); color: white; border: none; border-radius: 12px; padding: 10px 20px; font-size: 1.2rem; font-weight: bold; }
+
+        .search-bar { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 20px; border: 1px solid #ccc; margin-bottom: 10px; }
+
+        .tabs-container { overflow-x: auto; white-space: nowrap; display: flex; gap: 6px; padding-bottom: 5px; }
+        .tabs-container::-webkit-scrollbar { display: none; }
+        .tab-btn { padding: 8px 15px; border: none; border-radius: 15px; background: #dcdde1; font-weight: bold; font-size: 0.8rem; }
         .tab-btn.active { background: var(--accent); color: white; }
 
-        /* Style des cartes par catégorie */
+        #medList { padding: 10px; }
         .med-card { 
-            background: white; margin-bottom: 10px; border-radius: 12px; padding: 15px; 
+            background: white; margin-bottom: 6px; border-radius: 8px; padding: 10px; 
             display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 8px solid #bdc3c7;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 6px solid #bdc3c7;
         }
-        .cat-acr { border-left-color: var(--color-acr); }
-        .cat-antibio { border-left-color: var(--color-antibio); }
-        .cat-cardio { border-left-color: var(--color-cardio); }
-        .cat-sedation { border-left-color: var(--color-sedation); }
-        .cat-neuro { border-left-color: var(--color-neuro); }
-        .cat-antidote { border-left-color: var(--color-antidote); }
-        .cat-traumato { border-left-color: var(--color-traumato); }
-        .cat-perf { border-left-color: var(--color-perf); }
 
-        .med-name { font-weight: bold; font-size: 1rem; text-transform: uppercase; margin-bottom: 2px; }
-        .med-note { font-size: 0.75rem; color: #666; font-style: italic; }
-        .med-poso { font-size: 0.8rem; color: var(--accent); font-weight: bold; }
+        .cat-acr { border-left-color: var(--cat-acr); }
+        .cat-antibio { border-left-color: var(--cat-antibio); }
+        .cat-cardio { border-left-color: var(--cat-cardio); }
+        .cat-sedation { border-left-color: var(--cat-sedation); }
+        .cat-neuro { border-left-color: var(--cat-neuro); }
+        .cat-antidote { border-left-color: var(--cat-antidote); }
+        .cat-traumato { border-left-color: var(--cat-traumato); }
+        .cat-perf { border-left-color: var(--cat-perf); }
+
+        .med-name { font-weight: bold; font-size: 0.9rem; text-transform: uppercase; }
+        .med-note { font-size: 0.7rem; color: #666; }
+        .med-poso { font-size: 0.75rem; color: var(--accent); font-weight: bold; }
         
-        .result-box { text-align: right; min-width: 90px; }
-        .res-ml { font-size: 1.4rem; font-weight: 900; color: var(--danger); }
-        .res-mg { font-size: 0.85rem; color: #333; font-weight: bold; }
+        .result-box { text-align: right; min-width: 85px; }
+        .res-main { font-size: 1.3rem; font-weight: 900; color: var(--danger); }
+        .res-sub { font-size: 0.75rem; color: #333; }
 
-        .footer { font-size: 0.65rem; color: #7f8c8d; text-align: center; margin-top: 20px; }
+        .footer { font-size: 0.65rem; color: #95a5a6; text-align: center; padding: 15px; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h2 style="margin:0; font-size: 1.2rem;">PédiaUrg Service</h2>
-</div>
-
-<div class="weight-card">
-    <label style="font-weight:bold; display:block; margin-bottom:5px; font-size: 0.9rem;">POIDS DE L'ENFANT (kg)</label>
-    <input type="number" id="weightInput" placeholder="--" step="0.1">
-</div>
-
-<div class="tabs-container">
-    <button class="tab-btn active" onclick="setFilter('all', this)">Tous</button>
-    <button class="tab-btn" onclick="setFilter('acr', this)">ACR</button>
-    <button class="tab-btn" onclick="setFilter('antibio', this)">Antibiotiques</button>
-    <button class="tab-btn" onclick="setFilter('cardio', this)">Cardiologie</button>
-    <button class="tab-btn" onclick="setFilter('sedation', this)">Sédation</button>
-    <button class="tab-btn" onclick="setFilter('neuro', this)">Neurologie</button>
-    <button class="tab-btn" onclick="setFilter('antidote', this)">Antidotes</button>
-    <button class="tab-btn" onclick="setFilter('traumato', this)">Traumato</button>
-    <button class="tab-btn" onclick="setFilter('perf', this)">Perfusions</button>
+<div class="sticky-header">
+    <div class="top-bar">PédiaUrg PRO</div>
+    <div class="input-group">
+        <input type="number" id="weightInput" placeholder="kg" oninput="render()">
+        <button class="btn-clear" onclick="clearAll()">C</button>
+    </div>
+    <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Rechercher..." oninput="render()">
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="setFilter('all', this)">Tous</button>
+        <button class="tab-btn" onclick="setFilter('acr', this)">ACR</button>
+        <button class="tab-btn" onclick="setFilter('antibio', this)">Antibio</button>
+        <button class="tab-btn" onclick="setFilter('cardio', this)">Cardio</button>
+        <button class="tab-btn" onclick="setFilter('sedation', this)">Sédation</button>
+        <button class="tab-btn" onclick="setFilter('neuro', this)">Neuro</button>
+        <button class="tab-btn" onclick="setFilter('antidote', this)">Antidotes</button>
+        <button class="tab-btn" onclick="setFilter('traumato', this)">Traumato</button>
+        <button class="tab-btn" onclick="setFilter('perf', this)">Perf. Continue</button>
+    </div>
 </div>
 
 <div id="medList"></div>
 
-<div class="footer">
-    Logiciel d'aide au calcul. Vérification obligatoire.
-</div>
+<div class="footer">Calculs théoriques à vérifier selon le contexte clinique.</div>
 
 <script>
     const medications = [
         // ACR
-        { name: "Adrénaline (ACR)", cat: "acr", dose: 0.01, conc: 0.1, note: "0.1 ml/kg de la solution diluée (1mg/10ml)", max: 1 },
-        { name: "Amiodarone", cat: "acr", dose: 5, conc: 50, note: "Dose max 300mg", max: 300 },
-        
-        // ANTIBIOTIQUES (Exemples - À compléter selon vos protocoles)
-        { name: "Ceftriaxone", cat: "antibio", dose: 50, conc: 100, note: "IV lente (100mg/ml après rec.)", max: 2000 },
-        { name: "Amoxicilline", cat: "antibio", dose: 50, conc: 100, note: "IV (100mg/ml)", max: 2000 },
+        { name: "Adrénaline", cat: "acr", dose: 0.01, conc: 0.1, unit: "mg/kg", note: "Dilution 1mg/10ml", type: "ml" },
+        { name: "Amiodarone", cat: "acr", dose: 5, conc: 50, unit: "mg/kg", note: "ACR Bolus", type: "ml" },
+        { name: "Chlorure de Calcium 10%", cat: "acr", dose: 20, conc: 100, unit: "mg/kg", note: "0.2 ml/kg", type: "ml" },
+        { name: "Cardioversion", cat: "acr", dose: 1, unit: "J/kg", note: "Choc synchronisé", type: "joules" },
+        { name: "Défibrillation", cat: "acr", dose: 4, unit: "J/kg", note: "Choc asynchrone", type: "joules" },
 
-        // CARDIOLOGIE
-        { name: "Furosémide (Lasilix)", cat: "cardio", dose: 1, conc: 10, note: "IV (10mg/ml)", max: 40 },
-        
-        // SÉDATION / INDUCTION
-        { name: "Sufentanil", cat: "sedation", dose: 0.0002, conc: 0.005, note: "0.2 µg/kg (Conc 5µg/ml)", max: 0.05 },
-        { name: "Ketamine", cat: "sedation", dose: 2, conc: 10, note: "Induction IV", max: 200 },
-        
-        // NEUROLOGIE
-        { name: "Mannitol 20%", cat: "neuro", dose: 2.5, conc: 5, note: "0.5 g/kg (soit 2.5ml/kg)", max: 250 },
-        
+        // ANTIBIOTIQUES
+        { name: "Gentamicine", cat: "antibio", dose: 8, conc: 10, unit: "mg/kg", note: "IV 30min", type: "ml" },
+        { name: "Amoxicilline", cat: "antibio", dose: 50, conc: 100, unit: "mg/kg", note: "IV (100mg/ml)", type: "ml" },
+        { name: "Amox + Ac. Clavulanique", cat: "antibio", dose: 50, conc: 100, unit: "mg/kg", note: "Augmentin", type: "ml" },
+        { name: "Céfotaxime", cat: "antibio", dose: 50, conc: 100, unit: "mg/kg", note: "IV lente", type: "ml" },
+        { name: "Ceftriaxone", cat: "antibio", dose: 50, conc: 100, unit: "mg/kg", note: "Rocéphine", type: "ml" },
+
+        // CARDIO
+        { name: "Amiodarone (Rythme)", cat: "cardio", dose: 5, conc: 50, unit: "mg/kg", note: "Sur 30-60 min", type: "ml" },
+        { name: "Atropine", cat: "cardio", dose: 0.02, conc: 0.1, unit: "mg/kg", note: "Min 0.1 / Max 0.5", type: "ml" },
+        { name: "Hydrocortisone", cat: "cardio", dose: 2, conc: 50, unit: "mg/kg", note: "Insuffisance surrénale", type: "ml" },
+        { name: "Lidocaïne", cat: "cardio", dose: 1, conc: 10, unit: "mg/kg", note: "Anti-arythmique", type: "ml" },
+        { name: "Sulfate de Magnésium", cat: "cardio", dose: 50, conc: 150, unit: "mg/kg", note: "Torsade de pointe", type: "ml" },
+        { name: "Triphosadénine", cat: "cardio", dose: 0.1, conc: 10, unit: "mg/kg", note: "Striadyne (Bolus Flash)", type: "ml" },
+
+        // SEDATION
+        { name: "Etomidate", cat: "sedation", dose: 0.3, conc: 2, unit: "mg/kg", note: "Induction", type: "ml" },
+        { name: "Kétamine", cat: "sedation", dose: 2, conc: 10, unit: "mg/kg", note: "Induction IV", type: "ml" },
+        { name: "Midazolam", cat: "sedation", dose: 0.1, conc: 1, unit: "mg/kg", note: "Sédation/Hypnotique", type: "ml" },
+        { name: "Morphine (Charge)", cat: "sedation", dose: 0.1, conc: 1, unit: "mg/kg", note: "Dilution 1mg/ml", type: "ml" },
+        { name: "Morphine (Titration)", cat: "sedation", dose: 0.03, conc: 1, unit: "mg/kg", note: "Toutes les 10 min", type: "ml" },
+        { name: "Propofol", cat: "sedation", dose: 3, conc: 10, unit: "mg/kg", note: "1% (10mg/ml)", type: "ml" },
+        { name: "Célocurine", cat: "sedation", dose: 2, conc: 50, unit: "mg/kg", note: "Succinylcholine", type: "ml" },
+        { name: "Atracurium", cat: "sedation", dose: 0.5, conc: 10, unit: "mg/kg", note: "Bolus (Tracrium)", type: "ml" },
+
+        // NEURO
+        { name: "Midazolam", cat: "neuro", dose: 0.2, conc: 1, unit: "mg/kg", note: "Convulsion IR ou IV", type: "ml" },
+        { name: "Diazépam", cat: "neuro", dose: 0.5, conc: 5, unit: "mg/kg", note: "Valium (IR uniquement)", type: "ml" },
+        { name: "Clonazépam", cat: "neuro", dose: 0.02, conc: 1, unit: "mg/kg", note: "Rivotril", type: "ml" },
+        { name: "Lévétiracétam", cat: "neuro", dose: 40, conc: 100, unit: "mg/kg", note: "Keppra", type: "ml" },
+        { name: "Phénytoïne", cat: "neuro", dose: 20, conc: 50, unit: "mg/kg", note: "Dilantin", type: "ml" },
+        { name: "Sérum Salé Hypertonique 7.5%", cat: "neuro", dose: 2, unit: "ml/kg", note: "HTIC grave", type: "direct_ml" },
+
         // ANTIDOTES
-        { name: "Naloxone (Narcan)", cat: "antidote", dose: 0.01, conc: 0.4, note: "10 µg/kg (Ampoule 0.4mg/ml)", max: 0.4 },
-        { name: "Flumazénil", cat: "antidote", dose: 0.01, conc: 0.1, note: "Dose max 0.2mg", max: 0.2 },
+        { name: "Flumazénil", cat: "antidote", dose: 0.01, conc: 0.1, unit: "mg/kg", note: "Anexate", type: "ml" },
+        { name: "Sugammadex", cat: "antidote", dose: 4, conc: 100, unit: "mg/kg", note: "Bridion", type: "ml" },
+        { name: "Naloxone", cat: "antidote", dose: 0.01, conc: 0.4, unit: "mg/kg", note: "Narcan", type: "ml" },
 
-        // TRAUMATOLOGIE
-        { name: "Acide Tranexamique", cat: "traumato", dose: 15, conc: 100, note: "Exacyl (100mg/ml)", max: 1000 },
+        // TRAUMATO
+        { name: "Acide Tranexamique", cat: "traumato", dose: 15, conc: 100, unit: "mg/kg", note: "Exacyl (Bolus)", type: "ml" },
+        { name: "CGR", cat: "traumato", dose: 10, unit: "ml/kg", note: "Culot Globulaire", type: "direct_ml" },
+        { name: "PFC", cat: "traumato", dose: 10, unit: "ml/kg", note: "Plasma", type: "direct_ml" },
+        { name: "CPA", cat: "traumato", dose: 10, unit: "ml/kg", note: "Plaquettes", type: "direct_ml" },
 
-        // PERFUSIONS CONTINUES (Exemple de débit)
-        { name: "Adrénaline (Perf)", cat: "perf", dose: 0.1, conc: 0.1, note: "0.1 µg/kg/min (Base: 1mg dans 50ml)", isPerf: true }
+        // PERFUSIONS CONTINUES
+        { name: "Acide Tranexamique (Perf)", cat: "perf", dose: 2, conc: 100, unit: "mg/kg/h", note: "Relais après bolus", type: "perf_h" },
+        { name: "Adrénaline (Perf)", cat: "perf", dose: 0.1, conc: 0.1, unit: "µg/kg/min", note: "1mg/10ml (0.1mg/ml)", type: "perf_min" },
+        { name: "Alprostadil", cat: "perf", dose: 0.05, conc: 0.01, unit: "µg/kg/min", note: "Prostin", type: "perf_min" },
+        { name: "Atracurium (Perf)", cat: "perf", dose: 10, conc: 10, unit: "µg/kg/min", note: "Entretien", type: "perf_min" },
+        { name: "Clonazépam (Perf)", cat: "perf", dose: 1, conc: 0.1, unit: "µg/kg/min", note: "Rivotril", type: "perf_min" },
+        { name: "Dobutamine", cat: "perf", dose: 10, conc: 10, unit: "µg/kg/min", note: "10mg/ml", type: "perf_min" },
+        { name: "Dopamine", cat: "perf", dose: 10, conc: 10, unit: "µg/kg/min", note: "10mg/ml", type: "perf_min" },
+        { name: "Isoprénaline", cat: "perf", dose: 0.1, conc: 0.02, unit: "µg/kg/min", note: "Isuprel", type: "perf_min" },
+        { name: "Midazolam (Perf)", cat: "perf", dose: 1, conc: 1, unit: "µg/kg/min", note: "Entretien", type: "perf_min" },
+        { name: "Morphine (Perf)", cat: "perf", dose: 20, conc: 1, unit: "µg/kg/h", note: "Entretien (µg/kg/h)", type: "perf_h" },
+        { name: "Noradrénaline", cat: "perf", dose: 0.1, conc: 0.1, unit: "µg/kg/min", note: "0.1mg/ml", type: "perf_min" },
+        { name: "Nicardipine", cat: "perf", dose: 1, conc: 0.1, unit: "µg/kg/min", note: "Loxen", type: "perf_min" },
+        { name: "Salbutamol (Perf)", cat: "perf", dose: 1, conc: 1, unit: "µg/kg/min", note: "Ventspasm", type: "perf_min" },
+        { name: "Sufentanil (Perf)", cat: "perf", dose: 0.2, conc: 0.005, unit: "µg/kg/h", note: "Entretien (µg/kg/h)", type: "perf_h" }
     ];
 
     let currentFilter = 'all';
-    const input = document.getElementById('weightInput');
+    const weightInput = document.getElementById('weightInput');
+    const searchInput = document.getElementById('searchInput');
     const container = document.getElementById('medList');
 
-    input.addEventListener('input', render);
+    function clearAll() { weightInput.value = ''; searchInput.value = ''; render(); }
 
     function setFilter(cat, btn) {
         currentFilter = cat;
@@ -151,45 +173,29 @@
     }
 
     function render() {
-        const weight = parseFloat(input.value);
+        const p = parseFloat(weightInput.value);
+        const s = searchInput.value.toLowerCase();
         container.innerHTML = '';
+        if (!p || p <= 0) { container.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">Saisissez un poids.</p>'; return; }
 
-        if (!weight || weight <= 0) {
-            container.innerHTML = '<p style="text-align:center; color:#95a5a6; margin-top:30px;">Entrez un poids.</p>';
-            return;
-        }
-
-        const filtered = medications.filter(m => currentFilter === 'all' || m.cat === currentFilter);
+        const filtered = medications.filter(m => (currentFilter === 'all' || m.cat === currentFilter) && (m.name.toLowerCase().includes(s)));
 
         filtered.forEach(m => {
-            let mg = weight * m.dose;
-            if (m.min && mg < m.min) mg = m.min;
-            if (m.max && mg > m.max) mg = m.max;
-
-            const ml = mg / m.conc;
+            let resMain = "", resSub = "";
+            let val = p * m.dose;
+            if (m.type === "ml") { resMain = `${(val / m.conc).toFixed(2)} ml`; resSub = `${val.toFixed(2)} mg`; }
+            else if (m.type === "joules") { resMain = `${Math.round(val)} J`; resSub = "Choc"; }
+            else if (m.type === "direct_ml") { resMain = `${val.toFixed(1)} ml`; resSub = "Volume"; }
+            else if (m.type === "perf_min") { const mlh = (m.dose * p * 60) / (m.conc * 1000); resMain = `${mlh.toFixed(1)} ml/h`; resSub = `${m.dose} µg/kg/min`; }
+            else if (m.type === "perf_h") { const mlh = (m.dose * p) / (m.conc * 1000); resMain = `${mlh.toFixed(1)} ml/h`; resSub = `${m.dose} µg/kg/h`; }
 
             const card = document.createElement('div');
             card.className = `med-card cat-${m.cat}`;
-            
-            // Affichage différent si c'est une perfusion continue
-            const resultHtml = m.isPerf 
-                ? `<div class="res-ml">${(ml * 60).toFixed(1)} ml/h</div><div class="res-mg">Débit initial</div>`
-                : `<div class="res-ml">${ml.toFixed(2)} ml</div><div class="res-mg">${mg.toFixed(2)} mg</div>`;
-
-            card.innerHTML = `
-                <div>
-                    <div class="med-name">${m.name}</div>
-                    <div class="med-poso">${m.dose} ${m.isPerf ? 'µg/kg/min' : 'mg/kg'}</div>
-                    <div class="med-note">${m.note}</div>
-                </div>
-                <div class="result-box">
-                    ${resultHtml}
-                </div>
-            `;
+            card.innerHTML = `<div><div class="med-name">${m.name}</div><div class="med-poso">${m.dose} ${m.unit}</div><div class="med-note">${m.note}</div></div>
+                              <div class="result-box"><div class="res-main">${resMain}</div><div class="res-sub">${resSub}</div></div>`;
             container.appendChild(card);
         });
     }
 </script>
-
 </body>
 </html>
