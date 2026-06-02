@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PédiaUrg PRO - Intégral</title>
+    <title>PédiaUrg PRO - v3</title>
     <style>
         :root {
             --primary: #1a237e; --accent: #0288d1; --danger: #d32f2f;
@@ -15,7 +15,6 @@
 
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; color: #333; -webkit-tap-highlight-color: transparent; }
 
-        /* BANDEAU SUPÉRIEUR */
         .header-container {
             background: var(--primary); color: white; padding: 15px;
             border-radius: 0 0 25px 25px; position: sticky; top: 0; z-index: 1000;
@@ -27,7 +26,6 @@
         .input-group { background: rgba(255, 255, 255, 0.15); padding: 8px; border-radius: 12px; text-align: center; }
         .input-group label { display: block; font-size: 0.6rem; font-weight: bold; color: #e1f5fe; margin-bottom: 4px; }
         .input-group input { background: transparent; border: none; color: white; font-size: 1.3rem; font-weight: bold; width: 100%; text-align: center; outline: none; }
-        .input-group input::placeholder { color: rgba(255,255,255,0.3); }
 
         .weight-display-card { 
             background: white; border-radius: 15px; padding: 12px; 
@@ -38,7 +36,6 @@
         .weight-actual { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
         .btn-clear { background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: bold; font-size: 1.1rem; }
 
-        /* NAVIGATION TABS */
         .tabs-wrapper { padding: 15px 0 5px 15px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .tabs-wrapper::-webkit-scrollbar { display: none; }
         .tab-btn { 
@@ -48,7 +45,6 @@
         }
         .tab-btn.active { background: var(--accent); color: white; box-shadow: 0 4px 8px rgba(2,136,209,0.3); }
 
-        /* LISTE DE MÉDICAMENTS */
         #medList { padding: 10px 15px; }
         .med-card {
             background: white; border-radius: 15px; padding: 15px; margin-bottom: 10px;
@@ -62,7 +58,6 @@
         .res-main { font-size: 1.5rem; font-weight: 900; color: var(--danger); display: block; }
         .res-sub { font-size: 0.8rem; font-weight: bold; color: #555; }
 
-        /* MODALE PROTOCOLE */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); }
         .modal-content { 
             background: white; margin: 10% auto; padding: 20px; width: 85%; 
@@ -77,7 +72,6 @@
 
         .btn-close-modal { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 15px; font-weight: bold; margin-top: 10px; font-size: 1rem; }
 
-        /* COULEURS CATÉGORIES */
         .cat-acr { border-left-color: var(--cat-acr); }
         .cat-antibio { border-left-color: var(--cat-antibio); }
         .cat-cardio { border-left-color: var(--cat-cardio); }
@@ -92,24 +86,13 @@
 
 <div class="header-container">
     <div class="app-title">URGENCES PÉDIATRIQUES</div>
-    
     <div class="input-grid">
-        <div class="input-group" style="grid-column: span 2;">
-            <label>POIDS RÉEL (KG)</label>
-            <input type="number" id="manualWeight" placeholder="--" oninput="processInput()">
-        </div>
-        <div class="input-group">
-            <label>ÂGE (ANS)</label>
-            <input type="number" id="ageYears" placeholder="0" oninput="processInput()">
-        </div>
-        <div class="input-group">
-            <label>ÂGE (MOIS)</label>
-            <input type="number" id="ageMonths" placeholder="0" oninput="processInput()">
-        </div>
+        <div class="input-group" style="grid-column: span 2;"><label>POIDS RÉEL (KG)</label><input type="number" id="manualWeight" placeholder="--" oninput="processInput()"></div>
+        <div class="input-group"><label>ÂGE (ANS)</label><input type="number" id="ageYears" placeholder="0" oninput="processInput()"></div>
+        <div class="input-group"><label>ÂGE (MOIS)</label><input type="number" id="ageMonths" placeholder="0" oninput="processInput()"></div>
     </div>
-
     <div class="weight-display-card">
-        <div id="weightMsg" class="weight-info">ENTREZ LE POIDS OU L'ÂGE</div>
+        <div id="weightMsg" class="weight-info">DONNÉES...</div>
         <div id="weightValDisplay" class="weight-actual"></div>
         <button class="btn-clear" onclick="clearAll()">C</button>
     </div>
@@ -134,10 +117,11 @@
     <div class="modal-content">
         <div class="modal-header"><div id="modalTitle" class="modal-title">-</div></div>
         <div class="proto-box"><div class="proto-label">Calcul pour ce patient</div><div id="protoCalc" style="font-weight:900; color:var(--danger); font-size:1.2rem;">-</div></div>
-        <div class="proto-box"><div class="proto-label">Concentration Ampoule</div><div id="protoAmpoule" class="proto-text">À remplir...</div></div>
-        <div class="proto-box"><div class="proto-label">Méthode de Dilution</div><div id="protoDilution" class="proto-text">À remplir...</div></div>
-        <div class="proto-box"><div class="proto-label">Débit / Administration</div><div id="protoDebit" class="proto-text">À remplir...</div></div>
-        <div class="proto-box"><div class="proto-label">Posologie / Infos</div><div id="protoInfos" class="proto-text">À remplir...</div></div>
+        <div class="proto-box"><div class="proto-label">Ampoule</div><div id="protoAmpoule" class="proto-text">-</div></div>
+        <div class="proto-box"><div class="proto-label">Dilution</div><div id="protoDilution" class="proto-text">-</div></div>
+        <!-- Temps d'injection : affiché dynamiquement via JS -->
+        <div id="debitInjectionRow" class="proto-box"><div class="proto-label">Temps d'injection</div><div id="protoDebit" class="proto-text">-</div></div>
+        <div class="proto-box"><div class="proto-label">Posologie / Infos</div><div id="protoInfos" class="proto-text">-</div></div>
         <button class="btn-close-modal" onclick="closeModal()">FERMER</button>
     </div>
 </div>
@@ -148,8 +132,6 @@
         { name: "Adrénaline (ACR)", cat: "acr", dose: 0.01, conc: 0.1, unit: "mg/kg", type: "ml" },
         { name: "Amiodarone (ACR)", cat: "acr", dose: 5, conc: 50, unit: "mg/kg", type: "ml" },
         { name: "Chlorure de Calcium 10%", cat: "acr", dose: 20, conc: 100, unit: "mg/kg", type: "ml" },
-        { name: "Cardioversion", cat: "acr", dose: 1, unit: "J/kg", type: "joules" },
-        { name: "Défibrillation", cat: "acr", dose: 4, unit: "J/kg", type: "joules" },
 
         // ANTIBIOTIQUES
         { name: "Gentamicine", cat: "antibio", dose: 8, conc: 10, unit: "mg/kg", type: "ml" },
@@ -195,21 +177,21 @@
         { name: "PFC", cat: "traumato", dose: 10, unit: "ml/kg", type: "direct_ml" },
         { name: "CPA", cat: "traumato", dose: 10, unit: "ml/kg", type: "direct_ml" },
 
-        // PERFUSIONS CONTINUES
+        // PERFUSIONS CONTINUES (Unité mcg utilisée)
         { name: "Acide Tranexamique (Perf)", cat: "perf", dose: 2, conc: 100, unit: "mg/kg/h", type: "perf_h" },
-        { name: "Adrénaline (Perf)", cat: "perf", dose: 0.1, conc: 0.1, unit: "µg/kg/min", type: "perf_min" },
-        { name: "Alprostadil", cat: "perf", dose: 0.05, conc: 0.01, unit: "µg/kg/min", type: "perf_min" },
-        { name: "Atracurium (Perf)", cat: "perf", dose: 10, conc: 10, unit: "µg/kg/min", type: "perf_min" },
-        { name: "Clonazépam (Perf)", cat: "perf", dose: 1, conc: 0.1, unit: "µg/kg/min", type: "perf_min" },
-        { name: "Dobutamine", cat: "perf", dose: 10, conc: 10, unit: "µg/kg/min", type: "perf_min" },
-        { name: "Dopamine", cat: "perf", dose: 10, conc: 10, unit: "µg/kg/min", type: "perf_min" },
-        { name: "Isoprénaline", cat: "perf", dose: 0.1, conc: 0.02, unit: "µg/kg/min", type: "perf_min" },
-        { name: "Midazolam (Perf)", cat: "perf", dose: 1, conc: 1, unit: "µg/kg/min", type: "perf_min" },
-        { name: "Morphine (Perf)", cat: "perf", dose: 20, conc: 1, unit: "µg/kg/h", type: "perf_h" },
-        { name: "Noradrénaline (Perf)", cat: "perf", dose: 0.1, conc: 0.1, unit: "µg/kg/min", type: "perf_min" },
-        { name: "Nicardipine", cat: "perf", dose: 1, conc: 0.1, unit: "µg/kg/min", type: "perf_min" },
-        { name: "Salbutamol (Perf)", cat: "perf", dose: 1, conc: 1, unit: "µg/kg/min", type: "perf_min" },
-        { name: "Sufentanil (Perf)", cat: "perf", dose: 0.2, conc: 0.005, unit: "µg/kg/h", type: "perf_h" }
+        { name: "Adrénaline (Perf)", cat: "perf", dose: 0.1, conc: 0.1, unit: "mcg/kg/min", type: "perf_min" },
+        { name: "Alprostadil", cat: "perf", dose: 0.05, conc: 0.01, unit: "mcg/kg/min", type: "perf_min" },
+        { name: "Atracurium (Perf)", cat: "perf", dose: 10, conc: 10, unit: "mcg/kg/min", type: "perf_min" },
+        { name: "Clonazépam (Perf)", cat: "perf", dose: 1, conc: 0.1, unit: "mcg/kg/min", type: "perf_min" },
+        { name: "Dobutamine", cat: "perf", dose: 10, conc: 10, unit: "mcg/kg/min", type: "perf_min" },
+        { name: "Dopamine", cat: "perf", dose: 10, conc: 10, unit: "mcg/kg/min", type: "perf_min" },
+        { name: "Isoprénaline", cat: "perf", dose: 0.1, conc: 0.02, unit: "mcg/kg/min", type: "perf_min" },
+        { name: "Midazolam (Perf)", cat: "perf", dose: 1, conc: 1, unit: "mcg/kg/min", type: "perf_min" },
+        { name: "Morphine (Perf)", cat: "perf", dose: 20, conc: 1, unit: "mcg/kg/h", type: "perf_h" },
+        { name: "Noradrénaline (Perf)", cat: "perf", dose: 0.1, conc: 0.1, unit: "mcg/kg/min", type: "perf_min" },
+        { name: "Nicardipine", cat: "perf", dose: 1, conc: 0.1, unit: "mcg/kg/min", type: "perf_min" },
+        { name: "Salbutamol (Perf)", cat: "perf", dose: 1, conc: 1, unit: "mcg/kg/min", type: "perf_min" },
+        { name: "Sufentanil (Perf)", cat: "perf", dose: 0.2, conc: 0.005, unit: "mcg/kg/h", type: "perf_h" }
     ];
 
     let currentFilter = 'all';
@@ -265,20 +247,17 @@
         if (m.type === "ml") { 
             resMain = (val / m.conc).toFixed(2) + " ml"; 
             resSub = val.toFixed(2) + " mg";
-        } else if (m.type === "joules") {
-            resMain = Math.round(val) + " J";
-            resSub = "Choc électrique";
         } else if (m.type === "direct_ml") {
             resMain = val.toFixed(1) + " ml";
             resSub = "Volume total";
         } else if (m.type === "perf_min") {
             const mlh = (m.dose * activeWeight * 60) / (m.conc * 1000);
             resMain = mlh.toFixed(1) + " ml/h";
-            resSub = m.dose + " µg/kg/min";
+            resSub = m.dose + " mcg/kg/min";
         } else if (m.type === "perf_h") {
             const mlh = (m.dose * activeWeight) / (m.conc * 1000);
             resMain = mlh.toFixed(1) + " ml/h";
-            resSub = m.dose + " µg/kg/h";
+            resSub = m.dose + " mcg/kg/h";
         }
         return { main: resMain, sub: resSub };
     }
@@ -287,23 +266,13 @@
         const container = document.getElementById('medList');
         container.innerHTML = '';
         if (activeWeight <= 0) return;
-
         const filtered = medications.filter(m => currentFilter === 'all' || m.cat === currentFilter);
-
         filtered.forEach(m => {
             const res = calculate(m);
             const card = document.createElement('div');
             card.className = `med-card cat-${m.cat}`;
             card.onclick = () => openModal(m);
-            card.innerHTML = `
-                <div>
-                    <div class="med-name">${m.name}</div>
-                    <div class="med-poso-text">${m.dose} ${m.unit}</div>
-                </div>
-                <div class="res-container">
-                    <span class="res-main">${res.main}</span>
-                    <span class="res-sub">${res.sub}</span>
-                </div>`;
+            card.innerHTML = `<div><div class="med-name">${m.name}</div><div class="med-poso-text">${m.dose} ${m.unit}</div></div><div class="res-container"><span class="res-main">${res.main}</span><span class="res-sub">${res.sub}</span></div>`;
             container.appendChild(card);
         });
     }
@@ -314,8 +283,17 @@
         document.getElementById('protoCalc').innerText = res.main + " (" + res.sub + ")";
         document.getElementById('protoAmpoule').innerText = m.ampoule || "À renseigner...";
         document.getElementById('protoDilution').innerText = m.dilution || "À renseigner...";
-        document.getElementById('protoDebit').innerText = m.debit || "À renseigner...";
         document.getElementById('protoInfos').innerText = m.infos || m.unit;
+
+        const debitInjectionRow = document.getElementById('debitInjectionRow');
+        // Si c'est une perfusion continue (perf_min ou perf_h), on masque le temps d'injection
+        if (m.type.includes('perf')) {
+            debitInjectionRow.style.display = "none";
+        } else {
+            debitInjectionRow.style.display = "block";
+            document.getElementById('protoDebit').innerText = m.debit || "À renseigner...";
+        }
+        
         document.getElementById('protoModal').style.display = "block";
     }
 
