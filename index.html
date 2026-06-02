@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PédiaUrg PRO - Complet</title>
+    <title>PédiaUrg PRO - Âge/Poids</title>
     <style>
         :root {
             --primary: #2c3e50; --accent: #3498db; --danger: #e74c3c; --bg: #f4f7f6;
@@ -21,14 +21,20 @@
 
         .top-bar { text-align: center; background: var(--primary); color: white; padding: 5px; border-radius: 8px; font-weight: bold; margin-bottom: 8px; }
 
-        .input-group { display: flex; gap: 10px; align-items: center; justify-content: center; margin-bottom: 10px; }
-        .weight-input { 
-            width: 120px; padding: 12px; font-size: 2rem; border-radius: 12px; 
-            border: 3px solid var(--accent); text-align: center; font-weight: bold;
-        }
-        .btn-clear { background: var(--danger); color: white; border: none; border-radius: 12px; padding: 10px 20px; font-size: 1.2rem; font-weight: bold; }
+        .input-section { background: white; padding: 10px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 10px; }
+        .input-row { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; justify-content: center; }
+        
+        .label-text { font-size: 0.8rem; font-weight: bold; color: var(--primary); width: 60px; }
+        input { padding: 10px; border-radius: 8px; border: 2px solid #ccc; text-align: center; font-weight: bold; font-size: 1.1rem; }
+        .input-w { width: 80px; border-color: var(--accent); font-size: 1.5rem; }
+        .input-a { width: 60px; }
 
-        .search-bar { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 20px; border: 1px solid #ccc; margin-bottom: 10px; }
+        .weight-display { 
+            text-align: center; background: #e8f4fd; padding: 5px; border-radius: 8px; 
+            font-weight: bold; color: var(--accent); margin-bottom: 10px; font-size: 0.9rem;
+        }
+
+        .btn-clear { background: var(--danger); color: white; border: none; border-radius: 8px; padding: 10px 15px; font-weight: bold; }
 
         .tabs-container { overflow-x: auto; white-space: nowrap; display: flex; gap: 6px; padding-bottom: 5px; }
         .tabs-container::-webkit-scrollbar { display: none; }
@@ -66,11 +72,22 @@
 
 <div class="sticky-header">
     <div class="top-bar">PédiaUrg PRO</div>
-    <div class="input-group">
-        <input type="number" id="weightInput" placeholder="kg" oninput="render()">
-        <button class="btn-clear" onclick="clearAll()">C</button>
+    
+    <div class="input-section">
+        <div class="input-row">
+            <span class="label-text">POIDS (kg)</span>
+            <input type="number" id="manualWeight" class="input-w" placeholder="--" oninput="processInput()">
+            <button class="btn-clear" onclick="clearAll()">C</button>
+        </div>
+        <div class="input-row">
+            <span class="label-text">ÂGE</span>
+            <input type="number" id="ageYears" class="input-a" placeholder="Ans" oninput="processInput()">
+            <input type="number" id="ageMonths" class="input-a" placeholder="Mois" oninput="processInput()">
+        </div>
     </div>
-    <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Rechercher..." oninput="render()">
+
+    <div id="weightMsg" class="weight-display">En attente de données...</div>
+
     <div class="tabs-container">
         <button class="tab-btn active" onclick="setFilter('all', this)">Tous</button>
         <button class="tab-btn" onclick="setFilter('acr', this)">ACR</button>
@@ -85,8 +102,6 @@
 </div>
 
 <div id="medList"></div>
-
-<div class="footer">Calculs théoriques à vérifier selon le contexte clinique.</div>
 
 <script>
     const medications = [
@@ -143,7 +158,7 @@
 
         // PERFUSIONS CONTINUES
         { name: "Acide Tranexamique (Perf)", cat: "perf", dose: 2, conc: 100, unit: "mg/kg/h", note: "Relais après bolus", type: "perf_h" },
-        { name: "Adrénaline (Perf)", cat: "perf", dose: 0.1, conc: 0.1, unit: "µg/kg/min", note: "1mg/10ml (0.1mg/ml)", type: "perf_min" },
+        { name: "Adrénaline (Perf)", cat: "perf", dose: 0.1, conc: 0.1, unit: "µg/kg/min", note: "0.1mg/ml", type: "perf_min" },
         { name: "Alprostadil", cat: "perf", dose: 0.05, conc: 0.01, unit: "µg/kg/min", note: "Prostin", type: "perf_min" },
         { name: "Atracurium (Perf)", cat: "perf", dose: 10, conc: 10, unit: "µg/kg/min", note: "Entretien", type: "perf_min" },
         { name: "Clonazépam (Perf)", cat: "perf", dose: 1, conc: 0.1, unit: "µg/kg/min", note: "Rivotril", type: "perf_min" },
@@ -151,19 +166,45 @@
         { name: "Dopamine", cat: "perf", dose: 10, conc: 10, unit: "µg/kg/min", note: "10mg/ml", type: "perf_min" },
         { name: "Isoprénaline", cat: "perf", dose: 0.1, conc: 0.02, unit: "µg/kg/min", note: "Isuprel", type: "perf_min" },
         { name: "Midazolam (Perf)", cat: "perf", dose: 1, conc: 1, unit: "µg/kg/min", note: "Entretien", type: "perf_min" },
-        { name: "Morphine (Perf)", cat: "perf", dose: 20, conc: 1, unit: "µg/kg/h", note: "Entretien (µg/kg/h)", type: "perf_h" },
+        { name: "Morphine (Perf)", cat: "perf", dose: 20, conc: 1, unit: "µg/kg/h", note: "µg/kg/h", type: "perf_h" },
         { name: "Noradrénaline", cat: "perf", dose: 0.1, conc: 0.1, unit: "µg/kg/min", note: "0.1mg/ml", type: "perf_min" },
         { name: "Nicardipine", cat: "perf", dose: 1, conc: 0.1, unit: "µg/kg/min", note: "Loxen", type: "perf_min" },
         { name: "Salbutamol (Perf)", cat: "perf", dose: 1, conc: 1, unit: "µg/kg/min", note: "Ventspasm", type: "perf_min" },
-        { name: "Sufentanil (Perf)", cat: "perf", dose: 0.2, conc: 0.005, unit: "µg/kg/h", note: "Entretien (µg/kg/h)", type: "perf_h" }
+        { name: "Sufentanil (Perf)", cat: "perf", dose: 0.2, conc: 0.005, unit: "µg/kg/h", note: "µg/kg/h", type: "perf_h" }
     ];
 
     let currentFilter = 'all';
-    const weightInput = document.getElementById('weightInput');
-    const searchInput = document.getElementById('searchInput');
-    const container = document.getElementById('medList');
+    let activeWeight = 0;
 
-    function clearAll() { weightInput.value = ''; searchInput.value = ''; render(); }
+    function clearAll() {
+        document.getElementById('manualWeight').value = '';
+        document.getElementById('ageYears').value = '';
+        document.getElementById('ageMonths').value = '';
+        processInput();
+    }
+
+    function processInput() {
+        const w = parseFloat(document.getElementById('manualWeight').value);
+        const y = parseFloat(document.getElementById('ageYears').value) || 0;
+        const m = parseFloat(document.getElementById('ageMonths').value) || 0;
+        const msg = document.getElementById('weightMsg');
+
+        if (w > 0) {
+            activeWeight = w;
+            msg.innerHTML = `Poids utilisé : <b>${w} kg</b> (Saisie manuelle)`;
+        } else if (y >= 1 || (y + m/12) >= 1) {
+            const ageTotal = y + (m / 12);
+            activeWeight = (ageTotal + 4) * 2;
+            msg.innerHTML = `Poids estimé : <b>${activeWeight.toFixed(1)} kg</b> (Âge ${y}a ${m}m)`;
+        } else if (m > 0 || y > 0) {
+            activeWeight = 0;
+            msg.innerHTML = `<span style="color:red">Saisir le poids manuellement (enfant < 1 an)</span>`;
+        } else {
+            activeWeight = 0;
+            msg.innerHTML = "En attente de données...";
+        }
+        render();
+    }
 
     function setFilter(cat, btn) {
         currentFilter = cat;
@@ -173,21 +214,33 @@
     }
 
     function render() {
-        const p = parseFloat(weightInput.value);
-        const s = searchInput.value.toLowerCase();
+        const container = document.getElementById('medList');
         container.innerHTML = '';
-        if (!p || p <= 0) { container.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">Saisissez un poids.</p>'; return; }
+        
+        if (activeWeight <= 0) {
+            container.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">Veuillez définir un poids ou un âge (min 1 an).</p>';
+            return;
+        }
 
-        const filtered = medications.filter(m => (currentFilter === 'all' || m.cat === currentFilter) && (m.name.toLowerCase().includes(s)));
+        const filtered = medications.filter(m => (currentFilter === 'all' || m.cat === currentFilter));
 
         filtered.forEach(m => {
             let resMain = "", resSub = "";
-            let val = p * m.dose;
-            if (m.type === "ml") { resMain = `${(val / m.conc).toFixed(2)} ml`; resSub = `${val.toFixed(2)} mg`; }
-            else if (m.type === "joules") { resMain = `${Math.round(val)} J`; resSub = "Choc"; }
-            else if (m.type === "direct_ml") { resMain = `${val.toFixed(1)} ml`; resSub = "Volume"; }
-            else if (m.type === "perf_min") { const mlh = (m.dose * p * 60) / (m.conc * 1000); resMain = `${mlh.toFixed(1)} ml/h`; resSub = `${m.dose} µg/kg/min`; }
-            else if (m.type === "perf_h") { const mlh = (m.dose * p) / (m.conc * 1000); resMain = `${mlh.toFixed(1)} ml/h`; resSub = `${m.dose} µg/kg/h`; }
+            let val = activeWeight * m.dose;
+
+            if (m.type === "ml") { 
+                resMain = `${(val / m.conc).toFixed(2)} ml`; resSub = `${val.toFixed(2)} mg`; 
+            } else if (m.type === "joules") { 
+                resMain = `${Math.round(val)} J`; resSub = "Choc"; 
+            } else if (m.type === "direct_ml") { 
+                resMain = `${val.toFixed(1)} ml`; resSub = "Volume"; 
+            } else if (m.type === "perf_min") { 
+                const mlh = (m.dose * activeWeight * 60) / (m.conc * 1000); 
+                resMain = `${mlh.toFixed(1)} ml/h`; resSub = `${m.dose} µg/kg/min`; 
+            } else if (m.type === "perf_h") { 
+                const mlh = (m.dose * activeWeight) / (m.conc * 1000); 
+                resMain = `${mlh.toFixed(1)} ml/h`; resSub = `${m.dose} µg/kg/h`; 
+            }
 
             const card = document.createElement('div');
             card.className = `med-card cat-${m.cat}`;
