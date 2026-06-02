@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PédiaUrg PRO - v3</title>
+    <title>PédiaUrg PRO - v3.1</title>
     <style>
         :root {
             --primary: #1a237e; --accent: #0288d1; --danger: #d32f2f;
@@ -119,7 +119,6 @@
         <div class="proto-box"><div class="proto-label">Calcul pour ce patient</div><div id="protoCalc" style="font-weight:900; color:var(--danger); font-size:1.2rem;">-</div></div>
         <div class="proto-box"><div class="proto-label">Ampoule</div><div id="protoAmpoule" class="proto-text">-</div></div>
         <div class="proto-box"><div class="proto-label">Dilution</div><div id="protoDilution" class="proto-text">-</div></div>
-        <!-- Temps d'injection : affiché dynamiquement via JS -->
         <div id="debitInjectionRow" class="proto-box"><div class="proto-label">Temps d'injection</div><div id="protoDebit" class="proto-text">-</div></div>
         <div class="proto-box"><div class="proto-label">Posologie / Infos</div><div id="protoInfos" class="proto-text">-</div></div>
         <button class="btn-close-modal" onclick="closeModal()">FERMER</button>
@@ -128,12 +127,24 @@
 
 <script>
     const medications = [
-        // ACR
-        { name: "Adrénaline (ACR)", cat: "acr", dose: 0.01, conc: 0.1, unit: "mg/kg", type: "ml" },
-        { name: "Amiodarone (ACR)", cat: "acr", dose: 5, conc: 50, unit: "mg/kg", type: "ml" },
+        // ACR - MIS A JOUR SELON VOS INSTRUCTIONS
+        { 
+            name: "Adrénaline (ACR)", cat: "acr", dose: 10, conc: 100, unit: "mcg/kg", type: "ml",
+            ampoule: "Adrénaline : 1 mg/mL",
+            dilution: "1 mg dans 10 mL de NaCl 0,9% (soit 100 mcg/mL)",
+            debit: "IVD + rinçage 5 mL à chaque injection",
+            infos: "Dose : 10 mcg/kg"
+        },
+        { 
+            name: "Amiodarone (ACR)", cat: "acr", dose: 5, conc: 7.5, unit: "mg/kg", type: "ml",
+            ampoule: "Cordarone : 150 mg/3 mL",
+            dilution: "3 mL (1 amp) + 17 mL de G5% (Volume total 20 mL soit 7,5 mg/mL)",
+            debit: "IVD",
+            infos: "Dose : 5 mg/kg"
+        },
         { name: "Chlorure de Calcium 10%", cat: "acr", dose: 20, conc: 100, unit: "mg/kg", type: "ml" },
 
-        // ANTIBIOTIQUES
+        // ANTIBIOTIQUES (Exemples à compléter sur le même modèle)
         { name: "Gentamicine", cat: "antibio", dose: 8, conc: 10, unit: "mg/kg", type: "ml" },
         { name: "Amoxicilline", cat: "antibio", dose: 50, conc: 100, unit: "mg/kg", type: "ml" },
         { name: "Amoxicilline + Ac. Clav", cat: "antibio", dose: 50, conc: 100, unit: "mg/kg", type: "ml" },
@@ -177,7 +188,7 @@
         { name: "PFC", cat: "traumato", dose: 10, unit: "ml/kg", type: "direct_ml" },
         { name: "CPA", cat: "traumato", dose: 10, unit: "ml/kg", type: "direct_ml" },
 
-        // PERFUSIONS CONTINUES (Unité mcg utilisée)
+        // PERFUSIONS CONTINUES
         { name: "Acide Tranexamique (Perf)", cat: "perf", dose: 2, conc: 100, unit: "mg/kg/h", type: "perf_h" },
         { name: "Adrénaline (Perf)", cat: "perf", dose: 0.1, conc: 0.1, unit: "mcg/kg/min", type: "perf_min" },
         { name: "Alprostadil", cat: "perf", dose: 0.05, conc: 0.01, unit: "mcg/kg/min", type: "perf_min" },
@@ -244,9 +255,11 @@
         if (m.min && val < m.min) val = m.min;
         if (m.max && val > m.max) val = m.max;
 
+        const mainUnit = m.unit.split('/')[0]; // mg ou mcg
+
         if (m.type === "ml") { 
             resMain = (val / m.conc).toFixed(2) + " ml"; 
-            resSub = val.toFixed(2) + " mg";
+            resSub = val.toFixed(2) + " " + mainUnit;
         } else if (m.type === "direct_ml") {
             resMain = val.toFixed(1) + " ml";
             resSub = "Volume total";
@@ -286,7 +299,6 @@
         document.getElementById('protoInfos').innerText = m.infos || m.unit;
 
         const debitInjectionRow = document.getElementById('debitInjectionRow');
-        // Si c'est une perfusion continue (perf_min ou perf_h), on masque le temps d'injection
         if (m.type.includes('perf')) {
             debitInjectionRow.style.display = "none";
         } else {
