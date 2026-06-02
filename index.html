@@ -3,51 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PédiaUrg PRO - Âge/Poids</title>
+    <title>PédiaUrg PRO</title>
     <style>
         :root {
-            --primary: #2c3e50; --accent: #3498db; --danger: #e74c3c; --bg: #f4f7f6;
-            --cat-acr: #000000; --cat-antibio: #27ae60; --cat-cardio: #8e44ad;
-            --cat-sedation: #f39c12; --cat-neuro: #2980b9; --cat-antidote: #16a085;
-            --cat-traumato: #d35400; --cat-perf: #7f8c8d;
+            --primary: #1a237e; /* Bleu médical profond */
+            --accent: #0288d1;
+            --danger: #d32f2f;
+            --success: #2e7d32;
+            --warning: #ed6c02;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            /* Couleurs Catégories */
+            --cat-acr: #212121; --cat-antibio: #4caf50; --cat-cardio: #9c27b0;
+            --cat-sedation: #ff9800; --cat-neuro: #2196f3; --cat-antidote: #009688;
+            --cat-traumato: #795548; --cat-perf: #607d8b;
         }
 
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: var(--bg); margin: 0; padding: 0; color: #333; line-height: 1.4;
+        }
+
+        /* BANDEAU DU HAUT */
+        .header-container {
+            background: var(--primary);
+            color: white;
+            padding: 15px 15px 20px 15px;
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: sticky; top: 0; z-index: 1000;
+        }
+
+        .app-title {
+            text-align: center; font-size: 0.9rem; font-weight: 300; 
+            letter-spacing: 2px; margin-bottom: 15px; opacity: 0.9;
+        }
+
+        .input-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;
+        }
+
+        .input-group {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px; border-radius: 12px; text-align: center;
+        }
+
+        .input-group label {
+            display: block; font-size: 0.7rem; font-weight: bold; margin-bottom: 5px; color: #cfd8dc;
+        }
+
+        .input-group input {
+            background: transparent; border: none; color: white;
+            font-size: 1.4rem; font-weight: bold; width: 100%; text-align: center; outline: none;
+        }
+
+        .input-group input::placeholder { color: rgba(255,255,255,0.3); }
+
+        /* AFFICHAGE DU POIDS CALCULÉ */
+        .weight-result-area {
+            background: white; color: var(--primary);
+            border-radius: 15px; padding: 12px; display: flex;
+            align-items: center; justify-content: space-between;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .weight-main { font-size: 0.8rem; font-weight: bold; }
+        .weight-value { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
         
-        .sticky-header {
-            position: sticky; top: 0; background: var(--bg); z-index: 1000;
-            padding: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .btn-clear {
+            background: var(--danger); color: white; border: none;
+            padding: 8px 15px; border-radius: 10px; font-weight: bold; font-size: 1rem;
         }
 
-        .top-bar { text-align: center; background: var(--primary); color: white; padding: 5px; border-radius: 8px; font-weight: bold; margin-bottom: 8px; }
+        /* NAVIGATION TABS */
+        .tabs-wrapper {
+            padding: 15px 0 5px 15px; overflow-x: auto; white-space: nowrap;
+        }
+        .tabs-wrapper::-webkit-scrollbar { display: none; }
 
-        .input-section { background: white; padding: 10px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 10px; }
-        .input-row { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; justify-content: center; }
-        
-        .label-text { font-size: 0.8rem; font-weight: bold; color: var(--primary); width: 60px; }
-        input { padding: 10px; border-radius: 8px; border: 2px solid #ccc; text-align: center; font-weight: bold; font-size: 1.1rem; }
-        .input-w { width: 80px; border-color: var(--accent); font-size: 1.5rem; }
-        .input-a { width: 60px; }
-
-        .weight-display { 
-            text-align: center; background: #e8f4fd; padding: 5px; border-radius: 8px; 
-            font-weight: bold; color: var(--accent); margin-bottom: 10px; font-size: 0.9rem;
+        .tab-btn {
+            display: inline-block; padding: 8px 20px; margin-right: 8px;
+            border-radius: 20px; background: #e0e0e0; color: #666;
+            font-size: 0.85rem; font-weight: bold; border: none; transition: 0.3s;
         }
 
-        .btn-clear { background: var(--danger); color: white; border: none; border-radius: 8px; padding: 10px 15px; font-weight: bold; }
-
-        .tabs-container { overflow-x: auto; white-space: nowrap; display: flex; gap: 6px; padding-bottom: 5px; }
-        .tabs-container::-webkit-scrollbar { display: none; }
-        .tab-btn { padding: 8px 15px; border: none; border-radius: 15px; background: #dcdde1; font-weight: bold; font-size: 0.8rem; }
-        .tab-btn.active { background: var(--accent); color: white; }
-
-        #medList { padding: 10px; }
-        .med-card { 
-            background: white; margin-bottom: 6px; border-radius: 8px; padding: 10px; 
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 6px solid #bdc3c7;
+        .tab-btn.active {
+            background: var(--accent); color: white; box-shadow: 0 4px 8px rgba(2, 136, 209, 0.3);
         }
 
+        /* LISTE DE MÉDICAMENTS */
+        #medList { padding: 10px 15px; }
+
+        .med-card {
+            background: var(--card-bg); border-radius: 15px; padding: 15px;
+            margin-bottom: 12px; display: flex; justify-content: space-between;
+            align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-left: 6px solid #ddd;
+        }
+
+        .med-content { flex: 1; }
+        .med-name { font-weight: 800; font-size: 1rem; color: #222; text-transform: uppercase; letter-spacing: -0.3px; }
+        .med-poso { color: var(--accent); font-size: 0.85rem; font-weight: bold; margin: 2px 0; }
+        .med-note { color: #777; font-size: 0.75rem; font-style: italic; }
+
+        .med-result { text-align: right; margin-left: 10px; }
+        .res-ml { font-size: 1.6rem; font-weight: 900; color: var(--danger); display: block; }
+        .res-mg { font-size: 0.85rem; font-weight: bold; color: #444; }
+
+        /* Couleurs bordures */
         .cat-acr { border-left-color: var(--cat-acr); }
         .cat-antibio { border-left-color: var(--cat-antibio); }
         .cat-cardio { border-left-color: var(--cat-cardio); }
@@ -57,51 +120,50 @@
         .cat-traumato { border-left-color: var(--cat-traumato); }
         .cat-perf { border-left-color: var(--cat-perf); }
 
-        .med-name { font-weight: bold; font-size: 0.9rem; text-transform: uppercase; }
-        .med-note { font-size: 0.7rem; color: #666; }
-        .med-poso { font-size: 0.75rem; color: var(--accent); font-weight: bold; }
-        
-        .result-box { text-align: right; min-width: 85px; }
-        .res-main { font-size: 1.3rem; font-weight: 900; color: var(--danger); }
-        .res-sub { font-size: 0.75rem; color: #333; }
-
-        .footer { font-size: 0.65rem; color: #95a5a6; text-align: center; padding: 15px; }
+        .empty-state { text-align: center; color: #999; margin-top: 40px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-<div class="sticky-header">
-    <div class="top-bar">PédiaUrg PRO</div>
+<div class="header-container">
+    <div class="app-title">URGENCES PÉDIATRIQUES</div>
     
-    <div class="input-section">
-        <div class="input-row">
-            <span class="label-text">POIDS (kg)</span>
-            <input type="number" id="manualWeight" class="input-w" placeholder="--" oninput="processInput()">
-            <button class="btn-clear" onclick="clearAll()">C</button>
+    <div class="input-grid">
+        <div class="input-group" style="grid-column: span 2;">
+            <label>POIDS MANUEL (KG)</label>
+            <input type="number" id="manualWeight" placeholder="--" oninput="processInput()">
         </div>
-        <div class="input-row">
-            <span class="label-text">ÂGE</span>
-            <input type="number" id="ageYears" class="input-a" placeholder="Ans" oninput="processInput()">
-            <input type="number" id="ageMonths" class="input-a" placeholder="Mois" oninput="processInput()">
+        <div class="input-group">
+            <label>ÂGE (ANNÉES)</label>
+            <input type="number" id="ageYears" placeholder="0" oninput="processInput()">
+        </div>
+        <div class="input-group">
+            <label>ÂGE (MOIS)</label>
+            <input type="number" id="ageMonths" placeholder="0" oninput="processInput()">
         </div>
     </div>
 
-    <div id="weightMsg" class="weight-display">En attente de données...</div>
-
-    <div class="tabs-container">
-        <button class="tab-btn active" onclick="setFilter('all', this)">Tous</button>
-        <button class="tab-btn" onclick="setFilter('acr', this)">ACR</button>
-        <button class="tab-btn" onclick="setFilter('antibio', this)">Antibio</button>
-        <button class="tab-btn" onclick="setFilter('cardio', this)">Cardio</button>
-        <button class="tab-btn" onclick="setFilter('sedation', this)">Sédation</button>
-        <button class="tab-btn" onclick="setFilter('neuro', this)">Neuro</button>
-        <button class="tab-btn" onclick="setFilter('antidote', this)">Antidotes</button>
-        <button class="tab-btn" onclick="setFilter('traumato', this)">Traumato</button>
-        <button class="tab-btn" onclick="setFilter('perf', this)">Perf. Continue</button>
+    <div class="weight-result-area">
+        <div id="weightMsg" class="weight-main">SAISISSEZ LES DONNÉES</div>
+        <button class="btn-clear" onclick="clearAll()">C</button>
     </div>
 </div>
 
-<div id="medList"></div>
+<div class="tabs-wrapper">
+    <button class="tab-btn active" onclick="setFilter('all', this)">Tous</button>
+    <button class="tab-btn" onclick="setFilter('acr', this)">ACR</button>
+    <button class="tab-btn" onclick="setFilter('antibio', this)">Antibio</button>
+    <button class="tab-btn" onclick="setFilter('cardio', this)">Cardio</button>
+    <button class="tab-btn" onclick="setFilter('sedation', this)">Sédation</button>
+    <button class="tab-btn" onclick="setFilter('neuro', this)">Neuro</button>
+    <button class="tab-btn" onclick="setFilter('antidote', this)">Antidotes</button>
+    <button class="tab-btn" onclick="setFilter('traumato', this)">Traumato</button>
+    <button class="tab-btn" onclick="setFilter('perf', this)">Perfusion</button>
+</div>
+
+<div id="medList">
+    <div class="empty-state">En attente du poids pour le calcul...</div>
+</div>
 
 <script>
     const medications = [
@@ -191,17 +253,17 @@
 
         if (w > 0) {
             activeWeight = w;
-            msg.innerHTML = `Poids utilisé : <b>${w} kg</b> (Saisie manuelle)`;
+            msg.innerHTML = `POIDS : <span class="weight-value">${w} kg</span>`;
         } else if (y >= 1 || (y + m/12) >= 1) {
             const ageTotal = y + (m / 12);
             activeWeight = (ageTotal + 4) * 2;
-            msg.innerHTML = `Poids estimé : <b>${activeWeight.toFixed(1)} kg</b> (Âge ${y}a ${m}m)`;
+            msg.innerHTML = `ESTIMÉ : <span class="weight-value">${activeWeight.toFixed(1)} kg</span>`;
         } else if (m > 0 || y > 0) {
             activeWeight = 0;
-            msg.innerHTML = `<span style="color:red">Saisir le poids manuellement (enfant < 1 an)</span>`;
+            msg.innerHTML = `<span style="color:var(--danger); font-size:0.7rem">⚠️ MOINS D'UN AN : SAISIR POIDS REEL</span>`;
         } else {
             activeWeight = 0;
-            msg.innerHTML = "En attente de données...";
+            msg.innerHTML = "EN ATTENTE DE DONNÉES";
         }
         render();
     }
@@ -218,7 +280,7 @@
         container.innerHTML = '';
         
         if (activeWeight <= 0) {
-            container.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">Veuillez définir un poids ou un âge (min 1 an).</p>';
+            container.innerHTML = '<div class="empty-state">Veuillez définir un poids ou un âge (min 1 an) dans le bandeau supérieur.</div>';
             return;
         }
 
@@ -231,9 +293,9 @@
             if (m.type === "ml") { 
                 resMain = `${(val / m.conc).toFixed(2)} ml`; resSub = `${val.toFixed(2)} mg`; 
             } else if (m.type === "joules") { 
-                resMain = `${Math.round(val)} J`; resSub = "Choc"; 
+                resMain = `${Math.round(val)} J`; resSub = "Choc électrique"; 
             } else if (m.type === "direct_ml") { 
-                resMain = `${val.toFixed(1)} ml`; resSub = "Volume"; 
+                resMain = `${val.toFixed(1)} ml`; resSub = "Volume total"; 
             } else if (m.type === "perf_min") { 
                 const mlh = (m.dose * activeWeight * 60) / (m.conc * 1000); 
                 resMain = `${mlh.toFixed(1)} ml/h`; resSub = `${m.dose} µg/kg/min`; 
@@ -244,8 +306,16 @@
 
             const card = document.createElement('div');
             card.className = `med-card cat-${m.cat}`;
-            card.innerHTML = `<div><div class="med-name">${m.name}</div><div class="med-poso">${m.dose} ${m.unit}</div><div class="med-note">${m.note}</div></div>
-                              <div class="result-box"><div class="res-main">${resMain}</div><div class="res-sub">${resSub}</div></div>`;
+            card.innerHTML = `
+                <div class="med-content">
+                    <div class="med-name">${m.name}</div>
+                    <div class="med-poso">${m.dose} ${m.unit}</div>
+                    <div class="med-note">${m.note}</div>
+                </div>
+                <div class="med-result">
+                    <span class="res-ml">${resMain}</span>
+                    <span class="res-mg">${resSub}</span>
+                </div>`;
             container.appendChild(card);
         });
     }
