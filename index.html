@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PédiaUrg - MVP</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --success: #27ae60;
+            --bg: #f8f9fa;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0; padding: 10px;
+            color: #333;
+        }
+
+        .header {
+            text-align: center;
+            padding: 10px 0;
+            background: var(--primary);
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .weight-box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 20px;
+            border: 2px solid var(--accent);
+        }
+
+        label { display: block; font-weight: bold; margin-bottom: 10px; color: var(--primary); }
+
+        input[type="number"] {
+            width: 70%;
+            padding: 15px;
+            font-size: 2.5rem;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            background: #fff;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .tab-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 20px;
+            background: #ddd;
+            white-space: nowrap;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .med-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 6px solid #ccc;
+        }
+
+        /* Couleurs par catégorie */
+        .cat-vital { border-left-color: var(--danger); }
+        .cat-induction { border-left-color: var(--warning); }
+        .cat-convulsion { border-left-color: var(--success); }
+
+        .med-info { flex: 1; }
+        .med-name { font-weight: bold; font-size: 1.1rem; color: #000; text-transform: uppercase; }
+        .med-detail { font-size: 0.8rem; color: #666; margin-top: 3px; }
+        .med-dilution { font-size: 0.75rem; color: var(--accent); font-style: italic; margin-top: 2px; }
+
+        .med-result { text-align: right; min-width: 90px; }
+        .res-ml { font-size: 1.5rem; font-weight: 900; color: var(--danger); }
+        .res-mg { font-size: 0.9rem; font-weight: bold; color: #333; }
+
+        .footer-note {
+            font-size: 0.7rem;
+            color: #999;
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            line-height: 1.4;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2 style="margin:0">PédiaUrg Service</h2>
+</div>
+
+<div class="weight-box">
+    <label for="weightInput">POIDS DE L'ENFANT (kg)</label>
+    <input type="number" id="weightInput" placeholder="--" step="0.1" min="0">
+</div>
+
+<div class="tabs">
+    <button class="tab-btn active" onclick="filterCat('all')">Tous</button>
+    <button class="tab-btn" onclick="filterCat('vital')">Urgence Vitale</button>
+    <button class="tab-btn" onclick="filterCat('induction')">Induction/Sédation</button>
+    <button class="tab-btn" onclick="filterCat('convulsion')">Convulsion</button>
+</div>
+
+<div id="medList"></div>
+
+<div class="footer-note">
+    <strong>DISPOSITIF INTERNE :</strong> Calculs théoriques basés sur les protocoles SFMU/GFRUP.<br>
+    Vérifiez la concentration réelle de vos ampoules avant administration.<br>
+    Pas de données patient stockées.
+</div>
+
+<script>
+    // BASE DE DONNÉES DU MVP
+    const medications = [
+        // Urgence Vitale
+        { name: "Adrénaline (ACR)", cat: "vital", dose: 0.01, conc: 0.1, unit: "mg/kg", note: "Diluer 1mg dans 10ml NaCl 0.9%", max: 1 },
+        { name: "Amiodarone (ACR)", cat: "vital", dose: 5, conc: 50, unit: "mg/kg", note: "Direct (ACR) ou en 20-60min", max: 300 },
+        { name: "Atropine", cat: "vital", dose: 0.02, conc: 0.1, unit: "mg/kg", note: "Dose min: 0.1mg | Max: 0.5mg", minMg: 0.1, max: 0.5 },
+        { name: "Lidocaïne", cat: "vital", dose: 1, conc: 10, unit: "mg/kg", note: "Anti-arythmique (si pas Amiodarone)", max: 100 },
+
+        // Induction / Sédation
+        { name: "Etomidate", cat: "induction", dose: 0.3, conc: 2, unit: "mg/kg", note: "Induction séquence rapide", max: 20 },
+        { name: "Kétamine", cat: "induction", dose: 2, conc: 10, unit: "mg/kg", note: "Induction IV (conc. 10mg/ml)", max: 200 },
+        { name: "Propofol", cat: "induction", dose: 3, conc: 10, unit: "mg/kg", note: "Induction (1%)", max: 200 },
+        { name: "Midazolam (IV)", cat: "induction", dose: 0.1, conc: 1, unit: "mg/kg", note: "Titration sédation ou état de mal", max: 10 },
+        { name: "Célocurine", cat: "induction", dose: 2, conc: 50, unit: "mg/kg", note: "Curare d'induction (Succinylcholine)", max: 100 },
+        { name: "Atracurium", cat: "induction", dose: 0.5, conc: 10, unit: "mg/kg", note: "Curare d'entretien", max: 50 },
+
+        // Convulsion
+        { name: "Clonazépam (Rivotril)", cat: "convulsion", dose: 0.02, conc: 1, unit: "mg/kg", note: "IV lent (1mg/1ml après mélange)", max: 1 },
+        { name: "Phénobarbital", cat: "convulsion", dose: 20, conc: 40, unit: "mg/kg", note: "Diluer, max 1mg/kg/min", max: 1000 },
+        { name: "Lévétiracétam (Keppra)", cat: "convulsion", dose: 40, conc: 100, unit: "mg/kg", note: "Sur 15 min", max: 3000 },
+        { name: "Phénytoïne", cat: "convulsion", dose: 20, conc: 50, unit: "mg/kg", note: "Max 1mg/kg/min. Très irritant.", max: 1000 }
+    ];
+
+    const weightInput = document.getElementById('weightInput');
+    const medList = document.getElementById('medList');
+    let currentFilter = 'all';
+
+    weightInput.addEventListener('input', render);
+
+    function filterCat(cat) {
+        currentFilter = cat;
+        // Update tabs
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if(btn.innerText.toLowerCase().includes(cat) || (cat === 'all' && btn.innerText === 'Tous')) {
+                btn.classList.add('active');
+            }
+        });
+        render();
+    }
+
+    function render() {
+        const weight = parseFloat(weightInput.value);
+        medList.innerHTML = '';
+
+        if (!weight || weight <= 0) {
+            medList.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">Saisissez un poids pour voir les dosages.</p>';
+            return;
+        }
+
+        const filtered = medications.filter(m => currentFilter === 'all' || m.cat === currentFilter);
+
+        filtered.forEach(med => {
+            let mg = weight * med.dose;
+            
+            // Sécurité Min/Max
+            if (med.minMg && mg < med.minMg) mg = med.minMg;
+            if (med.max && mg > med.max) mg = med.max;
+
+            const ml = mg / med.conc;
+
+            const card = document.createElement('div');
+            card.className = `med-card cat-${med.cat}`;
+            card.innerHTML = `
+                <div class="med-info">
+                    <div class="med-name">${med.name}</div>
+                    <div class="med-detail">${med.dose} ${med.unit} (Concentration ${med.conc}mg/ml)</div>
+                    <div class="med-dilution">${med.note}</div>
+                </div>
+                <div class="med-result">
+                    <div class="res-ml">${ml.toFixed(2)} ml</div>
+                    <div class="res-mg">${mg.toFixed(2)} mg</div>
+                </div>
+            `;
+            medList.appendChild(card);
+        });
+    }
+
+    // Initialisation
+    render();
+</script>
+
+</body>
+</html>
