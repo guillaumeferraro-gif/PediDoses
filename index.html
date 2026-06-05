@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PédiaUrg PRO v20 - Dashboard ACR/EME</title>
+    <title>PédiaUrg PRO v21</title>
     <style>
         :root {
             --primary: #1a237e; --accent: #0288d1; --danger: #d32f2f;
@@ -11,9 +11,9 @@
             --step-t1: #2e7d32; --step-t2: #f9a825; --step-t3: #ef6c00; --step-t4: #d32f2f; --step-t5: #8e0000;
         }
 
-        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #eaeff2; margin: 0; padding-bottom: 50px; color: #333; overflow-x: hidden; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #eaeff2; margin: 0; padding-bottom: 50px; color: #333; }
 
-        /* --- HEADER v7 --- */
+        /* HEADER FIXE */
         .header-container {
             background: var(--primary); color: white; padding: 15px;
             border-radius: 0 0 25px 25px; position: sticky; top: 0; z-index: 1000;
@@ -27,56 +27,62 @@
         .weight-actual { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
         .btn-clear { background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: bold; }
 
-        /* --- NAVIGATION --- */
-        .tabs-wrapper { padding: 15px 0 5px 15px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        /* TABS */
+        .tabs-wrapper { padding: 15px 0 5px 15px; overflow-x: auto; white-space: nowrap; }
         .tab-btn { display: inline-block; padding: 10px 20px; margin-right: 8px; border-radius: 20px; background: #d0d7de; color: #555; font-size: 0.85rem; font-weight: bold; border: none; }
-        .tab-btn.active { background: var(--accent); color: white; box-shadow: 0 4px 8px rgba(2,136,209,0.3); }
+        .tab-btn.active { background: var(--accent); color: white; }
 
-        /* --- ACR PROTOCOLE PRO (SVG & DYNAMIQUE) --- */
-        .acr-dashboard { padding: 10px; display: flex; flex-direction: column; gap: 15px; }
-        .acr-selector { display: flex; background: #cfd8dc; border-radius: 12px; padding: 5px; margin-bottom: 10px; }
-        .sel-btn { flex: 1; border: none; padding: 12px; border-radius: 10px; font-weight: 900; font-size: 0.8rem; transition: 0.3s; }
-        .sel-btn.active { background: var(--danger); color: white; }
-        .sel-btn.non { background: #b0bec5; }
-        .sel-btn.non.active { background: var(--primary); color: white; }
+        /* --- ALGORITHME ACR STYLE ERC --- */
+        .acr-page { display: flex; flex-direction: column; align-items: center; padding: 15px; }
+        .acr-toggle-area { width: 100%; max-width: 400px; display: flex; background: #cfd8dc; padding: 5px; border-radius: 12px; margin-bottom: 20px; }
+        .acr-toggle-area button { flex: 1; border: none; padding: 12px; border-radius: 10px; font-weight: 900; font-size: 0.75rem; cursor: pointer; transition: 0.3s; }
+        .acr-toggle-area .active { background: var(--danger); color: white; }
+        .acr-toggle-area .active.non { background: var(--primary); }
 
-        .acr-chart { background: white; border-radius: 20px; padding: 20px; position: relative; display: flex; flex-direction: column; align-items: center; }
-        .acr-box { width: 85%; padding: 12px; border-radius: 10px; border: 2px solid #546e7a; background: #f8f9fa; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 30px; position: relative; z-index: 5; }
-        .acr-box.eval { border-radius: 50px; border: 3px solid #1a237e; background: #fff; width: 70%; padding: 15px; margin-bottom: 40px; }
-        .acr-box.main-action { border-color: var(--danger); background: #fff5f5; color: var(--danger); font-size: 1.1rem; }
-        
-        .acr-side-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 20px; }
-        .side-panel { background: #eceff1; border-radius: 10px; padding: 10px; font-size: 0.7rem; border-top: 4px solid #90a4ae; }
-        .side-panel h4 { margin: 0 0 5px 0; color: var(--primary); text-transform: uppercase; font-size: 0.65rem; }
+        .flow-container { 
+            position: relative; background: white; width: 100%; max-width: 400px; 
+            padding: 30px 20px; border-radius: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; align-items: center;
+        }
 
-        /* SVG CONNECTORS */
-        .acr-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .flow-box { 
+            width: 100%; border: 2px solid #546e7a; border-radius: 10px; padding: 12px; 
+            text-align: center; font-weight: bold; font-size: 0.8rem; background: #f8f9fa; 
+            position: relative; z-index: 2; margin-bottom: 40px; 
+        }
+        .flow-box.eval { border-radius: 50px; border-width: 3px; border-color: var(--primary); background: white; width: 80%; }
+        .flow-box.shock { border-color: var(--danger); background: #fff5f5; color: var(--danger); }
+        .flow-box.nonshock { border-color: var(--accent); background: #f0f7ff; color: #0d47a1; }
+        .flow-box.green { border-color: #2e7d32; background: #e8f5e9; color: #1b5e20; }
+
+        /* Flèches SVG */
+        .connector-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+
+        .acr-extra { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 400px; margin-top: 15px; }
+        .extra-card { background: #eceff1; padding: 10px; border-radius: 12px; font-size: 0.65rem; border-top: 4px solid #90a4ae; }
+        .extra-card h5 { margin: 0 0 5px 0; font-size: 0.7rem; color: var(--primary); text-transform: uppercase; }
 
         /* --- LISTES MÉDICAMENTS (INVERSION DOSE/VOLUME) --- */
         #medList { padding: 10px 15px; }
-        .med-card { background: white; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 8px solid #ddd; overflow: hidden; cursor: pointer; }
+        .med-card { background: white; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 8px solid #ddd; overflow: hidden; cursor: pointer; transition: 0.2s; }
         .med-header { padding: 12px; display: flex; justify-content: space-between; align-items: center; }
         .med-name { font-weight: 800; font-size: 0.85rem; text-transform: uppercase; color: #222; }
         .res-container { text-align: right; }
         .res-main { font-size: 1.4rem; font-weight: 900; color: var(--danger); display: block; }
         .res-sub { font-size: 0.8rem; font-weight: bold; color: #777; }
 
-        /* --- EME TOULOUSE STYLE --- */
-        .step-container { margin-bottom: 20px; }
-        .step-title { font-weight: 900; text-transform: uppercase; font-size: 0.85rem; margin-bottom: 10px; display: block; text-align: center; }
-        .wait-time { background: #fff; color: var(--danger); text-align: center; font-size: 0.75rem; font-weight: bold; padding: 8px; border-radius: 10px; margin: 8px 5%; border: 2px dashed var(--danger); }
+        /* --- EME TOULOUSE DESIGN VALIDÉ --- */
+        .wait-time { background: #fff; color: var(--danger); text-align: center; font-size: 0.75rem; font-weight: bold; padding: 8px; border-radius: 10px; margin: 8px 10%; border: 1.5px dashed var(--danger); }
         .choice-box { border-radius: 15px; padding: 10px; margin-bottom: 8px; border: 2px dashed #ccc; }
         .or-label { text-align: center; font-weight: 900; font-size: 0.7rem; margin: 8px 0; letter-spacing: 2px; }
-        
         .card-t1 { border-left-color: var(--step-t1); } .card-t2 { border-left-color: var(--step-t2); } .card-t3 { border-left-color: var(--step-t3); } .card-t4 { border-left-color: var(--step-t4); } .card-t5 { border-left-color: var(--step-t5); }
-        .bucco-tag { padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: bold; color: white; display: inline-block; margin-top: 3px; }
-        .bg-yellow { background: #fbc02d; color: black; } .bg-blue { background: #1976d2; } .bg-purple { background: #7b1fa2; } .bg-orange { background: #f57c00; }
-
-        /* ACCORDÉON INFO */
+        
         .med-details { max-height: 0; padding: 0 12px; background: #fafafa; opacity: 0; transition: 0.3s ease; }
         .med-card.open .med-details { max-height: 500px; padding: 12px; opacity: 1; border-top: 1px solid #eee; }
         .detail-row { margin-bottom: 8px; font-size: 0.8rem; }
         .detail-label { font-size: 0.6rem; font-weight: bold; color: var(--accent); text-transform: uppercase; }
+        .bucco-tag { padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: bold; color: white; display: inline-block; margin-top: 3px; }
+        .bg-yellow { background: #fbc02d; color: black; } .bg-blue { background: #1976d2; } .bg-purple { background: #7b1fa2; } .bg-orange { background: #f57c00; }
     </style>
 </head>
 <body>
@@ -111,18 +117,18 @@
 <div id="medList"></div>
 
 <script>
-    // BASE DE DONNÉES INTÉGRALE (TOUS LES MÉDICAMENTS RESTAURÉS)
+    // BASE DE DONNÉES INTÉGRALE
     const medications = [
-        { id: "adre_acr", name: "Adrénaline (ACR)", cat: "acr", dose: 10, conc: 100, unit: "mcg/kg", type: "ml", ampoule: "1 mg/ml", dilution: "1 mg dans 10 ml NaCl (100 mcg/ml)", debit: "IVD Flash + 5ml rinçage", infos: "Toutes les 3-5 min" },
-        { id: "amio_acr", name: "Amiodarone (ACR)", cat: "acr", dose: 5, conc: 7.5, unit: "mg/kg", type: "ml", ampoule: "150 mg/3 ml", dilution: "3 ml + 17 ml G5% (7,5 mg/ml)", debit: "IVD Bolus" },
+        { id: "adre_acr", name: "Adrénaline (ACR)", cat: "acr", dose: 10, conc: 100, unit: "mcg/kg", type: "ml", ampoule: "1 mg/ml", dilution: "1 mg (1ml) dans 9ml NaCl 0,9% (Final 100 mcg/ml)", debit: "IVD Flash + 5ml rinçage", infos: "Dose: 10 mcg/kg" },
+        { id: "amio_acr", name: "Amiodarone (ACR)", cat: "acr", dose: 5, conc: 7.5, unit: "mg/kg", type: "ml", ampoule: "150 mg/3 ml", dilution: "3 ml + 17 ml G5% (soit 7,5 mg/ml)", debit: "IVD Bolus" },
         { name: "Chlorure de Calcium 10%", cat: "acr", dose: 20, conc: 100, unit: "mg/kg", type: "ml", ampoule: "100 mg/ml" },
-        { id: "valium", name: "Diazépam (Valium) IR", cat: "eme", dose: 0.5, conc: 5, unit: "mg/kg", type: "ml", max: 10, ampoule: "10 mg / 2 ml", dilution: "Pure", debit: "Intra-Rectal" },
+        { id: "valium", name: "Diazépam (Valium) IR", cat: "eme", dose: 0.5, conc: 5, unit: "mg/kg", type: "ml", max: 10, ampoule: "10 mg / 2 ml", dilution: "Pure" },
         { id: "buccolam", name: "Buccolam (IB)", cat: "eme", type: "buccolam" },
         { id: "midal_in", name: "Midazolam IN", cat: "eme", dose: 0.2, conc: 5, unit: "mg/kg", type: "ml", max: 10, ampoule: "5 mg / 1 ml" },
-        { id: "rivotril", name: "Clonazépam (Rivotril)", cat: "eme", dose: 0.05, conc: 1, unit: "mg/kg", type: "ml", max: 1, ampoule: "1 mg/ml", dilution: "1+1 solvant" },
-        { id: "keppra", name: "Lévétiracétam (Keppra)", cat: "eme", dose: 40, conc: 100, unit: "mg/kg", type: "ml", max: 3000, ampoule: "100 mg/ml" },
-        { id: "dilantin", name: "Phénytoïne (Dilantin)", cat: "eme", dose: 20, conc: 50, unit: "mg/kg", type: "ml", max: 1000, ampoule: "50 mg/ml" },
-        { id: "gardenal", name: "Phénobarbital (Gardénal)", cat: "eme", dose: 20, conc: 40, unit: "mg/kg", type: "ml", max: 600, ampoule: "40 mg/ml" },
+        { id: "rivotril", name: "Clonazépam (Rivotril)", cat: "eme", dose: 0.05, conc: 1, unit: "mg/kg", type: "ml", max: 1 },
+        { id: "keppra", name: "Lévétiracétam (Keppra)", cat: "eme", dose: 40, conc: 100, unit: "mg/kg", type: "ml", max: 3000 },
+        { id: "dilantin", name: "Phénytoïne (Dilantin)", cat: "eme", dose: 20, conc: 50, unit: "mg/kg", type: "ml", max: 1000 },
+        { id: "gardenal", name: "Phénobarbital (Gardénal)", cat: "eme", dose: 20, conc: 40, unit: "mg/kg", type: "ml", max: 600 },
         { name: "Sérum Salé Hyperto 7.5%", cat: "neuro", dose: 2, unit: "ml/kg", type: "direct_ml" },
         { name: "Etomidate", cat: "sedation", dose: 0.3, conc: 2, unit: "mg/kg", type: "ml" },
         { name: "Kétamine", cat: "sedation", dose: 2, conc: 10, unit: "mg/kg", type: "ml" },
@@ -130,6 +136,7 @@
         { name: "Célocurine", cat: "sedation", dose: 2, conc: 50, unit: "mg/kg", type: "ml" },
         { name: "Atracurium (Bolus)", cat: "sedation", dose: 0.5, conc: 10, unit: "mg/kg", type: "ml" },
         { name: "Gentamicine", cat: "antibio", dose: 8, conc: 10, unit: "mg/kg", type: "ml" },
+        { name: "Amoxicilline", cat: "antibio", dose: 50, conc: 100, unit: "mg/kg", type: "ml" },
         { name: "Ceftriaxone", cat: "antibio", dose: 50, conc: 100, unit: "mg/kg", type: "ml", max: 2000 },
         { name: "Atropine", cat: "cardio", dose: 0.02, conc: 0.1, unit: "mg/kg", type: "ml", min: 0.1, max: 0.5 },
         { name: "Sugammadex", cat: "antidote", dose: 4, conc: 100, unit: "mg/kg", type: "ml" },
@@ -138,9 +145,9 @@
         { name: "Sufentanil (PSE)", cat: "perf", dose: 0.2, conc: 0.005, unit: "mcg/kg/h", type: "perf_h" }
     ];
 
-    let currentFilter = 'acr_protocole';
     let activeWeight = 0;
-    let acrPath = 'nonshock';
+    let currentFilter = 'acr_protocole';
+    let shockMode = false;
 
     function processInput() {
         const w = parseFloat(document.getElementById('manualWeight').value);
@@ -161,9 +168,9 @@
         let val = activeWeight * m.dose;
         if (m.min && val < m.min) val = m.min;
         if (m.max && val > m.max) val = m.max;
-        const unit = m.unit ? m.unit.split('/')[0] : "";
-        if (m.type === "ml") { resMain = val.toFixed(1) + " " + unit; resSub = (val / m.conc).toFixed(2) + " ml"; }
-        else if (m.type === "direct_ml") { resMain = val.toFixed(1) + " ml"; resSub = "Volume total"; }
+        const unitLabel = m.unit ? m.unit.split('/')[0] : "";
+        if (m.type === "ml") { resMain = val.toFixed(1) + " " + unitLabel; resSub = (val / m.conc).toFixed(2) + " ml"; }
+        else if (m.type === "direct_ml") { resMain = val.toFixed(1) + " ml"; resSub = "Vol total"; }
         else if (m.type === "perf_min") { resMain = m.dose + " mcg/kg/min"; resSub = ((m.dose * activeWeight * 60) / (m.conc * 1000)).toFixed(1) + " ml/h"; }
         else if (m.type === "perf_h") { resMain = m.dose + " mcg/kg/h"; resSub = ((m.dose * activeWeight) / (m.conc * 1000)).toFixed(1) + " ml/h"; }
         return { main: resMain, sub: resSub };
@@ -175,7 +182,7 @@
         if (m.type === "buccolam") {
             let d = activeWeight < 10 ? "2.5mg" : (activeWeight < 20 ? "5mg" : (activeWeight < 30 ? "7.5mg" : "10mg"));
             let c = activeWeight < 10 ? "bg-yellow" : (activeWeight < 20 ? "bg-blue" : (activeWeight < 30 ? "bg-purple" : "bg-orange"));
-            return `<div class="med-card card-t1" onclick="this.classList.toggle('open')"><div class="med-header"><div class="med-name">Buccolam<br><small class="bucco-tag ${c}">Seringue</small></div><div class="res-container"><span class="res-main">${d}</span><span class="res-sub">IB Fixe</span></div></div></div>`;
+            return `<div class="med-card card-t1" onclick="this.classList.toggle('open')"><div class="med-header"><div class="med-name">Buccolam<br><small class="bucco-tag ${c}">Seringue</small></div><div class="res-container"><span class="res-main">${d}</span><span class="res-sub">Fixe</span></div></div></div>`;
         }
         const res = calculate(m);
         return `<div class="med-card ${stepClass || 'cat-'+m.cat}" onclick="this.classList.toggle('open')">
@@ -191,50 +198,47 @@
         if (currentFilter === 'acr_protocole') {
             const adre = calculate(medications.find(m => m.id === 'adre_acr'));
             const amio = calculate(medications.find(m => m.id === 'amio_acr'));
-            const shock = Math.round(activeWeight * 4);
-
             container.innerHTML = `
-                <div class="acr-dashboard">
-                    <div class="acr-selector">
-                        <button class="sel-btn non ${acrPath==='nonshock'?'active':''}" onclick="acrPath='nonshock';render()">NON-CHOQUABLE</button>
-                        <button class="sel-btn ${acrPath==='shock'?'active':''}" onclick="acrPath='shock';render()">CHOQUABLE ⚡</button>
+                <div class="acr-page">
+                    <div class="acr-toggle-area">
+                        <button class="non ${!shockMode?'active':''}" onclick="shockMode=false; render()">NON-CHOQUABLE</button>
+                        <button class="${shockMode?'active':''}" onclick="shockMode=true; render()">CHOQUABLE ⚡</button>
                     </div>
 
-                    <div class="acr-chart">
-                        <svg class="acr-svg" viewBox="0 0 400 450">
-                            <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orientation="auto"><path d="M0,0 L0,6 L9,3 z" fill="#90a4ae" /></marker></defs>
-                            <line x1="200" y1="55" x2="200" y2="75" stroke="#90a4ae" stroke-width="2" marker-end="url(#arrow)" />
-                            <path d="M200,120 L200,135 L${acrPath==='shock'?100:300},135 L${acrPath==='shock'?100:300},155" fill="none" stroke="#90a4ae" stroke-width="2" marker-end="url(#arrow)" />
-                            <line x1="${acrPath==='shock'?100:300}" y1="215" x2="${acrPath==='shock'?100:300}" y2="235" stroke="#90a4ae" stroke-width="2" marker-end="url(#arrow)" />
-                            <path d="M${acrPath==='shock'?100:300},295 L${acrPath==='shock'?100:300},320 L${acrPath==='shock'?30:370},320 L${acrPath==='shock'?30:370},100 L180,100" fill="none" stroke="#90a4ae" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="4" />
+                    <div class="flow-container">
+                        <svg class="connector-svg" viewBox="0 0 400 480">
+                            <defs><marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="3" orientation="auto"><path d="M0,0 L0,6 L9,3 z" fill="#90a4ae"/></marker></defs>
+                            <!-- Flèches directes -->
+                            <line x1="200" y1="55" x2="200" y2="80" stroke="#90a4ae" stroke-width="2" marker-end="url(#arr)" />
+                            <line x1="200" y1="135" x2="200" y2="160" stroke="#90a4ae" stroke-width="2" marker-end="url(#arr)" />
+                            <line x1="200" y1="230" x2="200" y2="255" stroke="#90a4ae" stroke-width="2" marker-end="url(#arr)" />
+                            <!-- Boucle de retour -->
+                            <path d="M200,325 L200,350 L30,350 L30,110 L160,110" fill="none" stroke="#90a4ae" stroke-width="2" marker-end="url(#arr)" stroke-dasharray="4" />
                         </svg>
 
-                        <div class="acr-box blue">RCP (15:2)<br>OXYGÉNER / VENTILER</div>
-                        <div class="acr-box eval">ÉVALUER LE RYTHME</div>
+                        <div class="flow-box">RCP (15:2) / O2 / MONITOR</div>
+                        <div class="flow-box eval">ÉVALUER LE RYTHME</div>
+                        
+                        ${shockMode ? `
+                        <div class="flow-box shock"><b>RYTHME CHOQUABLE</b><br><span style="font-size:1.2rem">${Math.round(activeWeight*4)} Joules</span><br><small>(4 J/kg)</small></div>
+                        ` : `
+                        <div class="flow-box nonshock"><b>RYTHME NON-CHOQUABLE</b><br><span style="font-size:1.1rem; color:var(--danger)">Adré : ${adre.sub}</span><br><small>IMMÉDIAT</small></div>
+                        `}
 
-                        <div style="width:100%; display:flex; justify-content:${acrPath==='shock'?'flex-start':'flex-end'}">
-                            ${acrPath === 'shock' ? `
-                            <div class="acr-box main-action" style="width:45%; margin-left:5%"><b>CHOQUABLE</b><br><span class="res-acr-val">${shock} J</span><small>4 J/kg</small></div>
-                            ` : `
-                            <div class="acr-box blue" style="width:45%; margin-right:5%"><b>NON-CHOQUABLE</b><br><span class="res-acr-val" style="color:var(--accent)">Adré : ${adre.sub}</span><small>IMMÉDIAT</small></div>
-                            `}
+                        <div class="flow-box green">REPRENDRE RCP 2 MIN
+                            ${shockMode ? `<br><small style="color:var(--danger)">Dès 3e choc : Adré ${adre.sub} + Amio ${amio.sub}</small>` : `<br><small>Adrénaline toutes les 4 min</small>`}
                         </div>
+                    </div>
 
-                        <div class="acr-box green" style="width:50%; margin-top:10px; margin-left:${acrPath==='shock'?'-40%':'40%'}">
-                            REPRENDRE RCP 2 MIN
-                            ${acrPath === 'shock' ? `<br><small style="color:var(--danger)">Après 3e choc : Adré ${adre.sub} + Amio ${amio.sub}</small>` : `<br><small>Adré / 4 min</small>`}
-                        </div>
-
-                        <div class="acr-side-info">
-                            <div class="side-panel"><h4>Causes Réversibles (4H / 4T)</h4>Hypoxie, Hypovolémie, Hypo/HyperK, Hypothermie. Tension Pneumo, Toxiques, Tamponnade, Thrombo.</div>
-                            <div class="side-panel"><h4>Post-ROSC (ABCDE)</h4>O2 contrôlée, Ventilation stable, Normothermie, Glycémie, ECG.</div>
-                        </div>
+                    <div class="acr-extra">
+                        <div class="extra-card"><h5>Causes (4H/4T)</h5>Hypoxie, Hypovolémie, Hypo/HyperK, Hypothermie. Pneumo, Toxiques, Tamponnade, Thrombo.</div>
+                        <div class="extra-card"><h5>Post-ROSC</h5>O2 contrôlée, Ventilation stable, Normothermie, Glycémie, ECG.</div>
                     </div>
                 </div>`;
         } else if (currentFilter === 'eme') {
             container.innerHTML = `
-                <div class="exception-tag"><strong>⚠️ Exceptions :</strong> < 3 mois = Gardénal 20mg/kg. Régime cétogène = PAS DE GLUCOSE.</div>
-                <div class="step-container"><span class="step-title color-t1">T1 (0-5 min) - Choisir 1 seul</span>
+                <div class="exception-tag"><strong>⚠️ Exceptions :</strong> < 3 mois = Gardénal 20mg/kg. Cétogène = PAS DE GLUCOSE.</div>
+                <div class="step-container"><span class="step-title color-t1">T1 (0-5 min)</span>
                     <div class="choice-box border-t1" style="display:flex; gap:5px; align-items:center;">
                         <div style="flex:1">${getMedCard('valium', 'card-t1')}</div><div class="or-label color-t1">OU</div>
                         <div style="flex:1">${getMedCard('buccolam', 'card-t1')}</div><div class="or-label color-t1">OU</div>
@@ -255,7 +259,7 @@
                 <div class="wait-time">Si crise persiste 10 min après fin d'administration...</div>
                 <div class="step-container"><span class="step-title color-t5">T5 (55 min)</span>${getMedCard('gardenal', 'card-t5')}</div>`;
         } else {
-            medications.filter(m => currentFilter === 'all' || m.cat === currentFilter).forEach(m => { container.innerHTML += getMedCard(m.name); });
+            medications.filter(m => currentFilter === 'all' || m.cat === currentFilter).forEach(m => { container.innerHTML += getMedCard(m.id); });
         }
     }
 </script>
