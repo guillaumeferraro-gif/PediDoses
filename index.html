@@ -3,80 +3,519 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PédiaUrg PRO v22 - Stacked Edition</title>
+    <title>PédiaUrg PRO v23</title>
     <style>
         :root {
             --primary: #1a237e; --accent: #0288d1; --danger: #d32f2f;
             --bg: #f4f7f6; --card-bg: #ffffff;
             --step-t1: #2e7d32; --step-t2: #f9a825; --step-t3: #ef6c00; --step-t4: #d32f2f; --step-t5: #8e0000;
+            /* ACR palette */
+            --shock-color: #0C447C;
+            --shock-bg: #E6F1FB;
+            --shock-mid: #378ADD;
+            --shock-light: #B5D4F4;
+            --noshock-color: #3B6D11;
+            --noshock-bg: #EAF3DE;
+            --noshock-mid: #639922;
+            --amber-col: #854F0B;
+            --amber-bg: #FAEEDA;
+            --amber-mid: #BA7517;
+            --neutral-bg: #F1EFE8;
+            --neutral: #444441;
         }
 
-        body { font-family: -apple-system, system-ui, sans-serif; background: #eaeff2; margin: 0; padding-bottom: 50px; color: #333; }
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background: #eaeff2;
+            margin: 0;
+            padding-bottom: 60px;
+            color: #333;
+        }
 
-        /* HEADER DESIGN v7 */
+        /* ───────────────────────────────────────
+           HEADER
+        ─────────────────────────────────────── */
         .header-container {
-            background: var(--primary); color: white; padding: 15px;
-            border-radius: 0 0 25px 25px; position: sticky; top: 0; z-index: 1000;
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            border-radius: 0 0 25px 25px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-        .app-title { text-align: center; font-size: 0.8rem; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px; opacity: 0.8; }
-        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-        .input-group { background: rgba(255, 255, 255, 0.15); padding: 8px; border-radius: 12px; text-align: center; }
-        .input-group label { display: block; font-size: 0.6rem; font-weight: bold; color: #e1f5fe; margin-bottom: 4px; }
-        .input-group input { background: transparent; border: none; color: white; font-size: 1.3rem; font-weight: bold; width: 100%; text-align: center; outline: none; }
-
-        .weight-display-card { 
-            background: white; border-radius: 15px; padding: 12px; 
-            display: flex; align-items: center; justify-content: space-between;
+        .app-title {
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .input-group {
+            background: rgba(255,255,255,0.15);
+            padding: 8px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.6rem;
+            font-weight: bold;
+            color: #e1f5fe;
+            margin-bottom: 4px;
+        }
+        .input-group input {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.3rem;
+            font-weight: bold;
+            width: 100%;
+            text-align: center;
+            outline: none;
+        }
+        .weight-display-card {
+            background: white;
+            border-radius: 15px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
         }
         .weight-info { color: var(--primary); font-size: 0.75rem; font-weight: bold; }
         .weight-actual { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
-        .btn-clear { background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: bold; }
+        .btn-clear {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
-        /* NAVIGATION TABS */
-        .tabs-wrapper { padding: 15px 0 5px 15px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        /* ───────────────────────────────────────
+           NAVIGATION TABS
+        ─────────────────────────────────────── */
+        .tabs-wrapper {
+            padding: 15px 0 5px 15px;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
         .tabs-wrapper::-webkit-scrollbar { display: none; }
-        .tab-btn { display: inline-block; padding: 10px 20px; margin-right: 8px; border-radius: 20px; background: #d0d7de; color: #555; font-size: 0.85rem; font-weight: bold; border: none; }
-        .tab-btn.active { background: var(--accent); color: white; box-shadow: 0 4px 8px rgba(2,136,209,0.3); }
+        .tab-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-right: 8px;
+            border-radius: 20px;
+            background: #d0d7de;
+            color: #555;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 8px rgba(2,136,209,0.3);
+        }
 
-        /* LISTE ET CARTES */
+        /* ───────────────────────────────────────
+           MED LIST (tous les onglets sauf ACR)
+        ─────────────────────────────────────── */
         #medList { padding: 10px 15px; }
-        .med-card { background: white; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 8px solid #ddd; overflow: hidden; cursor: pointer; transition: 0.2s; }
-        .med-header { padding: 12px; display: flex; justify-content: space-between; align-items: center; }
+
+        .med-card {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 8px solid #ddd;
+            overflow: hidden;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .med-header {
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         .med-name { font-weight: 800; font-size: 0.85rem; text-transform: uppercase; color: #222; }
         .med-poso-text { color: var(--accent); font-size: 0.7rem; font-weight: bold; }
-        
         .res-container { text-align: right; }
         .res-main { font-size: 1.4rem; font-weight: 900; color: var(--danger); display: block; }
         .res-sub { font-size: 0.85rem; font-weight: bold; color: #555; }
-
-        .med-details { max-height: 0; padding: 0 12px; background: #fafafa; opacity: 0; transition: all 0.3s ease; }
-        .med-card.open .med-details { max-height: 500px; padding: 12px; opacity: 1; border-top: 1px solid #eee; }
+        .med-details {
+            max-height: 0;
+            padding: 0 12px;
+            background: #fafafa;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .med-card.open .med-details {
+            max-height: 500px;
+            padding: 12px;
+            opacity: 1;
+            border-top: 1px solid #eee;
+        }
         .detail-row { margin-bottom: 8px; font-size: 0.8rem; }
         .detail-label { font-size: 0.6rem; font-weight: bold; color: var(--accent); text-transform: uppercase; }
 
-        /* EME TOULOUSE DESIGN STACKED */
+        /* EME */
         .step-container { margin-bottom: 20px; }
-        .step-title { font-weight: 900; text-transform: uppercase; font-size: 0.85rem; margin-bottom: 10px; display: block; text-align: center; }
-        .wait-time { background: #fff; color: var(--danger); text-align: center; font-size: 0.75rem; font-weight: bold; padding: 10px; border-radius: 10px; margin: 10px 5%; border: 1.5px dashed var(--danger); }
-        .choice-box { border-radius: 15px; padding: 15px; margin-bottom: 8px; border: 2px dashed #ccc; display: flex; flex-direction: column; gap: 8px; }
-        .or-label { text-align: center; font-weight: 900; font-size: 0.7rem; margin: 5px 0; letter-spacing: 2px; }
+        .step-title {
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            display: block;
+            text-align: center;
+        }
+        .wait-time {
+            background: #fff;
+            color: var(--danger);
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 5%;
+            border: 1.5px dashed var(--danger);
+        }
+        .choice-box {
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 8px;
+            border: 2px dashed #ccc;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .or-label {
+            text-align: center;
+            font-weight: 900;
+            font-size: 0.7rem;
+            margin: 5px 0;
+            letter-spacing: 2px;
+        }
+        .card-t1 { border-left-color: var(--step-t1); }
+        .card-t2 { border-left-color: var(--step-t2); }
+        .card-t3 { border-left-color: var(--step-t3); }
+        .card-t4 { border-left-color: var(--step-t4); }
+        .card-t5 { border-left-color: var(--step-t5); }
+        .bucco-tag {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: white;
+            display: inline-block;
+            margin-top: 3px;
+        }
+        .bg-yellow { background: #fbc02d; color: black; }
+        .bg-blue   { background: #1976d2; }
+        .bg-purple { background: #7b1fa2; }
+        .bg-orange { background: #f57c00; }
+        .exception-tag {
+            background: #fff3e0;
+            border: 1px solid #ff9800;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 0.8rem;
+        }
 
-        .card-t1 { border-left-color: var(--step-t1); } .card-t2 { border-left-color: var(--step-t2); } .card-t3 { border-left-color: var(--step-t3); } .card-t4 { border-left-color: var(--step-t4); } .card-t5 { border-left-color: var(--step-t5); }
-        .bucco-tag { padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; color: white; display: inline-block; margin-top: 3px; }
-        .bg-yellow { background: #fbc02d; color: black; } .bg-blue { background: #1976d2; } .bg-purple { background: #7b1fa2; } .bg-orange { background: #f57c00; }
-        .exception-tag { background: #fff3e0; border: 1px solid #ff9800; border-radius: 10px; padding: 10px; margin-bottom: 15px; font-size: 0.8rem; }
+        /* ───────────────────────────────────────
+           ACR MODULE
+        ─────────────────────────────────────── */
+        #acrModule {
+            padding: 12px 15px 20px;
+            display: none;
+        }
+        #acrModule.visible { display: block; }
+
+        /* Bannière poids — reprise du style header */
+        .acr-weight-banner {
+            background: white;
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .acr-weight-banner label {
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            white-space: nowrap;
+        }
+        .acr-weight-val {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--accent);
+        }
+        .acr-weight-hint {
+            font-size: 0.7rem;
+            color: #888;
+            margin-left: auto;
+        }
+
+        /* Cycle banner */
+        .acr-cycle-banner {
+            background: white;
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .acr-cycle-label {
+            font-size: 0.6rem;
+            font-weight: bold;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 2px;
+        }
+        .acr-cycle-num {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--primary);
+            line-height: 1;
+        }
+        .acr-timer-val {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--danger);
+            font-variant-numeric: tabular-nums;
+        }
+        .acr-cycle-dots { display: flex; gap: 4px; margin-top: 5px; }
+        .acr-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #d0d7de;
+        }
+        .acr-dot.active { background: var(--danger); }
+        .acr-dot.past   { background: var(--accent); }
+
+        .acr-btn {
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .acr-btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .acr-btn-primary.running {
+            background: var(--danger);
+        }
+        .acr-btn-secondary {
+            background: #eee;
+            color: #555;
+            font-size: 0.7rem;
+            padding: 6px 12px;
+            margin-top: 4px;
+        }
+        .acr-btn-next {
+            background: #2e7d32;
+            color: white;
+        }
+
+        /* Évaluation centrale */
+        .acr-eval-box {
+            background: var(--neutral-bg);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .acr-eval-title {
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: var(--neutral);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 3px;
+        }
+        .acr-eval-sub { font-size: 0.75rem; color: #555; }
+
+        /* Deux branches */
+        .acr-branches {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .acr-branch {
+            border-radius: 14px;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+        .acr-branch.shock   { border-color: var(--shock-mid); }
+        .acr-branch.noshock { border-color: var(--noshock-mid); }
+
+        .acr-branch-header {
+            padding: 8px 6px;
+            text-align: center;
+        }
+        .acr-branch.shock   .acr-branch-header { background: var(--shock-bg); }
+        .acr-branch.noshock .acr-branch-header { background: var(--noshock-bg); }
+
+        .acr-branch-title {
+            font-size: 0.65rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .acr-branch.shock   .acr-branch-title { color: var(--shock-color); }
+        .acr-branch.noshock .acr-branch-title { color: var(--noshock-color); }
+
+        .acr-branch-sub {
+            font-size: 0.6rem;
+            font-weight: normal;
+            text-transform: none;
+            letter-spacing: 0;
+            display: block;
+            margin-top: 1px;
+        }
+        .acr-branch.shock   .acr-branch-sub { color: var(--shock-color); opacity: 0.75; }
+        .acr-branch.noshock .acr-branch-sub { color: var(--noshock-color); opacity: 0.75; }
+
+        /* Steps dans chaque branche */
+        .acr-steps { display: flex; flex-direction: column; }
+        .acr-step {
+            padding: 8px 10px;
+            border-bottom: 0.5px solid rgba(0,0,0,0.07);
+            background: white;
+        }
+        .acr-step:last-child { border-bottom: none; }
+        .acr-step.highlight-shock   { background: var(--shock-bg); }
+        .acr-step.highlight-noshock { background: var(--noshock-bg); }
+        .acr-step.highlight-amber   { background: var(--amber-bg); }
+        .acr-step.dimmed            { opacity: 0.45; }
+
+        .acr-step-tag {
+            font-size: 0.55rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            margin-bottom: 3px;
+        }
+        .tag-shock   { color: var(--shock-color); }
+        .tag-noshock { color: var(--noshock-color); }
+        .tag-amber   { color: var(--amber-col); }
+        .tag-neutral { color: var(--neutral); }
+
+        .acr-step-name {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #222;
+            margin-bottom: 2px;
+        }
+        .acr-step-dose {
+            font-size: 0.78rem;
+            font-weight: 900;
+            color: var(--danger);
+        }
+        .acr-step-detail {
+            font-size: 0.62rem;
+            color: #666;
+            margin-top: 2px;
+            line-height: 1.45;
+        }
+
+        /* Cartes basses */
+        .acr-bottom-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .acr-info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 10px 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .acr-info-title {
+            font-size: 0.6rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #888;
+            margin-bottom: 6px;
+        }
+        .acr-info-body {
+            font-size: 0.68rem;
+            color: #333;
+            line-height: 1.65;
+        }
+
+        /* ROSC */
+        .acr-rosc-bar {
+            background: var(--noshock-bg);
+            border: 1.5px solid var(--noshock-mid);
+            border-radius: 12px;
+            padding: 10px 14px;
+        }
+        .acr-rosc-title {
+            font-size: 0.6rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--noshock-color);
+            margin-bottom: 4px;
+        }
+        .acr-rosc-body {
+            font-size: 0.68rem;
+            color: #333;
+            line-height: 1.65;
+        }
     </style>
 </head>
 <body>
 
+<!-- ════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════ -->
 <div class="header-container">
     <div class="app-title">PÉDIAURG EXPERT TOULOUSE</div>
     <div class="input-grid">
-        <div class="input-group" style="grid-column: span 2;"><label>POIDS RÉEL (KG)</label><input type="number" id="manualWeight" placeholder="--" oninput="processInput()"></div>
-        <div class="input-group"><label>ÂGE (ANS)</label><input type="number" id="ageYears" placeholder="0" oninput="processInput()"></div>
-        <div class="input-group"><label>ÂGE (MOIS)</label><input type="number" id="ageMonths" placeholder="0" oninput="processInput()"></div>
+        <div class="input-group" style="grid-column: span 2;">
+            <label>POIDS RÉEL (KG)</label>
+            <input type="number" id="manualWeight" placeholder="--" oninput="processInput()">
+        </div>
+        <div class="input-group">
+            <label>ÂGE (ANS)</label>
+            <input type="number" id="ageYears" placeholder="0" oninput="processInput()">
+        </div>
+        <div class="input-group">
+            <label>ÂGE (MOIS)</label>
+            <input type="number" id="ageMonths" placeholder="0" oninput="processInput()">
+        </div>
     </div>
     <div class="weight-display-card">
         <div id="weightMsg" class="weight-info">DONNÉES...</div>
@@ -85,6 +524,9 @@
     </div>
 </div>
 
+<!-- ════════════════════════════════════════════
+     NAVIGATION
+════════════════════════════════════════════ -->
 <div class="tabs-wrapper">
     <button class="tab-btn active" onclick="setFilter('eme', this)">EME</button>
     <button class="tab-btn" onclick="setFilter('neuro', this)">Neuro</button>
@@ -98,149 +540,600 @@
     <button class="tab-btn" onclick="setFilter('all', this)">Tous</button>
 </div>
 
+<!-- ════════════════════════════════════════════
+     MED LIST (onglets non-ACR)
+════════════════════════════════════════════ -->
 <div id="medList"></div>
 
+<!-- ════════════════════════════════════════════
+     MODULE ACR
+════════════════════════════════════════════ -->
+<div id="acrModule">
+
+    <!-- Poids courant -->
+    <div class="acr-weight-banner">
+        <label>Poids utilisé</label>
+        <span class="acr-weight-val" id="acrWeightVal">—</span>
+        <span class="acr-weight-hint" id="acrWeightHint"></span>
+    </div>
+
+    <!-- Bannière cycle + minuteur -->
+    <div class="acr-cycle-banner">
+        <div>
+            <div class="acr-cycle-label">Cycle RCP</div>
+            <div class="acr-cycle-num" id="acrCycleNum">1</div>
+            <div class="acr-cycle-dots" id="acrCycleDots"></div>
+        </div>
+        <div style="text-align:center">
+            <div class="acr-cycle-label">MCE restant</div>
+            <div class="acr-timer-val" id="acrTimer">2:00</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
+            <button class="acr-btn acr-btn-primary" id="acrBtnTimer" onclick="acrToggleTimer()">▶ Démarrer</button>
+            <button class="acr-btn acr-btn-secondary" onclick="acrReset()">Réinitialiser</button>
+        </div>
+    </div>
+
+    <!-- Évaluation -->
+    <div class="acr-eval-box">
+        <div class="acr-eval-title">⟳ Évaluer le rythme</div>
+        <div class="acr-eval-sub">Analyse à chaque pause MCE — toutes les 2 min</div>
+    </div>
+
+    <!-- Branches choquable / non-choquable -->
+    <div class="acr-branches">
+        <div class="acr-branch shock">
+            <div class="acr-branch-header">
+                <div class="acr-branch-title">
+                    Choquable
+                    <span class="acr-branch-sub">FV / TV sans pouls</span>
+                </div>
+            </div>
+            <div class="acr-steps" id="acrShockSteps"></div>
+        </div>
+
+        <div class="acr-branch noshock">
+            <div class="acr-branch-header">
+                <div class="acr-branch-title">
+                    Non-choquable
+                    <span class="acr-branch-sub">Asystolie / AESP</span>
+                </div>
+            </div>
+            <div class="acr-steps" id="acrNoshockSteps"></div>
+        </div>
+    </div>
+
+    <!-- MCE + causes -->
+    <div class="acr-bottom-cards">
+        <div class="acr-info-card">
+            <div class="acr-info-title">MCE</div>
+            <div class="acr-info-body">
+                15/2 (ratio pédiatrique)<br>
+                Continu si intubé<br>
+                Relâchement complet<br>
+                Fréquence 100–120/min
+            </div>
+        </div>
+        <div class="acr-info-card">
+            <div class="acr-info-title">Causes 4H / 4T</div>
+            <div class="acr-info-body">
+                Hypoxie · Hypovolémie<br>
+                Hypo/HyperK · Hypo°<br>
+                Pneumo T · Tamponnade<br>
+                Thrombo · Toxiques
+            </div>
+        </div>
+    </div>
+
+    <!-- Post-ROSC -->
+    <div class="acr-rosc-bar">
+        <div class="acr-rosc-title">✓ Post-ROSC (ABCDE)</div>
+        <div class="acr-rosc-body">
+            O₂ contrôlée · Ventilation stable · Normothermie · Glycémie · ECG<br>
+            PAM cible : &gt; 55 mmHg (&gt; 45 si &lt; 2 ans) — Noradrénaline si besoin
+        </div>
+    </div>
+
+</div><!-- /acrModule -->
+
+
 <script>
-    // BASE DE DONNÉES COMPLÈTE (TOUT RESTAURÉ)
-    const medications = [
-        // ACR - PROTOCOLE DEMANDE
-        { id: "adre_acr", name: "Adrénaline (ACR)", cat: "acr", dose: 10, conc: 100, unit: "mcg/kg", type: "ml", ampoule: "1 mg/ml", dilution: "1 mg (1ml) + 9ml NaCl 0,9% (Final 100 mcg/ml)", debit: "IVD Flash + rinçage 5 ml", infos: "Dose: 10 mcg/kg" },
-        { id: "amio_acr", name: "Amiodarone (ACR)", cat: "acr", dose: 5, conc: 7.5, unit: "mg/kg", type: "ml", ampoule: "150 mg/3 ml", dilution: "3 ml + 17 ml G5% (Final 7,5 mg/ml)", debit: "IVD Bolus", infos: "Dose: 5 mg/kg" },
-        { name: "Chlorure de Calcium 10%", cat: "acr", dose: 20, conc: 100, unit: "mg/kg", type: "ml", ampoule: "100 mg/ml" },
+/* ════════════════════════════════════════════
+   BASE DE DONNÉES MÉDICAMENTS
+════════════════════════════════════════════ */
+const medications = [
+    // ACR
+    { id: "adre_acr", name: "Adrénaline (ACR)", cat: "acr", dose: 10, conc: 100, unit: "mcg/kg", type: "ml", ampoule: "1 mg/ml", dilution: "1 mg (1 ml) + 9 ml NaCl 0,9% → 100 mcg/ml", debit: "IVD Flash + rinçage 5 ml NaCl", infos: "Dose : 10 mcg/kg (= 0,01 mg/kg)" },
+    { id: "amio_acr", name: "Amiodarone (ACR)", cat: "acr", dose: 5, conc: 7.5, unit: "mg/kg", type: "ml", ampoule: "150 mg/3 ml", dilution: "3 ml + 17 ml G5% → 7,5 mg/ml", debit: "IVD Bolus lent", infos: "Dose : 5 mg/kg — après 3e puis 5e choc" },
+    { name: "Chlorure de Calcium 10%", cat: "acr", dose: 20, conc: 100, unit: "mg/kg", type: "ml", ampoule: "100 mg/ml" },
 
-        // EME
-        { id: "valium", name: "Diazépam (Valium) IR", cat: "eme", dose: 0.5, conc: 5, unit: "mg/kg", type: "ml", max: 10, ampoule: "10 mg / 2 ml", dilution: "Pure", debit: "Intra-Rectal (IR)" },
-        { id: "buccolam", name: "Buccolam (IB)", cat: "eme", type: "buccolam" },
-        { id: "midal_in", name: "Midazolam IN", cat: "eme", dose: 0.2, conc: 5, unit: "mg/kg", type: "ml", max: 10, ampoule: "5 mg / 1 ml", dilution: "Pure", debit: "Intra-Nasal" },
-        { id: "rivotril", name: "Clonazépam (Rivotril)", cat: "eme", dose: 0.05, conc: 1, unit: "mg/kg", type: "ml", max: 1, ampoule: "1 mg / 1 ml", dilution: "1+1 solvant", debit: "IVL 5-10 min" },
-        { id: "keppra", name: "Lévétiracétam (Keppra)", cat: "eme", dose: 40, conc: 100, unit: "mg/kg", type: "ml", max: 3000, ampoule: "500 mg / 5 ml", dilution: "NaCl 0,9%", debit: "IVL 5 min" },
-        { id: "dilantin", name: "Phénytoïne (Dilantin)", cat: "eme", dose: 20, conc: 50, unit: "mg/kg", type: "ml", max: 1000, ampoule: "250 mg / 5 ml", dilution: "NaCl 0,9% UNIQUEMENT", debit: "IVL 20 min" },
-        { id: "gardenal", name: "Phénobarbital (Gardénal)", cat: "eme", dose: 20, conc: 40, unit: "mg/kg", type: "ml", max: 600, ampoule: "200 mg / 5 ml", dilution: "NaCl 0,9%", debit: "IVL 20 min" },
+    // EME
+    { id: "valium", name: "Diazépam (Valium) IR", cat: "eme", dose: 0.5, conc: 5, unit: "mg/kg", type: "ml", max: 10, ampoule: "10 mg / 2 ml", dilution: "Pure", debit: "Intra-Rectal (IR)" },
+    { id: "buccolam", name: "Buccolam (IB)", cat: "eme", type: "buccolam" },
+    { id: "midal_in", name: "Midazolam IN", cat: "eme", dose: 0.2, conc: 5, unit: "mg/kg", type: "ml", max: 10, ampoule: "5 mg / 1 ml", dilution: "Pure", debit: "Intra-Nasal" },
+    { id: "rivotril", name: "Clonazépam (Rivotril)", cat: "eme", dose: 0.05, conc: 1, unit: "mg/kg", type: "ml", max: 1, ampoule: "1 mg / 1 ml", dilution: "1+1 solvant", debit: "IVL 5–10 min" },
+    { id: "keppra", name: "Lévétiracétam (Keppra)", cat: "eme", dose: 40, conc: 100, unit: "mg/kg", type: "ml", max: 3000, ampoule: "500 mg / 5 ml", dilution: "NaCl 0,9%", debit: "IVL 5 min" },
+    { id: "dilantin", name: "Phénytoïne (Dilantin)", cat: "eme", dose: 20, conc: 50, unit: "mg/kg", type: "ml", max: 1000, ampoule: "250 mg / 5 ml", dilution: "NaCl 0,9% UNIQUEMENT", debit: "IVL 20 min" },
+    { id: "gardenal", name: "Phénobarbital (Gardénal)", cat: "eme", dose: 20, conc: 40, unit: "mg/kg", type: "ml", max: 600, ampoule: "200 mg / 5 ml", dilution: "NaCl 0,9%", debit: "IVL 20 min" },
 
-        // AUTRES CATÉGORIES
-        { name: "Sérum Salé Hyperto 7.5%", cat: "neuro", dose: 2, unit: "ml/kg", type: "direct_ml", infos: "HTIC grave" },
-        { name: "Etomidate", cat: "sedation", dose: 0.3, conc: 2, unit: "mg/kg", type: "ml", ampoule: "2 mg/ml" },
-        { name: "Kétamine", cat: "sedation", dose: 2, conc: 10, unit: "mg/kg", type: "ml", ampoule: "10 mg/ml" },
-        { name: "Midazolam (Sédation)", cat: "sedation", dose: 0.1, conc: 1, unit: "mg/kg", type: "ml" },
-        { name: "Propofol", cat: "sedation", dose: 3, conc: 10, unit: "mg/kg", type: "ml", ampoule: "10 mg/ml" },
-        { name: "Célocurine", cat: "sedation", dose: 2, conc: 50, unit: "mg/kg", type: "ml", ampoule: "50 mg/ml" },
-        { name: "Atracurium (Bolus)", cat: "sedation", dose: 0.5, conc: 10, unit: "mg/kg", type: "ml", ampoule: "10 mg/ml" },
-        { name: "Gentamicine", cat: "antibio", dose: 8, conc: 10, unit: "mg/kg", type: "ml" },
-        { name: "Ceftriaxone", cat: "antibio", dose: 50, conc: 100, unit: "mg/kg", type: "ml", max: 2000 },
-        { name: "Atropine", cat: "cardio", dose: 0.02, conc: 0.1, unit: "mg/kg", type: "ml", min: 0.1, max: 0.5 },
-        { name: "Exacyl (Bolus)", cat: "traumato", dose: 15, conc: 100, unit: "mg/kg", type: "ml" },
-        { name: "Adrénaline (PSE)", cat: "perf", dose: 0.1, conc: 0.1, unit: "mcg/kg/min", type: "perf_min" },
-        { name: "Sufentanil (PSE)", cat: "perf", dose: 0.2, conc: 0.005, unit: "mcg/kg/h", type: "perf_h" }
-    ];
+    // AUTRES
+    { name: "Sérum Salé Hyperto 7.5%", cat: "neuro", dose: 2, unit: "ml/kg", type: "direct_ml", infos: "HTIC grave" },
+    { name: "Etomidate", cat: "sedation", dose: 0.3, conc: 2, unit: "mg/kg", type: "ml", ampoule: "2 mg/ml" },
+    { name: "Kétamine", cat: "sedation", dose: 2, conc: 10, unit: "mg/kg", type: "ml", ampoule: "10 mg/ml" },
+    { name: "Midazolam (Sédation)", cat: "sedation", dose: 0.1, conc: 1, unit: "mg/kg", type: "ml" },
+    { name: "Propofol", cat: "sedation", dose: 3, conc: 10, unit: "mg/kg", type: "ml", ampoule: "10 mg/ml" },
+    { name: "Célocurine", cat: "sedation", dose: 2, conc: 50, unit: "mg/kg", type: "ml", ampoule: "50 mg/ml" },
+    { name: "Atracurium (Bolus)", cat: "sedation", dose: 0.5, conc: 10, unit: "mg/kg", type: "ml", ampoule: "10 mg/ml" },
+    { name: "Gentamicine", cat: "antibio", dose: 8, conc: 10, unit: "mg/kg", type: "ml" },
+    { name: "Ceftriaxone", cat: "antibio", dose: 50, conc: 100, unit: "mg/kg", type: "ml", max: 2000 },
+    { name: "Atropine", cat: "cardio", dose: 0.02, conc: 0.1, unit: "mg/kg", type: "ml", min: 0.1, max: 0.5 },
+    { name: "Exacyl (Bolus)", cat: "traumato", dose: 15, conc: 100, unit: "mg/kg", type: "ml" },
+    { name: "Adrénaline (PSE)", cat: "perf", dose: 0.1, conc: 0.1, unit: "mcg/kg/min", type: "perf_min" },
+    { name: "Sufentanil (PSE)", cat: "perf", dose: 0.2, conc: 0.005, unit: "mcg/kg/h", type: "perf_h" }
+];
 
-    let currentFilter = 'eme';
-    let activeWeight = 0;
+/* ════════════════════════════════════════════
+   ÉTAT GLOBAL
+════════════════════════════════════════════ */
+let currentFilter = 'eme';
+let activeWeight  = 0;
 
-    function processInput() {
-        const w = parseFloat(document.getElementById('manualWeight').value);
-        const y = parseFloat(document.getElementById('ageYears').value) || 0;
-        const m = parseFloat(document.getElementById('ageMonths').value) || 0;
-        if (w > 0) activeWeight = w;
-        else if (y >= 1 || (y + m/12) >= 1) activeWeight = (y + (m/12) + 4) * 2;
-        else activeWeight = 0;
-        document.getElementById('weightMsg').innerText = w > 0 ? "POIDS RÉEL :" : (activeWeight > 0 ? "POIDS ESTIMÉ :" : "DONNÉES...");
-        document.getElementById('weightValDisplay').innerText = activeWeight > 0 ? activeWeight.toFixed(1) + " kg" : "";
-        render();
+// ACR state
+let acrCycle     = 1;
+let acrTimerSec  = 120;
+let acrRunning   = false;
+let acrInterval  = null;
+const ACR_MAX_CYCLES = 8;
+
+/* ════════════════════════════════════════════
+   CALCUL POIDS
+════════════════════════════════════════════ */
+function processInput() {
+    const w = parseFloat(document.getElementById('manualWeight').value);
+    const y = parseFloat(document.getElementById('ageYears').value)  || 0;
+    const m = parseFloat(document.getElementById('ageMonths').value) || 0;
+
+    if (w > 0) {
+        activeWeight = w;
+    } else if (y >= 1 || (y + m / 12) >= 1) {
+        activeWeight = (y + m / 12 + 4) * 2;
+    } else {
+        activeWeight = 0;
     }
 
-    function clearAll() { document.querySelectorAll('input').forEach(i => i.value = ''); processInput(); }
-    function setFilter(cat, btn) { currentFilter = cat; document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); render(); }
+    const isReal = w > 0;
+    document.getElementById('weightMsg').innerText        = isReal ? 'POIDS RÉEL :' : (activeWeight > 0 ? 'POIDS ESTIMÉ :' : 'DONNÉES...');
+    document.getElementById('weightValDisplay').innerText = activeWeight > 0 ? activeWeight.toFixed(1) + ' kg' : '';
 
-    function calculate(m) {
-        let resMain = "-", resSub = "-";
-        let val = activeWeight * m.dose;
-        if (m.min && val < m.min) val = m.min;
-        if (m.max && val > m.max) val = m.max;
-        const unit = m.unit ? m.unit.split('/')[0] : "";
-        if (m.type === "ml") { resMain = val.toFixed(1) + " " + unit; resSub = (val / m.conc).toFixed(2) + " ml"; }
-        else if (m.type === "direct_ml") { resMain = val.toFixed(1) + " ml"; resSub = "Volume total"; }
-        else if (m.type === "perf_min") { resMain = m.dose + " mcg/kg/min"; resSub = ((m.dose * activeWeight * 60) / (m.conc * 1000)).toFixed(1) + " ml/h"; }
-        else if (m.type === "perf_h") { resMain = m.dose + " mcg/kg/h"; resSub = ((m.dose * activeWeight) / (m.conc * 1000)).toFixed(1) + " ml/h"; }
-        return { main: resMain, sub: resSub };
+    render();
+}
+
+function clearAll() {
+    document.querySelectorAll('input').forEach(i => i.value = '');
+    processInput();
+}
+
+/* ════════════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════════════ */
+function setFilter(cat, btn) {
+    currentFilter = cat;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+}
+
+/* ════════════════════════════════════════════
+   CALCUL MÉDICAMENT (onglets hors ACR)
+════════════════════════════════════════════ */
+function calculate(m) {
+    let resMain = '–', resSub = '–';
+    let val = activeWeight * m.dose;
+    if (m.min && val < m.min) val = m.min;
+    if (m.max && val > m.max) val = m.max;
+    const unit = m.unit ? m.unit.split('/')[0] : '';
+
+    if (m.type === 'ml') {
+        resMain = val.toFixed(1) + ' ' + unit;
+        resSub  = (val / m.conc).toFixed(2) + ' ml';
+    } else if (m.type === 'direct_ml') {
+        resMain = val.toFixed(1) + ' ml';
+        resSub  = 'Volume total';
+    } else if (m.type === 'perf_min') {
+        resMain = m.dose + ' mcg/kg/min';
+        resSub  = ((m.dose * activeWeight * 60) / (m.conc * 1000)).toFixed(1) + ' ml/h';
+    } else if (m.type === 'perf_h') {
+        resMain = m.dose + ' mcg/kg/h';
+        resSub  = ((m.dose * activeWeight) / (m.conc * 1000)).toFixed(1) + ' ml/h';
     }
+    return { main: resMain, sub: resSub };
+}
 
-    function getBuccolam(w) {
-        let d = "10 mg", c = "bg-orange", l = "ORANGE";
-        if (w < 10) { d = "2.5 mg"; c = "bg-yellow"; l = "JAUNE"; }
-        else if (w < 20) { d = "5 mg"; c = "bg-blue"; l = "BLEUE"; }
-        else if (w < 30) { d = "7.5 mg"; c = "bg-purple"; l = "VIOLETTE"; }
-        return `<div class="med-card card-t1" onclick="this.classList.toggle('open')">
-            <div class="med-header">
-                <div class="med-name">Buccolam (IB)<br><small class="bucco-tag ${c}">Seringue ${l}</small></div>
-                <div class="res-container"><span class="res-main" style="color:var(--danger)">${d}</span><span class="res-sub">Fixe</span></div>
+function getBuccolam(w) {
+    let d = '10 mg', c = 'bg-orange', l = 'ORANGE';
+    if (w < 10)       { d = '2.5 mg'; c = 'bg-yellow'; l = 'JAUNE'; }
+    else if (w < 20)  { d = '5 mg';   c = 'bg-blue';   l = 'BLEUE'; }
+    else if (w < 30)  { d = '7.5 mg'; c = 'bg-purple'; l = 'VIOLETTE'; }
+    return `<div class="med-card card-t1" onclick="this.classList.toggle('open')">
+        <div class="med-header">
+            <div class="med-name">Buccolam (IB)<br><small class="bucco-tag ${c}">Seringue ${l}</small></div>
+            <div class="res-container"><span class="res-main" style="color:var(--danger)">${d}</span><span class="res-sub">Fixe</span></div>
+        </div>
+        <div class="med-details">Intra-buccal uniquement.</div>
+    </div>`;
+}
+
+function getMedCard(id, stepClass) {
+    const m = medications.find(x => x.id === id || x.name === id);
+    if (!m) return '';
+    if (m.type === 'buccolam') return getBuccolam(activeWeight);
+
+    const res = calculate(m);
+    return `<div class="med-card ${stepClass || 'cat-' + m.cat}" onclick="this.classList.toggle('open')">
+        <div class="med-header">
+            <div>
+                <div class="med-name">${m.name}</div>
+                <div class="med-poso-text">${m.dose} ${m.unit || ''}</div>
             </div>
-            <div class="med-details">Intra-buccal uniquement.</div>
-        </div>`;
+            <div class="res-container">
+                <span class="res-main">${res.main}</span>
+                <span class="res-sub">${res.sub}</span>
+            </div>
+        </div>
+        <div class="med-details">
+            <div class="detail-row"><div class="detail-label">Ampoule</div><div>${m.ampoule || '–'}</div></div>
+            <div class="detail-row"><div class="detail-label">Dilution</div><div>${m.dilution || '–'}</div></div>
+            <div class="detail-row"><div class="detail-label">Injection / Infos</div><div>${m.debit || ''} ${m.infos || ''}</div></div>
+        </div>
+    </div>`;
+}
+
+/* ════════════════════════════════════════════
+   MODULE ACR — CALCULS
+════════════════════════════════════════════ */
+
+/** Adrénaline : 0.01 mg/kg, dilution 0.1 mg/ml (1 mg + 9 ml NaCl) */
+function acrCalcAdre(w) {
+    if (!w) return { mg: '—', ml: '—', detail: '0.01 mg/kg · dil. 0.1 mg/ml' };
+    const mg  = +(w * 0.01).toFixed(3);
+    const ml  = +(mg / 0.1).toFixed(2);
+    return {
+        mg:     mg.toFixed(2) + ' mg',
+        ml:     ml.toFixed(2) + ' ml',
+        detail: 'Dil. 0.1 mg/ml | Flush 5 ml NaCl'
+    };
+}
+
+/** Amiodarone : 5 mg/kg, dilution 7.5 mg/ml */
+function acrCalcAmio(w) {
+    if (!w) return { mg: '—', ml: '—', detail: '5 mg/kg · dil. 7.5 mg/ml' };
+    const mg = +(w * 5).toFixed(0);
+    const ml = +(mg / 7.5).toFixed(1);
+    return {
+        mg:     mg + ' mg',
+        ml:     ml.toFixed(1) + ' ml',
+        detail: 'Dil. 7.5 mg/ml (G5%) | Bolus lent'
+    };
+}
+
+/** Joules : 4 J/kg, max 360 J */
+function acrJoules(w) {
+    if (!w) return '—';
+    return Math.min(Math.round(w * 4), 360) + ' J';
+}
+
+/** Adrénaline due ? cycles impairs ≥ 1 côté non-choquable (immédiat), cycles ≥ 3 côté choquable (après 1er choc raté) */
+function adreDueCycle(c) { return c % 2 === 1; }
+/** Amiodarone choquable : après 3e et 5e choc */
+function amioDueCycle(c) { return c === 3 || c === 5; }
+
+/* ════════════════════════════════════════════
+   MODULE ACR — CONSTRUCTION HTML DES ÉTAPES
+════════════════════════════════════════════ */
+
+function acrStepHTML(s) {
+    const hlClass = s.hl === 'shock'   ? 'highlight-shock'
+                  : s.hl === 'noshock' ? 'highlight-noshock'
+                  : s.hl === 'amber'   ? 'highlight-amber'
+                  : s.dim             ? 'dimmed'
+                  : '';
+    const tagClass = s.tagColor === 'shock'   ? 'tag-shock'
+                   : s.tagColor === 'noshock' ? 'tag-noshock'
+                   : s.tagColor === 'amber'   ? 'tag-amber'
+                   : 'tag-neutral';
+    return `<div class="acr-step ${hlClass}">
+        <div class="acr-step-tag ${tagClass}">${s.tag}</div>
+        <div class="acr-step-name">${s.name}</div>
+        ${s.dose   ? `<div class="acr-step-dose">${s.dose}</div>` : ''}
+        ${s.detail ? `<div class="acr-step-detail">${s.detail}</div>` : ''}
+    </div>`;
+}
+
+function buildShockSteps(w, c) {
+    const adre = acrCalcAdre(w);
+    const amio = acrCalcAmio(w);
+    const j    = acrJoules(w);
+    const steps = [];
+
+    // Choc numéro c
+    steps.push({
+        tag:      'Choc n°' + c,
+        name:     'Défibrillation',
+        dose:     j,
+        detail:   'Manuel biphasique · Gel/patch',
+        hl:       'shock',
+        tagColor: 'shock'
+    });
+
+    // Adrénaline après le 1er choc raté (cycle 3, 5, 7…) = cycles impairs ≥ 3
+    if (c >= 3 && adreDueCycle(c)) {
+        steps.push({
+            tag:      'Adrénaline — toutes 4 min',
+            name:     'Adrénaline IVD / IO',
+            dose:     adre.mg + ' · ' + adre.ml,
+            detail:   adre.detail,
+            hl:       'shock',
+            tagColor: 'shock'
+        });
+    } else if (c >= 2) {
+        steps.push({
+            tag:      'Adrénaline — prochaine dose cycle ' + (c % 2 === 0 ? c + 1 : c + 2),
+            name:     'Pas d\'adrénaline ce cycle',
+            dose:     '',
+            detail:   '',
+            hl:       '',
+            dim:      true,
+            tagColor: 'neutral'
+        });
     }
 
-    function getMedCard(id, stepClass) {
-        const m = medications.find(x => x.id === id || x.name === id);
-        if (!m) return '';
-        if (m.type === "buccolam") return getBuccolam(activeWeight);
-
-        const res = calculate(m);
-        return `<div class="med-card ${stepClass || 'cat-'+m.cat}" onclick="this.classList.toggle('open')">
-            <div class="med-header">
-                <div><div class="med-name">${m.name}</div><div class="med-poso-text">${m.dose} ${m.unit || ""}</div></div>
-                <div class="res-container"><span class="res-main">${res.main}</span><span class="res-sub">${res.sub}</span></div>
-            </div>
-            <div class="med-details">
-                <div class="detail-row"><div class="detail-label">Ampoule</div><div class="detail-text">${m.ampoule || "-"}</div></div>
-                <div class="detail-row"><div class="detail-label">Dilution</div><div class="detail-text">${m.dilution || "-"}</div></div>
-                <div class="detail-row"><div class="detail-label">Injection / Infos</div><div class="detail-text">${m.debit || ""} ${m.infos || ""}</div></div>
-            </div>
-        </div>`;
+    // Amiodarone : après 3e et 5e choc
+    if (amioDueCycle(c)) {
+        const label = c === 3 ? 'Amiodarone — après 3ᵉ choc' : 'Amiodarone — après 5ᵉ choc';
+        steps.push({
+            tag:      label,
+            name:     'Amiodarone IVD / IO',
+            dose:     amio.mg + ' · ' + amio.ml,
+            detail:   amio.detail,
+            hl:       'amber',
+            tagColor: 'amber'
+        });
     }
 
-    function render() {
-        const container = document.getElementById('medList');
-        container.innerHTML = '';
-        if (activeWeight <= 0) return;
+    // MCE
+    steps.push({
+        tag:      'MCE 2 min',
+        name:     'Compressions thoraciques',
+        dose:     '',
+        detail:   '15/2 · Qualité +++ · Relâchement complet',
+        hl:       '',
+        tagColor: 'neutral'
+    });
 
-        if (currentFilter === 'eme') {
-            container.innerHTML = `
-                <div class="exception-tag"><strong>⚠️ Exceptions :</strong> < 3 mois = Gardénal 20mg/kg. Cétogène = PAS DE GLUCOSE.</div>
-                
-                <div class="step-container">
-                    <span class="step-title color-t1">T1 (0-5 min) - Choisir 1 seul</span>
-                    <div class="choice-box border-t1">
-                        ${getMedCard('valium', 'card-t1')}
-                        <div class="or-label color-t1">OU</div>
-                        ${getMedCard('buccolam', 'card-t1')}
-                        <div class="or-label color-t1">OU</div>
-                        ${getMedCard('midal_in', 'card-t1')}
-                    </div>
+    return steps;
+}
+
+function buildNoshockSteps(w, c) {
+    const adre = acrCalcAdre(w);
+    const steps = [];
+
+    // Adrénaline : immédiate au 1er cycle, puis cycles impairs
+    const adreActive = (c === 1) || adreDueCycle(c);
+
+    if (adreActive) {
+        steps.push({
+            tag:      c === 1 ? 'Immédiat' : 'Adrénaline — toutes 4 min',
+            name:     'Adrénaline IVD / IO',
+            dose:     adre.mg + ' · ' + adre.ml,
+            detail:   adre.detail,
+            hl:       'noshock',
+            tagColor: 'noshock'
+        });
+    } else {
+        const nextCycle = c % 2 === 0 ? c + 1 : c;
+        steps.push({
+            tag:      'Adrénaline — prochaine dose cycle ' + nextCycle,
+            name:     'Pas d\'adrénaline ce cycle',
+            dose:     '',
+            detail:   '',
+            hl:       '',
+            dim:      true,
+            tagColor: 'neutral'
+        });
+    }
+
+    // MCE
+    steps.push({
+        tag:      'MCE 2 min',
+        name:     'Compressions thoraciques',
+        dose:     '',
+        detail:   '15/2 · Qualité +++ · Relâchement complet',
+        hl:       '',
+        tagColor: 'neutral'
+    });
+
+    return steps;
+}
+
+/* ════════════════════════════════════════════
+   MODULE ACR — MINUTEUR
+════════════════════════════════════════════ */
+function acrUpdateTimerDisplay() {
+    const m = Math.floor(acrTimerSec / 60);
+    const s = acrTimerSec % 60;
+    document.getElementById('acrTimer').textContent = m + ':' + String(s).padStart(2, '0');
+}
+
+function acrToggleTimer() {
+    const btn = document.getElementById('acrBtnTimer');
+    if (acrRunning) {
+        clearInterval(acrInterval);
+        acrRunning = false;
+        btn.textContent = '▶ Reprendre';
+        btn.classList.remove('running');
+    } else {
+        acrRunning = true;
+        btn.textContent = '⏸ Pause';
+        btn.classList.add('running');
+        acrInterval = setInterval(() => {
+            if (acrTimerSec > 0) {
+                acrTimerSec--;
+                acrUpdateTimerDisplay();
+            } else {
+                clearInterval(acrInterval);
+                acrRunning = false;
+                btn.textContent = '→ Cycle suivant';
+                btn.classList.remove('running');
+                btn.classList.add('acr-btn-next');
+                btn.onclick = acrNextCycle;
+            }
+        }, 1000);
+    }
+}
+
+function acrNextCycle() {
+    acrCycle    = Math.min(acrCycle + 1, ACR_MAX_CYCLES);
+    acrTimerSec = 120;
+    acrRunning  = false;
+    clearInterval(acrInterval);
+
+    const btn = document.getElementById('acrBtnTimer');
+    btn.textContent = '▶ Démarrer';
+    btn.classList.remove('running', 'acr-btn-next');
+    btn.onclick = acrToggleTimer;
+
+    document.getElementById('acrCycleNum').textContent = acrCycle;
+    acrUpdateTimerDisplay();
+    acrRenderSteps();
+    acrUpdateDots();
+}
+
+function acrReset() {
+    acrCycle    = 1;
+    acrTimerSec = 120;
+    acrRunning  = false;
+    clearInterval(acrInterval);
+
+    const btn = document.getElementById('acrBtnTimer');
+    btn.textContent = '▶ Démarrer';
+    btn.classList.remove('running', 'acr-btn-next');
+    btn.onclick = acrToggleTimer;
+
+    document.getElementById('acrCycleNum').textContent = 1;
+    acrUpdateTimerDisplay();
+    acrRenderSteps();
+    acrUpdateDots();
+}
+
+function acrUpdateDots() {
+    const container = document.getElementById('acrCycleDots');
+    let html = '';
+    const visible = Math.min(acrCycle + 3, ACR_MAX_CYCLES);
+    for (let i = 1; i <= visible; i++) {
+        const cls = i < acrCycle ? 'past' : i === acrCycle ? 'active' : '';
+        html += `<div class="acr-dot ${cls}"></div>`;
+    }
+    container.innerHTML = html;
+}
+
+/* ════════════════════════════════════════════
+   MODULE ACR — RENDU COMPLET
+════════════════════════════════════════════ */
+function acrRenderSteps() {
+    const w = activeWeight;
+
+    // Bannière poids
+    document.getElementById('acrWeightVal').textContent  = w > 0 ? w.toFixed(1) + ' kg' : '—';
+    document.getElementById('acrWeightHint').textContent = w > 0 ? (parseFloat(document.getElementById('manualWeight').value) > 0 ? 'Poids réel' : 'Poids estimé') : 'Saisir un poids en haut';
+
+    // Étapes
+    const shock   = buildShockSteps(w, acrCycle);
+    const noshock = buildNoshockSteps(w, acrCycle);
+    document.getElementById('acrShockSteps').innerHTML   = shock.map(acrStepHTML).join('');
+    document.getElementById('acrNoshockSteps').innerHTML = noshock.map(acrStepHTML).join('');
+}
+
+/* ════════════════════════════════════════════
+   RENDER PRINCIPAL
+════════════════════════════════════════════ */
+function render() {
+    const medList   = document.getElementById('medList');
+    const acrModule = document.getElementById('acrModule');
+
+    if (currentFilter === 'acr') {
+        medList.style.display   = 'none';
+        acrModule.classList.add('visible');
+        acrRenderSteps();
+        acrUpdateDots();
+        return;
+    }
+
+    acrModule.classList.remove('visible');
+    medList.style.display = '';
+    medList.innerHTML = '';
+
+    if (activeWeight <= 0) return;
+
+    if (currentFilter === 'eme') {
+        medList.innerHTML = `
+            <div class="exception-tag"><strong>⚠️ Exceptions :</strong> &lt; 3 mois = Gardénal 20 mg/kg. Cétogène = PAS DE GLUCOSE.</div>
+
+            <div class="step-container">
+                <span class="step-title" style="color:var(--step-t1)">T1 (0–5 min) — Choisir 1 seul</span>
+                <div class="choice-box" style="border-color:var(--step-t1)">
+                    ${getMedCard('valium',   'card-t1')}
+                    <div class="or-label" style="color:var(--step-t1)">OU</div>
+                    ${getMedCard('buccolam', 'card-t1')}
+                    <div class="or-label" style="color:var(--step-t1)">OU</div>
+                    ${getMedCard('midal_in', 'card-t1')}
                 </div>
+            </div>
 
-                <div class="wait-time">Si crise persiste 5 minutes après fin d'administration...</div>
+            <div class="wait-time">Si crise persiste 5 minutes après fin d'administration...</div>
 
-                <div class="step-container">
-                    <span class="step-title color-t2">T2 (10 min)</span>
-                    <div class="choice-box border-t2">
-                        <small style="display:block; text-align:center; color:var(--step-t2); font-weight:bold;">PAS DE VVP</small>
-                        ${getMedCard('valium', 'card-t2')}
-                        <div class="or-label color-t2">OU SI VVP</div>
-                        ${getMedCard('rivotril', 'card-t2')}
-                    </div>
+            <div class="step-container">
+                <span class="step-title" style="color:var(--step-t2)">T2 (10 min)</span>
+                <div class="choice-box" style="border-color:var(--step-t2)">
+                    <small style="display:block;text-align:center;color:var(--step-t2);font-weight:bold;">PAS DE VVP</small>
+                    ${getMedCard('valium',   'card-t2')}
+                    <div class="or-label" style="color:var(--step-t2)">OU SI VVP</div>
+                    ${getMedCard('rivotril', 'card-t2')}
                 </div>
+            </div>
 
-                <div class="wait-time">🛑 STOP BENZO. Si crise persiste 5 minutes après fin d'administration...</div>
-                <div class="step-container"><span class="step-title color-t3">T3 (25 min)</span><div class="choice-box border-t3">${getMedCard('keppra', 'card-t3')}</div></div>
-                <div class="wait-time">Si crise persiste 10 minutes après fin d'administration...</div>
-                <div class="step-container"><span class="step-title color-t4">T4 (35 min)</span>${getMedCard('dilantin', 'card-t4')}</div>
-                <div class="wait-time">Si crise persiste 10 minutes après fin d'administration...</div>
-                <div class="step-container"><span class="step-title color-t5">T5 (55 min)</span>${getMedCard('gardenal', 'card-t5')}</div>`;
-        } else {
-            medications.filter(m => (currentFilter === 'all' || m.cat === currentFilter) && m.cat !== 'eme' || (currentFilter==='all')).forEach(m => {
-                container.innerHTML += getMedCard(m.name);
-            });
-        }
+            <div class="wait-time">🛑 STOP BENZO. Si crise persiste 5 minutes après fin d'administration...</div>
+
+            <div class="step-container">
+                <span class="step-title" style="color:var(--step-t3)">T3 (25 min)</span>
+                <div class="choice-box" style="border-color:var(--step-t3)">
+                    ${getMedCard('keppra', 'card-t3')}
+                </div>
+            </div>
+
+            <div class="wait-time">Si crise persiste 10 minutes après fin d'administration...</div>
+
+            <div class="step-container">
+                <span class="step-title" style="color:var(--step-t4)">T4 (35 min)</span>
+                ${getMedCard('dilantin', 'card-t4')}
+            </div>
+
+            <div class="wait-time">Si crise persiste 10 minutes après fin d'administration...</div>
+
+            <div class="step-container">
+                <span class="step-title" style="color:var(--step-t5)">T5 (55 min)</span>
+                ${getMedCard('gardenal', 'card-t5')}
+            </div>`;
+    } else {
+        medications
+            .filter(m => currentFilter === 'all' ? true : m.cat === currentFilter)
+            .filter(m => m.cat !== 'acr') // ACR géré séparément
+            .forEach(m => { medList.innerHTML += getMedCard(m.name); });
     }
+}
+
+/* Init */
+render();
+acrUpdateTimerDisplay();
 </script>
 </body>
 </html>
