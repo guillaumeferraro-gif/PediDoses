@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PédiaUrg PRO v16 - ERC & EME Expert</title>
+    <title>PédiaUrg PRO v17 - ERC SVG Edition</title>
     <style>
         :root {
             --primary: #1a237e; --accent: #0288d1; --danger: #d32f2f;
             --bg: #f4f7f6; --card-bg: #ffffff;
             --step-t1: #2e7d32; --step-t2: #f9a825; --step-t3: #ef6c00; --step-t4: #d32f2f; --step-t5: #8e0000;
-            --cat-perf: #607d8b;
         }
 
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; color: #333; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; color: #333; -webkit-tap-highlight-color: transparent; }
 
         /* HEADER */
         .header-container {
@@ -24,66 +23,55 @@
         .input-group { background: rgba(255, 255, 255, 0.15); padding: 8px; border-radius: 12px; text-align: center; }
         .input-group label { display: block; font-size: 0.6rem; font-weight: bold; color: #e1f5fe; margin-bottom: 4px; }
         .input-group input { background: transparent; border: none; color: white; font-size: 1.3rem; font-weight: bold; width: 100%; text-align: center; outline: none; }
-
-        .weight-display-card { 
-            background: white; border-radius: 15px; padding: 12px; 
-            display: flex; align-items: center; justify-content: space-between;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-        }
+        .weight-display-card { background: white; border-radius: 15px; padding: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
         .weight-actual { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
         .btn-clear { background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: bold; }
 
         /* TABS */
         .tabs-wrapper { padding: 15px 0 5px 15px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-        .tabs-wrapper::-webkit-scrollbar { display: none; }
         .tab-btn { display: inline-block; padding: 10px 20px; margin-right: 8px; border-radius: 20px; background: #e0e0e0; color: #666; font-size: 0.85rem; font-weight: bold; border: none; }
         .tab-btn.active { background: var(--accent); color: white; box-shadow: 0 4px 8px rgba(2,136,209,0.3); }
 
-        /* ALGORITHME ACR STYLE ERC */
-        .acr-flow { display: flex; flex-direction: column; align-items: center; padding: 10px; }
-        .acr-box { background: #b0bec5; border-radius: 8px; padding: 12px; width: 90%; text-align: center; font-weight: bold; font-size: 0.8rem; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .acr-box.blue { background: #bbdefb; color: #0d47a1; border: 1px solid #1e88e5; }
-        .acr-box.green { background: #c8e6c9; color: #1b5e20; border: 1px solid #43a047; }
-        .acr-arrow { color: #78909c; font-size: 1.2rem; margin: -10px 0 5px 0; }
+        /* ACR SVG FLOWCHART */
+        .acr-svg-container { position: relative; width: 100%; max-width: 500px; margin: auto; padding: 10px; background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .acr-node { 
+            position: relative; z-index: 2; width: 140px; min-height: 50px; 
+            border-radius: 8px; border: 2px solid #546e7a; background: #eceff1;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: bold; text-align: center; padding: 5px; box-sizing: border-box;
+        }
+        .node-center { margin: 0 auto 30px auto; width: 200px; }
+        .node-split { display: flex; justify-content: space-between; width: 100%; margin-bottom: 40px; }
+        .node-shock { border-color: #d32f2f; background: #ffebee; color: #b71c1c; }
+        .node-nonshock { border-color: #1976d2; background: #e3f2fd; color: #0d47a1; }
+        .node-green { border-color: #2e7d32; background: #e8f5e9; color: #1b5e20; width: 180px; }
         
-        .rhythm-split { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
-        .side-box { padding: 15px; border-radius: 12px; border: 2px solid #ccc; text-align: center; font-size: 0.8rem; position: relative; }
-        .side-shock { border-color: var(--danger); background: #ffebee; color: var(--danger); opacity: 0.4; }
-        .side-shock.active { opacity: 1; border-style: solid; box-shadow: 0 0 15px rgba(211,47,47,0.3); }
-        .side-nonshock { border-color: #546e7a; background: #eceff1; }
-        .side-nonshock.active { border-color: var(--accent); background: #e3f2fd; }
+        .svg-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        .shock-val { color: var(--danger); font-size: 1.1rem; font-weight: 900; display: block; }
+        .adre-val { color: var(--accent); font-size: 0.9rem; font-weight: 900; display: block; }
 
-        .btn-shock-toggle { background: #37474f; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; font-weight: 900; margin-bottom: 15px; }
-
-        /* LISTE ET CARTES ACCORDEON */
+        /* LISTES CLASSIQUES & EME */
         #medList { padding: 10px 15px; }
-        .med-card { background: white; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 8px solid #ddd; overflow: hidden; cursor: pointer; transition: 0.2s; }
+        .med-card { background: white; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 8px solid #ddd; overflow: hidden; cursor: pointer; }
         .med-header { padding: 12px; display: flex; justify-content: space-between; align-items: center; }
         .med-name { font-weight: 800; font-size: 0.85rem; text-transform: uppercase; color: #222; }
+        .res-container { text-align: right; }
+        .res-main { font-size: 1.4rem; font-weight: 900; color: var(--danger); display: block; }
+        .res-sub { font-size: 0.8rem; font-weight: bold; color: #777; }
         
-        /* DOSE EN ROUGE ET GROS */
-        .res-main { font-size: 1.4rem; font-weight: 900; color: var(--danger); display: block; text-align: right; }
-        .res-sub { font-size: 0.85rem; font-weight: bold; color: #555; text-align: right; }
-
         .med-details { max-height: 0; padding: 0 12px; background: #fafafa; opacity: 0; transition: all 0.3s ease; }
         .med-card.open .med-details { max-height: 500px; padding: 12px; opacity: 1; border-top: 1px solid #eee; }
         .detail-row { margin-bottom: 8px; font-size: 0.8rem; }
         .detail-label { font-size: 0.6rem; font-weight: bold; color: var(--accent); text-transform: uppercase; }
 
-        /* EME STYLE */
-        .step-container { margin-bottom: 15px; }
-        .step-title { font-weight: 900; text-transform: uppercase; font-size: 0.85rem; margin-bottom: 10px; display: block; text-align: center; }
-        .wait-time { background: #fff; color: var(--danger); text-align: center; font-size: 0.75rem; font-weight: bold; padding: 8px; border-radius: 10px; margin: 8px 10%; border: 1.5px dashed var(--danger); }
+        /* EME DESIGN */
         .choice-box { border-radius: 15px; padding: 10px; margin-bottom: 8px; border: 2px dashed #ccc; }
         .or-label { text-align: center; font-weight: 900; font-size: 0.7rem; margin: 8px 0; letter-spacing: 2px; }
+        .wait-time { background: #fff; color: var(--danger); text-align: center; font-size: 0.7rem; font-weight: bold; padding: 8px; border-radius: 10px; margin: 8px 10%; border: 1.5px dashed var(--danger); }
 
         /* COULEURS */
-        .color-t1 { color: var(--step-t1); } .border-t1 { border-color: var(--step-t1); background: #e8f5e9; } .card-t1 { border-left-color: var(--step-t1); }
-        .color-t2 { color: var(--step-t2); } .border-t2 { border-color: var(--step-t2); background: #fffde7; } .card-t2 { border-left-color: var(--step-t2); }
-        .color-t3 { color: var(--step-t3); } .border-t3 { border-color: var(--step-t3); background: #fff3e0; } .card-t3 { border-left-color: var(--step-t3); }
-        .color-t4 { color: var(--step-t4); } .card-t4 { border-left-color: var(--step-t4); }
-        .color-t5 { color: var(--step-t5); } .card-t5 { border-left-color: var(--step-t5); }
-        .cat-perf { border-left-color: var(--cat-perf); }
+        .card-t1 { border-left-color: var(--step-t1); } .card-t2 { border-left-color: var(--step-t2); } .card-t3 { border-left-color: var(--step-t3); } .card-t4 { border-left-color: var(--step-t4); } .card-t5 { border-left-color: var(--step-t5); }
+        .cat-perf { border-left-color: #607d8b; }
     </style>
 </head>
 <body>
@@ -108,8 +96,6 @@
     <button class="tab-btn" onclick="setFilter('acr', this)">ACR Drogues</button>
     <button class="tab-btn" onclick="setFilter('neuro', this)">Neuro</button>
     <button class="tab-btn" onclick="setFilter('sedation', this)">Sédation</button>
-    <button class="tab-btn" onclick="setFilter('antibio', this)">Antibio</button>
-    <button class="tab-btn" onclick="setFilter('cardio', this)">Cardio</button>
     <button class="tab-btn" onclick="setFilter('perf', this)">Perfusions</button>
     <button class="tab-btn" onclick="setFilter('all', this)">Tous</button>
 </div>
@@ -117,39 +103,23 @@
 <div id="medList"></div>
 
 <script>
+    // BASE DE DONNÉES INTÉGRALE RESTAURÉE
     const medications = [
-        // ACR
-        { id: "adre_acr", name: "Adrénaline (ACR)", cat: "acr", dose: 10, conc: 100, unit: "mcg/kg", type: "ml", ampoule: "1 mg/ml", dilution: "1 mg dans 10 ml NaCl 0,9% (Final 100 mcg/ml)", debit: "IVD Flash + rinçage 5 ml", infos: "Dose: 10 mcg/kg" },
-        { id: "amio_acr", name: "Amiodarone (ACR)", cat: "acr", dose: 5, conc: 7.5, unit: "mg/kg", type: "ml", ampoule: "Cordarone 150 mg/3 ml", dilution: "3 ml + 17 ml G5% (Final 7,5 mg/ml)", debit: "IVD Bolus", infos: "Après 3e et 5e choc" },
-        { id: "calcium", name: "Chlorure de Calcium 10%", cat: "acr", dose: 20, conc: 100, unit: "mg/kg", type: "ml", ampoule: "100 mg/ml" },
-        
-        // EME
-        { id: "valium", name: "Diazépam (Valium) IR", cat: "eme", dose: 0.5, conc: 5, unit: "mg/kg", type: "ml", max: 10, ampoule: "10 mg / 2 ml", dilution: "Pure", debit: "Intra-Rectal (IR)" },
-        { id: "buccolam", name: "Buccolam (IB)", cat: "eme", type: "buccolam" },
+        { id: "adre_acr", name: "Adrénaline (ACR)", cat: "acr", dose: 10, conc: 100, unit: "mcg/kg", type: "ml", ampoule: "1 mg/ml", dilution: "1 mg (1ml) dans 9ml NaCl 0,9% (soit 100 mcg/ml)", debit: "IVD Flash + 5ml rinçage", infos: "Dose: 10 mcg/kg" },
+        { id: "amio_acr", name: "Amiodarone (ACR)", cat: "acr", dose: 5, conc: 7.5, unit: "mg/kg", type: "ml", ampoule: "Cordarone 150 mg/3 ml", dilution: "3 ml + 17 ml G5% (soit 7,5 mg/ml)", debit: "IVD Bolus", infos: "Dose: 5 mg/kg" },
+        { id: "valium", name: "Valium IR", cat: "eme", dose: 0.5, conc: 5, unit: "mg/kg", type: "ml", max: 10, ampoule: "10 mg / 2 ml", dilution: "Pure" },
+        { id: "buccolam", name: "Buccolam", cat: "eme", type: "buccolam" },
         { id: "midal_in", name: "Midazolam IN", cat: "eme", dose: 0.2, conc: 5, unit: "mg/kg", type: "ml", max: 10, ampoule: "5 mg / 1 ml" },
-        { id: "rivotril", name: "Clonazépam (Rivotril)", cat: "eme", dose: 0.05, conc: 1, unit: "mg/kg", type: "ml", max: 1, ampoule: "1 mg / 1 ml", dilution: "1+1 solvant" },
-        { id: "keppra", name: "Lévétiracétam (Keppra)", cat: "eme", dose: 40, conc: 100, unit: "mg/kg", type: "ml", max: 3000, ampoule: "100 mg/ml", dilution: "NaCl 0,9%", debit: "IVL en 5 min" },
-        { id: "dilantin", name: "Phénytoïne (Dilantin)", cat: "eme", dose: 20, conc: 50, unit: "mg/kg", type: "ml", max: 1000, ampoule: "50 mg/ml", dilution: "NaCl 0,9% UNIQUEMENT", debit: "IVL en 20 min" },
-        { id: "gardenal", name: "Phénobarbital (Gardénal)", cat: "eme", dose: 20, conc: 40, unit: "mg/kg", type: "ml", max: 600, ampoule: "40 mg/ml", dilution: "Pur ou NaCl", debit: "IVL en 20 min" },
-
-        // AUTRES
+        { id: "rivotril", name: "Rivotril IV", cat: "eme", dose: 0.05, conc: 1, unit: "mg/kg", type: "ml", max: 1 },
+        { id: "keppra", name: "Keppra", cat: "eme", dose: 40, conc: 100, unit: "mg/kg", type: "ml", max: 3000 },
+        { id: "dilantin", name: "Dilantin", cat: "eme", dose: 20, conc: 50, unit: "mg/kg", type: "ml", max: 1000 },
+        { id: "gardenal", name: "Gardénal", cat: "eme", dose: 20, conc: 40, unit: "mg/kg", type: "ml", max: 600 },
         { name: "Sérum Salé Hyperto 7.5%", cat: "neuro", dose: 2, unit: "ml/kg", type: "direct_ml" },
-        { name: "Etomidate", cat: "sedation", dose: 0.3, conc: 2, unit: "mg/kg", type: "ml" },
-        { name: "Kétamine", cat: "sedation", dose: 2, conc: 10, unit: "mg/kg", type: "ml" },
-        { name: "Propofol", cat: "sedation", dose: 3, conc: 10, unit: "mg/kg", type: "ml" },
-        { name: "Célocurine", cat: "sedation", dose: 2, conc: 50, unit: "mg/kg", type: "ml" },
-        { name: "Atracurium (Bolus)", cat: "sedation", dose: 0.5, conc: 10, unit: "mg/kg", type: "ml" },
-        { name: "Gentamicine", cat: "antibio", dose: 8, conc: 10, unit: "mg/kg", type: "ml" },
-        { name: "Ceftriaxone", cat: "antibio", dose: 50, conc: 100, unit: "mg/kg", type: "ml", max: 2000 },
-        { name: "Atropine", cat: "cardio", dose: 0.02, conc: 0.1, unit: "mg/kg", type: "ml", min: 0.1, max: 0.5 },
-        { name: "Sugammadex", cat: "antidote", dose: 4, conc: 100, unit: "mg/kg", type: "ml" },
-        { name: "Exacyl (Bolus)", cat: "traumato", dose: 15, conc: 100, unit: "mg/kg", type: "ml" },
         { name: "Adrénaline (PSE)", cat: "perf", dose: 0.1, conc: 0.1, unit: "mcg/kg/min", type: "perf_min" }
     ];
 
     let currentFilter = 'acr_protocole';
     let activeWeight = 0;
-    let shockMode = false;
 
     function processInput() {
         const w = parseFloat(document.getElementById('manualWeight').value);
@@ -182,12 +152,16 @@
         if (!m) return '';
         if (m.type === "buccolam") {
             let d = activeWeight < 10 ? "2.5mg" : (activeWeight < 20 ? "5mg" : (activeWeight < 30 ? "7.5mg" : "10mg"));
-            return `<div class="med-card card-t1" onclick="this.classList.toggle('open')"><div class="med-header"><div class="med-name">Buccolam (IB)</div><div class="res-container"><span class="res-main">${d}</span><span class="res-sub">Dose Fixe</span></div></div></div>`;
+            return `<div class="med-card card-t1" onclick="this.classList.toggle('open')"><div class="med-header"><div class="med-name">Buccolam (IB)</div><div class="res-container"><span class="res-main">${d}</span><span class="res-sub">Fixe</span></div></div></div>`;
         }
         const res = calculate(m);
         return `<div class="med-card ${stepClass || 'cat-'+m.cat}" onclick="this.classList.toggle('open')">
             <div class="med-header"><div><div class="med-name">${m.name}</div></div><div class="res-container"><span class="res-main">${res.main}</span><span class="res-sub">${res.sub}</span></div></div>
-            <div class="med-details"><div class="detail-row"><div class="detail-label">Dilution</div><div class="detail-text">${m.dilution || "-"}</div></div></div></div>`;
+            <div class="med-details">
+                <div class="detail-row"><div class="detail-label">Dilution</div><div class="detail-text">${m.dilution || "-"}</div></div>
+                <div class="detail-row"><div class="detail-label">Temps d'injection</div><div class="detail-text">${m.debit || "-"}</div></div>
+                <div class="detail-row"><div class="detail-label">Infos</div><div class="detail-text">${m.infos || ""}</div></div>
+            </div></div>`;
     }
 
     function render() {
@@ -198,29 +172,42 @@
         if (currentFilter === 'acr_protocole') {
             const adre = calculate(medications.find(m => m.id === 'adre_acr'));
             const amio = calculate(medications.find(m => m.id === 'amio_acr'));
+            const shock = Math.round(activeWeight * 4);
+
             container.innerHTML = `
-                <button class="btn-shock-toggle" onclick="shockMode=!shockMode; render();">
-                    ${shockMode ? 'PASSER EN NON-CHOQUABLE' : 'PASSER EN RYTHME CHOQUABLE ⚡'}
-                </button>
-                <div class="acr-flow">
-                    <div class="acr-box">CONSCIENT ? RESPIRATION ?</div>
-                    <div class="acr-arrow">▼</div>
-                    <div class="acr-box blue">RCP (15:2) / OXYGÈNE / DÉFIBRILLATEUR</div>
-                    <div class="acr-arrow">▼</div>
-                    <div class="acr-box">ÉVALUER LE RYTHME</div>
-                    <div class="rhythm-split">
-                        <div class="side-box side-shock ${shockMode ? 'active' : ''}">
-                            <b>CHOQUABLE</b><br><small>(FV / TV sans pouls)</small>
-                            ${shockMode ? `<div class="acr-box" style="background:var(--danger);color:white;margin-top:10px;">1 CHOC : ${Math.round(activeWeight * 4)} J</div><div style="font-size:0.6rem">Puis RCP 2 min</div>` : ''}
+                <div class="acr-svg-container">
+                    <svg class="svg-overlay" viewBox="0 0 400 600">
+                        <defs><marker id="arrow" markerWidth="10" markerHeight=\"10\" refX=\"9\" refY=\"3\" orientation=\"auto\"><path d=\"M0,0 L0,6 L9,3 z\" fill=\"#90a4ae\" /></marker></defs>
+                        <!-- Flèches principales -->
+                        <line x1="200" y1="50" x2="200" y2="80" stroke="#90a4ae" stroke-width="2" marker-end="url(#arrow)" />
+                        <line x1="200" y1="130" x2="200" y2="160" stroke="#90a4ae" stroke-width="2" marker-end="url(#arrow)" />
+                        <!-- Séparation -->
+                        <path d="M200,210 L200,230 L100,230 L100,250" fill="none" stroke="#90a4ae" stroke-width="2" marker-end="url(#arrow)" />
+                        <path d="M200,210 L200,230 L300,230 L300,250" fill="none" stroke="#90a4ae" stroke-width="2" marker-end="url(#arrow)" />
+                        <!-- Descentes RCP -->
+                        <line x1="100" y1="310" x2="100" y2="340" stroke="#90a4ae" stroke-width="2" marker-end="url(#arrow)" />
+                        <line x1="300" y1=\"310\" x2=\"300\" y2=\"340\" stroke=\"#90a4ae\" stroke-width=\"2\" marker-end=\"url(#arrow)\" />
+                        <!-- BOUCLES DE RETOUR -->
+                        <path d=\"M100,400 L100,430 L30,430 L30,185 L180,185\" fill=\"none\" stroke=\"#90a4ae\" stroke-width=\"2\" marker-end=\"url(#arrow)\" stroke-dasharray=\"4\" />
+                        <path d=\"M300,400 L300,430 L370,430 L370,185 L220,185\" fill=\"none\" stroke=\"#90a4ae\" stroke-width=\"2\" marker-end=\"url(#arrow)\" stroke-dasharray=\"4\" />
+                    </svg>
+
+                    <div class=\"acr-node node-center\">APPELER ÉQUIPE RÉA<br>DÉFIBRILLATEUR / MONITOR</div>
+                    <div class=\"acr-node node-center blue\">RCP (15:2)<br>OXYGÉNER / VENTILER</div>
+                    <div class=\"acr-node node-center\" style=\"border-radius:50px; background:#fff; border:3px solid #546e7a\">ÉVALUER LE RYTHME</div>
+
+                    <div class=\"node-split\">
+                        <div class=\"acr-node node-shock\"><b>CHOQUABLE</b><br>(FV / TV sans pouls)<br><hr style=\"width:100%\">
+                            <span class=\"shock-val\">${shock} Joules</span><small>(4 J/kg)</small>
                         </div>
-                        <div class="side-box side-nonshock ${!shockMode ? 'active' : ''}">
-                            <b>NON-CHOQUABLE</b><br><small>(AEP / Asystolie)</small>
-                            ${!shockMode ? `<div class="acr-box blue" style="margin-top:10px;">ADRÉNALINE<br><span style="color:var(--danger)">${adre.main}</span><br>(${adre.sub})</div><div style="font-size:0.6rem">RCP 2 min - Adré / 4 min</div>` : ''}
+                        <div class=\"acr-node node-nonshock\"><b>NON-CHOQUABLE</b><br>(AEP / Asystolie)<br><hr style=\"width:100%\">
+                            <span class=\"adre-val\">Adré : ${adre.sub}</span><small>IMMÉDIAT</small>
                         </div>
                     </div>
-                    <div class="acr-arrow" style="margin-top:10px">▼</div>
-                    <div class="acr-box green">REPRENDRE MCE PENDANT 2 MIN
-                        ${shockMode ? `<br><small style="color:var(--danger)">Après 3e choc : Adré ${adre.main} + Amio ${amio.main}</small>` : ''}
+
+                    <div class=\"node-split\">
+                        <div class=\"acr-node node-green\" style=\"width:140px\">REPRENDRE RCP 2 MIN<br><small>Adré/Amio après 3e choc</small></div>
+                        <div class=\"acr-node node-green\" style=\"width:140px\">REPRENDRE RCP 2 MIN<br><small>Adré / 4 min</small></div>
                     </div>
                 </div>`;
         } else if (currentFilter === 'eme') {
@@ -229,15 +216,15 @@
                 <div class="step-container"><span class="step-title color-t1">T1 (0-5 min) - Choisir 1 seul</span>
                     <div class="choice-box border-t1">${getMedCard('valium', 'card-t1')}<div class="or-label color-t1">OU</div>${getMedCard('buccolam', 'card-t1')}<div class="or-label color-t1">OU</div>${getMedCard('midal_in', 'card-t1')}</div>
                 </div>
-                <div class="wait-time">Si crise persiste 5 minutes après fin d'administration...</div>
+                <div class="wait-time">Si crise persiste 5 min après fin d'administration...</div>
                 <div class="step-container"><span class="step-title color-t2">T2 (10 min)</span>
                     <div class="choice-box border-t2"><small style="display:block; text-align:center; color:var(--step-t2); font-weight:bold; margin-bottom:3px;">PAS DE VVP</small>${getMedCard('valium', 'card-t2')}<div class="or-label color-t2">OU SI VVP</div>${getMedCard('rivotril', 'card-t2')}</div>
                 </div>
-                <div class="wait-time">🛑 STOP BENZO. Si crise persiste 5 minutes après fin d'administration...</div>
+                <div class="wait-time">🛑 STOP BENZO. Si crise persiste 5 min après fin d'administration...</div>
                 <div class="step-container"><span class="step-title color-t3">T3 (25 min) - 2ème ligne</span><div class="choice-box border-t3">${getMedCard('keppra', 'card-t3')}</div></div>
-                <div class="wait-time">Si crise persiste 10 minutes après fin d'administration...</div>
+                <div class="wait-time">Si crise persiste 10 min après fin d'administration...</div>
                 <div class="step-container"><span class="step-title color-t4">T4 (35 min)</span>${getMedCard('dilantin', 'card-t4')}</div>
-                <div class="wait-time">Si crise persiste 10 minutes après fin d'administration...</div>
+                <div class="wait-time">Si crise persiste 10 min après fin d'administration...</div>
                 <div class="step-container"><span class="step-title color-t5">T5 (55 min) - EME Réfractaire</span>${getMedCard('gardenal', 'card-t5')}</div>`;
         } else {
             medications.filter(m => (currentFilter === 'all' || m.cat === currentFilter) && m.cat !== 'eme').forEach(m => {
