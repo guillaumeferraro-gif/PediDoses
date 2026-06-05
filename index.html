@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PédiaUrg PRO - Accordéon Intégral</title>
+    <title>PédiaUrg PRO - EME Toulouse</title>
     <style>
         :root {
             --primary: #1a237e; --accent: #0288d1; --danger: #d32f2f;
@@ -15,7 +15,6 @@
 
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 40px; color: #333; -webkit-tap-highlight-color: transparent; }
 
-        /* HEADER FIXE */
         .header-container {
             background: var(--primary); color: white; padding: 15px;
             border-radius: 0 0 25px 25px; position: sticky; top: 0; z-index: 1000;
@@ -37,7 +36,6 @@
         .weight-actual { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
         .btn-clear { background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: bold; font-size: 1.1rem; }
 
-        /* NAVIGATION TABS */
         .tabs-wrapper { padding: 15px 0 5px 15px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .tabs-wrapper::-webkit-scrollbar { display: none; }
         .tab-btn { 
@@ -47,19 +45,14 @@
         }
         .tab-btn.active { background: var(--accent); color: white; box-shadow: 0 4px 8px rgba(2,136,209,0.3); }
 
-        /* CARTES MÉDICAMENTS ACCORDÉON */
         #medList { padding: 10px 15px; }
-        
         .med-card {
             background: white; border-radius: 15px; margin-bottom: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 8px solid #ddd;
-            overflow: hidden; transition: all 0.3s ease;
-            cursor: pointer;
+            overflow: hidden; transition: all 0.3s ease; cursor: pointer;
         }
 
-        .med-header {
-            padding: 15px; display: flex; justify-content: space-between; align-items: center;
-        }
+        .med-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .med-name { font-weight: 800; font-size: 0.95rem; text-transform: uppercase; color: #222; }
         .med-poso-text { color: var(--accent); font-size: 0.8rem; font-weight: bold; }
         
@@ -67,7 +60,6 @@
         .res-main { font-size: 1.5rem; font-weight: 900; color: var(--danger); display: block; }
         .res-sub { font-size: 0.8rem; font-weight: bold; color: #555; }
 
-        /* Contenu extensible cliquable */
         .med-details {
             max-height: 0; padding: 0 15px; background: #fafafa;
             border-top: 1px solid transparent; transition: all 0.3s ease;
@@ -84,7 +76,6 @@
         .detail-label { font-size: 0.65rem; font-weight: bold; color: var(--accent); text-transform: uppercase; margin-bottom: 2px; }
         .detail-text { font-size: 0.9rem; color: #333; line-height: 1.4; }
 
-        /* Couleurs Catégories */
         .cat-acr { border-left-color: var(--cat-acr); }
         .cat-antibio { border-left-color: var(--cat-antibio); }
         .cat-cardio { border-left-color: var(--cat-cardio); }
@@ -127,24 +118,52 @@
 
 <script>
     const medications = [
-        // ACR - Protocoles spécifiques demandés
+        // ACR
         { 
             name: "Adrénaline (ACR)", cat: "acr", dose: 10, conc: 100, unit: "mcg/kg", type: "ml",
-            ampoule: "Adrénaline : 1 mg/mL",
-            dilution: "1 mg dans 10 mL de NaCl 0,9% (soit 100 mcg/mL)",
-            debit: "IVD + rinçage 5 mL à chaque injection",
-            infos: "Dose : 10 mcg/kg"
+            ampoule: "Adrénaline : 1 mg/mL", dilution: "1 mg dans 10 mL de NaCl 0,9% (soit 100 mcg/mL)", debit: "IVD + rinçage 5 mL", infos: "Dose : 10 mcg/kg"
         },
         { 
             name: "Amiodarone (ACR)", cat: "acr", dose: 5, conc: 7.5, unit: "mg/kg", type: "ml",
-            ampoule: "Cordarone : 150 mg/3 mL",
-            dilution: "3 mL (1 amp) + 17 mL de G5% (Volume total 20 mL soit 7,5 mg/mL)",
-            debit: "IVD",
-            infos: "Dose : 5 mg/kg"
+            ampoule: "Cordarone : 150 mg/3 mL", dilution: "3 mL (1 amp) + 17 mL de G5% (Volume total 20 mL)", debit: "IVD", infos: "Dose : 5 mg/kg"
+        },
+        { name: "Chlorure de Calcium 10%", cat: "acr", dose: 20, conc: 100, unit: "mg/kg", type: "ml" },
+
+        // NEUROLOGIE (Ordre du protocole Hôpitaux de Toulouse)
+        { 
+            name: "DIAZÉPAM (VALIUM)", cat: "neuro", dose: 0.5, conc: 5, unit: "mg/kg", type: "ml", max: 10,
+            ampoule: "Valium : 10 mg / 2 mL",
+            dilution: "Utilisation pure (Intra-Rectal)",
+            debit: "Intra-Rectal (IR) uniquement",
+            infos: "Benzodiazépine n°1 (si pas de VVP)"
         },
         { 
-            name: "Chlorure de Calcium 10%", cat: "acr", dose: 20, conc: 100, unit: "mg/kg", type: "ml", 
-            ampoule: "100 mg/mL", dilution: "Utilisation pure", debit: "IV lente (min 5 min)", infos: "20 mg/kg"
+            name: "CLONAZÉPAM (RIVOTRIL)", cat: "neuro", dose: 0.05, conc: 1, unit: "mg/kg", type: "ml", max: 1,
+            ampoule: "Rivotril : 1 mg / 1 mL",
+            dilution: "1 mg dans 1 mL de solvant",
+            debit: "IVL en 5 à 10 minutes",
+            infos: "Benzodiazépine n°2 (si VVP)"
+        },
+        { 
+            name: "LÉVÉTIRACÉTAM (KEPPRA)", cat: "neuro", dose: 40, conc: 100, unit: "mg/kg", type: "ml", max: 3000,
+            ampoule: "Keppra : 500 mg / 5 mL (100 mg/mL)",
+            dilution: "NaCl 0.9% ou G5%",
+            debit: "IVL en 5 minutes",
+            infos: "2ème ligne (max 3 g)"
+        },
+        { 
+            name: "PHÉNYTOÏNE (DILANTIN)", cat: "neuro", dose: 20, conc: 50, unit: "mg/kg", type: "ml", max: 1000,
+            ampoule: "Dilantin : 250 mg / 5 mL (50 mg/mL)",
+            dilution: "NaCl 0.9% uniquement (risque précipitation)",
+            debit: "IVL en 20 minutes (Vitesse < 1-3 mg/kg/min)",
+            infos: "3ème ligne. Surveillance Scope (FC, PA)."
+        },
+        { 
+            name: "PHÉNOBARBITAL (GARDÉNAL)", cat: "neuro", dose: 20, conc: 40, unit: "mg/kg", type: "ml", max: 600,
+            ampoule: "Gardénal : 200 mg / 5 mL (40 mg/mL)",
+            dilution: "Pur ou NaCl 0.9%",
+            debit: "IVL en 20 minutes (Max 100 mg/min)",
+            infos: "EME Réfractaire. Surveillance respiratoire."
         },
 
         // ANTIBIOTIQUES
@@ -161,19 +180,10 @@
         { name: "Etomidate", cat: "sedation", dose: 0.3, conc: 2, unit: "mg/kg", type: "ml" },
         { name: "Kétamine", cat: "sedation", dose: 2, conc: 10, unit: "mg/kg", type: "ml" },
         { name: "Midazolam", cat: "sedation", dose: 0.1, conc: 1, unit: "mg/kg", type: "ml" },
-        { name: "Morphine (Charge)", cat: "sedation", dose: 0.1, conc: 1, unit: "mg/kg", type: "ml" },
-        { name: "Propofol", cat: "sedation", dose: 3, conc: 10, unit: "mg/kg", type: "ml" },
-
-        // NEUROLOGIE
-        { name: "Diazépam (Valium)", cat: "neuro", dose: 0.5, conc: 5, unit: "mg/kg", type: "ml" },
-        { name: "Clonazépam (Rivotril)", cat: "neuro", dose: 0.02, conc: 1, unit: "mg/kg", type: "ml" },
-        { name: "Lévétiracétam (Keppra)", cat: "neuro", dose: 40, conc: 100, unit: "mg/kg", type: "ml" },
-        { name: "Serum Salé Hyperto 7.5%", cat: "neuro", dose: 2, unit: "ml/kg", type: "direct_ml" },
 
         // PERFUSIONS CONTINUES
         { name: "Adrénaline (Perf)", cat: "perf", dose: 0.1, conc: 0.1, unit: "mcg/kg/min", type: "perf_min" },
-        { name: "Midazolam (Perf)", cat: "perf", dose: 1, conc: 1, unit: "mcg/kg/min", type: "perf_min" },
-        { name: "Sufentanil (Perf)", cat: "perf", dose: 0.2, conc: 0.005, unit: "mcg/kg/h", type: "perf_h" }
+        { name: "Midazolam (Perf)", cat: "perf", dose: 1, conc: 1, unit: "mcg/kg/min", type: "perf_min" }
     ];
 
     let currentFilter = 'all';
@@ -261,23 +271,10 @@
                     </div>
                 </div>
                 <div class="med-details">
-                    <div class="detail-row">
-                        <div class="detail-label">Ampoule</div>
-                        <div class="detail-text">${m.ampoule || "-"}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Dilution</div>
-                        <div class="detail-text">${m.dilution || "-"}</div>
-                    </div>
-                    ${!isPerf ? `
-                    <div class="detail-row">
-                        <div class="detail-label">Temps d'injection</div>
-                        <div class="detail-text">${m.debit || "-"}</div>
-                    </div>` : ''}
-                    <div class="detail-row">
-                        <div class="detail-label">Posologie / Infos</div>
-                        <div class="detail-text">${m.infos || m.unit}</div>
-                    </div>
+                    <div class="detail-row"><div class="detail-label">Ampoule</div><div class="detail-text">${m.ampoule || "-"}</div></div>
+                    <div class="detail-row"><div class="detail-label">Dilution</div><div class="detail-text">${m.dilution || "-"}</div></div>
+                    ${!isPerf ? `<div class="detail-row"><div class="detail-label">Temps d'injection</div><div class="detail-text">${m.debit || "-"}</div></div>` : ''}
+                    <div class="detail-row"><div class="detail-label">Posologie / Infos</div><div class="detail-text">${m.infos || m.unit}</div></div>
                 </div>`;
             container.appendChild(card);
         });
