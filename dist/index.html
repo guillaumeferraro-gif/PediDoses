@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Tableau français des médicaments d’urgence pédiatrique : consultation et relecture des doses, dilutions et perfusions importées. Protocoles non validés.">
+  <meta name="robots" content="noindex,nofollow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <title>Pédia Urgences · Prototype</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./catalog.css">
+  <script type="module" src="./app.js"></script>
+  <script type="module" src="./catalog-ui.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Aller au référentiel</a>
+  <header class="header">
+    <div class="header-inner">
+      <a class="brand" href="./" aria-label="Pédia Urgences, accueil">
+        <span class="brand-symbol" aria-hidden="true">P<span>u</span></span>
+        <span>Pédia <strong>Urgences</strong></span>
+      </a>
+      <span class="version-badge">France <span>v0.2</span></span>
+    </div>
+  </header>
+  <main id="main" class="workspace">
+    <div class="page-heading">
+      <div><p class="eyebrow">URGENCES PÉDIATRIQUES · FRANCE</p><h1>Médicaments d’urgence</h1><p class="lede">Votre tableau, ses préparations et les points à clarifier.</p></div>
+      <div class="mode-badge"><span aria-hidden="true">◈</span> Référentiel en revue</div>
+    </div>
+    <div class="notice" role="note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3 22 21H2L12 3Z"/><path d="M12 9v5m0 3v1"/></svg>
+      <p><strong>Tableau importé, non validé pour la prescription.</strong> Les valeurs d’origine sont conservées. Les contrôles numériques ne valident ni les indications ni les modalités d’administration.</p>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Espace de travail">
+      <button type="button" id="catalog-tab" role="tab" aria-selected="true" aria-controls="catalog-panel" class="tab active">Tableau importé <span class="count catalog-count">63</span></button>
+      <button type="button" id="protocols-tab" role="tab" aria-selected="false" aria-controls="protocols-panel" tabindex="-1" class="tab">Relecture <span class="count" id="issue-count"></span></button>
+      <button type="button" id="calculator-tab" role="tab" aria-selected="false" aria-controls="calculator-panel" tabindex="-1" class="tab">Simulation logicielle</button>
+    </nav>
+
+    <section id="catalog-panel" role="tabpanel" aria-labelledby="catalog-tab">
+      <div class="catalog-toolbar">
+        <div class="search-field"><label for="medication-search">Rechercher une ligne</label><input type="search" id="medication-search" placeholder="Médicament, présentation, voie…" maxlength="100" autocomplete="off"></div>
+        <div class="category-field"><label for="category-filter">Rubrique du tableau</label><select id="category-filter"><option value="all">Toutes les rubriques</option></select></div>
+        <p class="catalog-counter" id="catalog-counter" role="status"></p>
+      </div>
+      <div class="catalog-workspace">
+        <section class="panel catalog-list" aria-label="Lignes du tableau fourni">
+          <div class="table-scroll"><table class="medication-table"><caption class="sr-only">Lignes importées et état de relecture. Sélectionnez un nom pour consulter la source et son contrôle.</caption><thead><tr><th scope="col">Ligne du tableau</th><th scope="col">Posologie indiquée</th><th scope="col">Relecture</th></tr></thead><tbody id="catalog-rows"></tbody></table></div>
+          <p id="catalog-empty" class="catalog-empty" hidden>Aucune ligne ne correspond. Essayez un autre nom ou une autre rubrique.</p>
+        </section>
+        <aside class="panel record-detail" id="record-detail" aria-labelledby="record-title">
+          <p class="eyebrow" id="record-category"></p><h2 id="record-title" tabindex="-1"></h2>
+          <div class="record-badges"><span id="record-state" class="review-badge"></span><span class="source-badge">Source utilisateur</span></div>
+          <h3 class="detail-section-title">Valeurs du tableau fourni</h3>
+          <dl id="record-source" class="record-source"></dl>
+          <section class="record-issues" id="record-issues-section"><h3>À clarifier pour cette ligne</h3><ul id="record-issues"></ul></section>
+          <details class="audit-details" id="audit-details"><summary>Contrôler l’exemple de 10 kg <span>Hypothèse à confirmer</span></summary><p class="audit-note">Contrôle du tableau à poids fixe, sans données patient. Les résultats ci-dessous ne sont pas des consignes de préparation ou d’administration.</p><div id="record-audit"></div></details>
+          <div class="clinical-lock"><strong>Calcul patient indisponible</strong><p>Protocole daté, indications, plafonds et validation clinique restent à compléter.</p></div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="calculator-panel" role="tabpanel" aria-labelledby="calculator-tab" hidden>
+      <p class="demo-intro"><strong>Simulation logicielle indépendante du tableau.</strong> La substance et les unités de cet onglet sont fictives. Ne pas utiliser pour soigner un patient.</p>
+      <form id="calculator-form" novalidate autocomplete="off">
+        <div class="calculator-grid">
+          <section class="panel patient-panel" aria-labelledby="patient-heading">
+            <div class="panel-heading"><span class="step">01</span><h2 id="patient-heading">Cas fictif</h2></div>
+            <p class="section-hint">Saisissez les données de votre simulation.</p>
+            <div class="field">
+              <label for="weight">Poids <span class="required">requis</span></label>
+              <div class="input-with-unit"><input id="weight" name="weight" type="text" inputmode="decimal" placeholder="Ex. 12,5" maxlength="12" required aria-describedby="weight-help"><span>kg</span></div>
+              <p id="weight-help" class="field-help">Saisie en kilogrammes. Virgule ou point acceptés.</p>
+            </div>
+            <div class="field">
+              <label for="age">Âge <span class="required">requis</span></label>
+              <div class="age-inputs"><input id="age" name="age" type="text" inputmode="decimal" placeholder="Ex. 3" maxlength="12" required><label for="age-unit" class="sr-only">Unité de l’âge</label><select id="age-unit" name="age-unit"><option value="years">ans</option><option value="months">mois</option></select></div>
+            </div>
+            <button type="button" id="fill-example" class="button button-soft example-button">Charger un exemple fictif <span aria-hidden="true">↗</span></button>
+            <div class="privacy-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3"/><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M12 14v3"/></svg><p>Aucune identité demandée. Les valeurs restent en mémoire pendant cette session.</p></div>
+          </section>
+
+          <section class="panel protocol-panel" aria-labelledby="protocol-heading">
+            <div class="panel-heading"><span class="step">02</span><h2 id="protocol-heading">Protocole de simulation</h2><span class="tiny-badge">FICTIF</span></div>
+            <div class="substance"><div class="substance-mark" aria-hidden="true">A</div><div><h3>Substance fictive A</h3><p>Scénario de démonstration · Voie fictive</p></div></div>
+            <dl class="protocol-values">
+              <div><dt>Coefficient de calcul</dt><dd><span id="coefficient-value"></span> <small>u. démo/kg</small></dd></div>
+              <div><dt>Plafond de l’exemple</dt><dd><span id="maximum-value"></span> <small>u. démo</small></dd></div>
+              <div><dt>Concentration fictive</dt><dd><span id="concentration-value"></span> <small>u. démo/mL</small></dd></div>
+            </dl>
+            <p class="unit-note">« u. démo » est une unité fictive, sans équivalent médicamenteux.</p>
+            <div class="source-row"><span class="source-label">SOURCE</span><p>Jeu de test logiciel <span>· DEMO-1.0</span><br><span>Aucune recommandation clinique.</span></p></div>
+            <label class="confirmation" for="confirm-demo"><input type="checkbox" id="confirm-demo" required><span>Je confirme utiliser uniquement un cas fictif.</span></label>
+            <div id="form-error" class="form-error" role="alert" hidden></div>
+            <div class="form-actions"><button type="submit" class="button button-primary">Calculer la simulation <span aria-hidden="true">→</span></button><button type="button" id="reset" class="button button-plain">Réinitialiser</button></div>
+          </section>
+
+          <section class="panel result-panel" aria-labelledby="result-heading" aria-live="polite" aria-atomic="true">
+            <div class="panel-heading"><span class="step">03</span><h2 id="result-heading">Résultat simulé</h2><span id="result-status" class="result-status">En attente de saisie</span></div>
+            <div id="empty-result" class="empty-result"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="8" y="4" width="24" height="32" rx="3"/><path d="M13 10h14v6H13zM13 22h3m8 0h3m-14 7h3m8 0h3"/></svg><div><h3>Le calcul apparaîtra ici</h3><p>Renseignez le cas fictif, puis lancez la simulation.</p></div></div>
+            <div id="result-content" hidden>
+              <p class="result-context" id="result-context"></p>
+              <div id="cap-notice" class="cap-notice" hidden>Plafond de simulation appliqué. La dose théorique dépasse le maximum de l’exemple.</div>
+              <div class="result-numbers"><div class="result-number"><p>Dose simulée</p><strong><span id="dose-result"></span> <small>u. démo</small></strong></div><div class="result-number"><p>Volume théorique simulé</p><strong><span id="volume-result"></span> <small>mL fictifs</small></strong></div></div>
+              <details class="calculation-details" open><summary>Détail du calcul</summary><ol id="calculation-steps"></ol><p>Affichage limité à 6 décimales ; aucune règle d’arrondi d’administration n’est appliquée.</p></details>
+              <p class="result-footer">SIMULATION — Aucune ordonnance générée. Aucune administration à partir de ce résultat.</p>
+            </div>
+          </section>
+        </div>
+      </form>
+    </section>
+
+    <section id="protocols-panel" role="tabpanel" aria-labelledby="protocols-tab" hidden>
+      <div class="reference-grid">
+        <section class="panel reference-main"><div class="panel-heading"><span class="step">R</span><h2>Provenance du référentiel</h2><span class="tiny-badge neutral">NON VALIDÉ</span></div><h3><span class="catalog-count">63</span> lignes importées</h3><p>Médicaments, gestes électriques, perfusions, hyperkaliémie et produits sanguins. Aucune ligne n’est présentée comme cliniquement approuvée.</p><dl class="reference-list"><div><dt>Pays / juridiction</dt><dd>France</dd></div><div><dt>Source</dt><dd>Tableau transmis dans la conversation</dd></div><div><dt>Version de transcription</dt><dd>FR-IMPORT-1</dd></div><div><dt>Poids de référence</dt><dd>10 kg présumés, à confirmer</dd></div><div><dt>Service et protocole daté</dt><dd>À fournir</dd></div><div><dt>Relecture clinique et pharmaceutique</dt><dd>Non effectuée</dd></div></dl><p class="reference-bottom">Les calculs portent seulement sur la cohérence de l’exemple source. Aucun plafond, intervalle ou usage clinique n’est ajouté par déduction.</p></section>
+        <aside class="panel reference-aside"><h2>Écarts numériques de l’exemple</h2><p class="review-explainer">Sous l’hypothèse de 10 kg et avec les concentrations écrites. Les valeurs sources ne sont pas remplacées.</p><div id="discrepancy-list"></div><details class="sources-details"><summary>Documents consultés pour la relecture</summary><p>Vérifications ciblées de présentations et d’unités. Ces documents ne constituent pas une validation complète du tableau ni un protocole pédiatrique du service.</p><div id="reference-links"></div></details></aside>
+      </div>
+      <section class="panel outstanding-review"><div class="panel-heading"><h2>Autres points à préciser</h2><span id="outstanding-count" class="count"></span></div><div id="outstanding-list"></div></section>
+    </section>
+    <noscript><p class="notice">Activez JavaScript pour utiliser ce prototype.</p></noscript>
+    <footer class="footer"><span>Pédia Urgences <span class="footer-divider">/</span> France · FR-IMPORT-1</span><span>Tableau non validé · Aucune prescription générée</span></footer>
+  </main>
+</body>
+</html>

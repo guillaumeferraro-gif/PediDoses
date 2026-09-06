@@ -1,0 +1,19 @@
+name: Vérifier le prototype
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Vérifier la syntaxe JavaScript
+        run: npm run check
+      - name: Tester les calculs et les blocages
+        run: npm test
