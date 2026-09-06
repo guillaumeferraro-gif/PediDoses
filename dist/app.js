@@ -103,7 +103,7 @@ form.addEventListener('submit', event => {
   }
 });
 
-const tabs = [byId('catalog-tab'), byId('protocols-tab'), byId('calculator-tab')];
+const tabs = [byId('quick-tab'), byId('catalog-tab'), byId('protocols-tab'), byId('calculator-tab')];
 function activateTab(tab) {
   for (const item of tabs) {
     const active = item === tab;
