@@ -1,11 +1,9 @@
 import { smurRecords, smurCategories, smurSources } from './smur-data.js';
-import { reviewSources } from './catalog-data.js';
-import { auditRecord } from './catalog-audit.js';
-import { parseDecimal } from './calculator.js';
 import { resolvePatientContext, calculateAllRecords } from './patient-calculator.js';
 
 const byId = id => document.getElementById(id);
-const format = number => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 6 }).format(number);
+const format = (number, digits = 6) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: digits }).format(number);
+const preparationVolume = number => format(number, 2);
 const unitLabel = unit => unit === 'mcg' ? 'µg' : unit;
 const display = number => number > 0 && number < 0.000001 ? '< 0,000001' : format(number);
 const normalize = text => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -21,11 +19,9 @@ const ageInput = byId('quick-age');
 const ageUnitInput = byId('quick-age-unit');
 const searchInput = byId('quick-search');
 const categoryInput = byId('quick-category');
-let previousAgeUnit = ageUnitInput.value;
 let context = null;
 let results = calculateAllRecords(smurRecords, null);
 let cards = new Map();
-const sourceAudits = new Map(smurRecords.filter(record => record.kind === 'imported').map(record => [record.id, auditRecord(record)]));
 
 function sourceLink(source) {
   const anchor = make('a', source.title);
@@ -35,28 +31,35 @@ function sourceLink(source) {
   return anchor;
 }
 function formulaFor(record) {
-  const m = record.model;
-  if (!m.coefficient) return record.category === 'ivc' ? record.sourceCells[4] : record.sourceCells[1];
-  const period = m.type !== 'infusion' ? '' : m.periodMinutes === 1 ? '/min' : m.periodMinutes === 60 ? '/h' : '/6 h';
-  return `${format(m.coefficient)} ${unitLabel(m.unit)}/kg${period}`;
+  return record.protocol.posology;
 }
 function addPreparation(details, record) {
-  const m = record.model;
-  if (record.sourceCells[0]) details.append(make('p', `Présentation : ${record.sourceCells[0]}`));
-  if (m.mix) {
-    details.append(make('p', `Mélange du tableau : ${format(m.mix.takeMl)} mL de produit + ${format(m.mix.addMl)} mL de diluant = ${format(m.mix.takeMl + m.mix.addMl)} mL. La préparation reste fixe quand le poids change.`));
+  const grid = make('div', '', 'protocol-grid');
+  const section = (title, value) => {
+    const block = make('section', '', 'protocol-block');
+    block.append(make('h4', title), make('p', value));
+    return block;
+  };
+  grid.append(
+    section('Posologie', record.protocol.posology),
+    section('Dilution / préparation', record.protocol.dilution),
+    section('Administration', record.protocol.administration),
+  );
+  details.append(grid);
+  if (record.sourceCells[0]) details.append(make('p', `Présentation : ${record.sourceCells[0]}`, 'presentation-line'));
+  if (record.protocol.particulars.length) {
+    const block = make('section', '', 'protocol-particulars');
+    block.append(make('h4', 'Particularités'));
+    const list = make('ul');
+    list.append(...record.protocol.particulars.map(text => make('li', text)));
+    block.append(list); details.append(block);
   }
-  const preparation = record.category === 'ivc'
-    ? `Cellules de préparation : ${record.sourceCells[1] || 'non renseignée'} ; ${record.sourceCells[2] || 'non renseignée'}.`
-    : `Préparation / durée source : ${record.sourceCells[2] || 'non renseignée'}.`;
-  details.append(make('p', preparation));
-  if (record.kind === 'imported') details.append(make('p', 'Les volumes d’origine correspondent à l’exemple présumé de 10 kg. Ils restent consultables dans « Tableau source ». La mention « non » ne vaut pas autorisation d’injection directe.'));
-  for (const issue of record.issues) {
-    const paragraph = make('p', issue.message);
-    if (issue.source && reviewSources[issue.source]) {
-      paragraph.append(document.createTextNode(' '), sourceLink(reviewSources[issue.source]));
-    }
-    details.append(paragraph);
+  if (record.protocol.questions.length) {
+    const block = make('section', '', 'protocol-questions');
+    block.append(make('h4', 'Questionnements restants'));
+    const list = make('ul');
+    list.append(...record.protocol.questions.map(text => make('li', text)));
+    block.append(list); details.append(block);
   }
   for (const key of record.sources ?? []) details.append(sourceLink(smurSources[key]));
 }
@@ -71,7 +74,7 @@ function makeCard(record) {
   const values = make('div', '', 'dose-values');
   const notes = make('p', '', 'dose-notes');
   const details = make('details', '', 'dose-details');
-  details.append(make('summary', 'Préparation, calcul et précautions'));
+  details.append(make('summary', 'Posologie, dilution, administration et questions'));
   const calculation = make('div', '', 'dose-calculation');
   details.append(calculation);
   addPreparation(details, record);
@@ -100,24 +103,19 @@ function updateCard(record) {
   values.append(make('span', result.rateMlH !== null ? 'Débit calculé' : result.unit === 'J' ? 'Énergie calculée' : result.unit === 'mL' ? 'Volume calculé' : 'Quantité calculée', 'dose-value-label'));
   values.append(make('strong', `${display(primary)} ${primaryUnit}`));
   if (result.volumeMl !== null && result.unit !== 'mL') values.append(make('span', `Volume : ${display(result.volumeMl)} mL`, 'dose-volume'));
-  const audit = sourceAudits.get(record.id);
   const messages = [];
-  if (audit?.discrepancies.length) messages.push('Écart dans l’exemple source : résultat calculé à partir de la posologie/kg.');
-  if (record.category === 'antibiotiques') messages.push('Par prise ou par jour : à préciser.');
-  if (record.id === 'isofundine') messages.push('Bolus à réévaluer · contre-indiqué en cas d’hyperkaliémie.');
   if (result.volumeMl === null && record.model.type === 'dose' && !['J', 'mL'].includes(result.unit)) messages.push('Volume indisponible : concentration finale non documentée.');
-  if (record.issues.length && messages.length === 0) messages.push('Précautions ou modalités à préciser : ouvrir le détail.');
+  if (record.protocol.questions.length) messages.push(`${record.protocol.questions.length} point${record.protocol.questions.length > 1 ? 's' : ''} à confirmer dans la fiche.`);
+  if (result.maximumApplied) messages.push('Plafond confirmé appliqué.');
   notes.textContent = messages.join(' ');
   calculation.append(make('p', `Poids retenu : ${format(result.weightKg)} kg (${result.weightSource === 'measured' ? 'saisi' : 'estimé'}).`));
-  if (result.rateMlH !== null) {
-    calculation.append(make('p', `${formulaFor(record)} × ${format(result.weightKg)} kg × 60 ÷ ${record.model.periodMinutes} min = ${display(result.hourlyAmount)} ${unitLabel(result.unit)}/h.`));
-  } else calculation.append(make('p', `${formulaFor(record)} × ${format(result.weightKg)} kg = ${display(result.dose)} ${unitLabel(result.unit)}.`));
+  if (result.dose !== null) calculation.append(make('p', `Quantité calculée : ${display(result.dose)} ${unitLabel(result.unit)}${result.maximumApplied ? ' après plafond' : ''}.`));
+  if (result.rateMlH !== null) calculation.append(make('p', `Débit final : ${format(result.rateMlH, 1)} mL/h (arrondi final à 0,1 mL/h).`));
   if (result.concentration !== null) calculation.append(make('p', `Concentration du modèle : ${format(result.concentration)} ${unitLabel(result.unit)}/mL.`));
   if (result.mass !== null) calculation.append(make('p', `Quantité correspondante : ${display(result.mass)} ${unitLabel(result.massUnit)}.`));
-  if (record.model.durationHours) {
-    calculation.append(make('p', `Durée de la ligne source : ${format(record.model.durationHours)} h. Avec le mélange fixe, autonomie théorique : ${display(result.theoreticalDurationHours)} h ; vérifier le volume disponible.`));
-  }
-  calculation.append(make('p', 'Aucun plafond, intervalle ni arrondi d’administration appliqué. Affichage à 6 décimales au maximum.'));
+  if (result.volumeMl !== null) calculation.append(make('p', `Volume de produit à préparer : ${preparationVolume(result.volumeMl)} mL.`));
+  if (result.mixtureVolumeMl !== null) calculation.append(make('p', `Volume final : ${preparationVolume(result.mixtureVolumeMl)} mL.`));
+  calculation.append(make('p', 'Les calculs internes conservent leur précision ; aucun arrondi n’est réinjecté dans le calcul suivant.'));
 }
 
 function renderGroups() {
@@ -161,7 +159,7 @@ function updatePatient() {
   }
   results = calculateAllRecords(smurRecords, context);
   byId('quick-used-weight').textContent = context ? `${format(context.weightKg)} kg` : '— kg';
-  byId('quick-weight-source').textContent = context ? context.weightSource === 'measured' ? 'Poids saisi · prioritaire' : 'Poids estimé · APLS' : failure ? 'Saisie à corriger' : 'En attente de saisie';
+  byId('quick-weight-source').textContent = context ? context.weightSource === 'measured' ? 'Poids saisi · prioritaire' : 'Poids estimé · règle locale' : failure ? 'Saisie à corriger' : 'En attente de saisie';
   byId('quick-weight-summary').className = `quick-weight-summary ${context?.weightSource === 'estimated' ? 'estimated' : ''}`;
   byId('quick-formula').textContent = context?.formula ? `Estimation : ${context.formula}. Privilégier un poids connu ou une estimation par la taille.` : context ? 'Ce poids est utilisé pour toutes les lignes calculables.' : 'Âge seul → estimation ; poids saisi → priorité.';
   const calculated = [...results.values()].filter(result => result.status === 'calculated').length;
@@ -175,17 +173,7 @@ for (const category of smurCategories) {
   categoryInput.append(option);
 }
 for (const input of [weightInput, ageInput]) input.addEventListener('input', updatePatient);
-ageUnitInput.addEventListener('change', () => {
-  // Changing the display unit must not turn 2 years into 2 months.
-  if (ageInput.value.trim() && previousAgeUnit !== ageUnitInput.value) {
-    try {
-      const value = parseDecimal(ageInput.value, 'Âge');
-      ageInput.value = String(previousAgeUnit === 'years' ? value * 12 : value / 12).replace('.', ',');
-    } catch { /* Keep invalid text visible; updatePatient reports it. */ }
-  }
-  previousAgeUnit = ageUnitInput.value;
-  updatePatient();
-});
+ageUnitInput.addEventListener('change', updatePatient);
 form.addEventListener('submit', event => event.preventDefault());
 byId('quick-clear-weight').addEventListener('click', () => {
   weightInput.value = '';
@@ -194,7 +182,6 @@ byId('quick-clear-weight').addEventListener('click', () => {
 });
 function resetPatient() {
   form.reset();
-  previousAgeUnit = ageUnitInput.value;
   updatePatient();
 }
 byId('quick-reset').addEventListener('click', () => { resetPatient(); ageInput.focus(); });

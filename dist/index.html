@@ -23,7 +23,7 @@
         <span class="brand-symbol" aria-hidden="true">P<span>u</span></span>
         <span>Pedi<strong>Doses</strong></span>
       </a>
-      <span class="version-badge">France <span>v0.3</span></span>
+      <span class="version-badge">France <span>v0.4</span></span>
     </div>
   </header>
   <main id="main" class="workspace">
@@ -33,7 +33,7 @@
     </div>
     <div class="notice" role="note">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3 22 21H2L12 3Z"/><path d="M12 9v5m0 3v1"/></svg>
-      <p><strong>Prototype non validé pour les soins.</strong> Les résultats suivent les coefficients du tableau fourni. Indications, plafonds et modalités d’administration restent à valider avec le protocole du service.</p>
+      <p><strong>Protocole en cours de validation.</strong> Les règles confirmées sont calculées ; les questionnements restants sont affichés dans chaque fiche.</p>
     </div>
     <nav class="tabs" role="tablist" aria-label="Espace de travail">
       <button type="button" id="quick-tab" role="tab" aria-selected="true" aria-controls="quick-panel" class="tab active">Calculs rapides <span class="count">64</span></button>
@@ -68,10 +68,10 @@
         <div class="category-field"><label for="quick-category">Groupe</label><select id="quick-category"><option value="all">Tous les groupes</option></select></div>
       </div>
       <div class="quick-counter-row"><p id="quick-calculation-status" role="status" aria-live="polite"></p><p id="quick-counter"></p></div>
-      <p class="quick-limit"><strong>Calculs du tableau, sans plafond clinique.</strong> Les lignes ambiguës restent sans résultat. Les volumes dépendent de la présentation et de la préparation affichées dans chaque détail.</p>
+      <p class="quick-limit"><strong>Calculs SMUR.</strong> Les plafonds confirmés sont appliqués. Les volumes de préparation sont affichés à 0,01 mL et les débits de pompe à 0,1 mL/h, sans arrondi intermédiaire.</p>
       <div id="quick-groups"></div>
       <p id="quick-empty" class="catalog-empty" hidden>Aucun médicament trouvé. Modifiez la recherche ou le groupe.</p>
-      <details class="quick-estimation"><summary>Estimation du poids et références</summary><p>Formules APLS : de 1 à moins de 12 mois, 0,5 × âge en mois + 4 ; de 1 à moins de 6 ans, 2 × âge en années + 8 ; de 6 à 12 ans inclus, 3 × âge en années + 7. Pas d’estimation en dehors de ces bornes. Changer l’unité convertit l’âge déjà saisi.</p><p>Estimation approximative de secours : privilégier un poids connu ou une méthode fondée sur la taille. Aucune adaptation au poids idéal, à l’obésité ou aux particularités du patient n’est automatisée. Les nouveau-nés nécessitent un protocole spécifique.</p><p><a href="https://bpspubs.onlinelibrary.wiley.com/doi/10.1111/bcp.12876" target="_blank" rel="noopener noreferrer">Carasco et al. · Formules et limites de l’estimation</a> · <a href="https://www.resus.org.uk/professional-library/2025-resuscitation-guidelines/paediatric-basic-life-support-guidelines" target="_blank" rel="noopener noreferrer">RCUK 2025 · Réanimation pédiatrique</a></p><p>L’Isofundine est un ajout séparé du tableau source. Son repère de remplissage est documenté dans sa fiche. Les valeurs saisies restent uniquement en mémoire dans cette page.</p></details>
+      <details class="quick-estimation"><summary>Estimation du poids</summary><p>Avant 1 an : table mensuelle locale (0 à 11 mois). À partir de 1 an : (âge en années + 4) × 2. Le poids saisi reste prioritaire.</p><p>Changer « mois » en « ans », ou inversement, ne modifie jamais la valeur saisie : seul son sens change pour les calculs.</p><p>Estimation approximative de secours : privilégier le poids connu. Aucune adaptation au poids idéal, à l’obésité ou aux particularités du patient n’est automatisée. Les valeurs restent uniquement en mémoire dans cette page.</p></details>
     </section>
 
     <section id="catalog-panel" role="tabpanel" aria-labelledby="catalog-tab" hidden>
@@ -155,7 +155,7 @@
       <section class="panel outstanding-review"><div class="panel-heading"><h2>Autres points à préciser</h2><span id="outstanding-count" class="count"></span></div><div id="outstanding-list"></div></section>
     </section>
     <noscript><p class="notice">Activez JavaScript pour utiliser ce prototype.</p></noscript>
-    <footer class="footer"><span>PediDoses <span class="footer-divider">/</span> France · v0.3 · Source FR-IMPORT-1</span><span>Prototype non validé · Aucune prescription générée</span></footer>
+    <footer class="footer"><span>PediDoses <span class="footer-divider">/</span> France · v0.4 · Source locale enrichie</span><span>Validation clinique à finaliser · Aucune prescription générée</span></footer>
   </main>
 </body>
 </html>

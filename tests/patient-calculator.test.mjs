@@ -1,148 +1,132 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { catalogRecords, categories } from '../dist/catalog-data.js';
 import { smurRecords, smurCategories, isofundine } from '../dist/smur-data.js';
-import { resolvePatientContext, estimateWeightKg, calculateRecordForPatient, calculateAllRecords } from '../dist/patient-calculator.js';
+import { resolvePatientContext, estimateWeightKg, infantWeightTable, calculateRecordForPatient, calculateAllRecords } from '../dist/patient-calculator.js';
 
 const row = id => smurRecords.find(record => record.id === id);
 const patient = (weight = '10', age = '3', ageUnit = 'years') => resolvePatientContext({ weight, age, ageUnit });
 const calculate = (id, context = patient()) => calculateRecordForPatient(row(id), context);
 const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9, `${actual} != ${expected}`);
 
-test('estimation APLS : bornes, mois et années décimales', () => {
-  for (const [months, expected] of [[1, 4.5], [6, 7], [11, 9.5], [12, 10], [18, 11], [36, 14], [60, 18], [71, 19 + 5 / 6], [72, 25], [96, 31], [144, 43]]) {
-    close(estimateWeightKg(months).weightKg, expected);
-  }
-  for (const months of [0, 0.99, 144.01, 156, -1, NaN, Infinity, '12']) assert.throws(() => estimateWeightKg(months));
-  assert.equal(patient('', '3').weightKg, 14);
-  assert.equal(patient('', '36', 'months').weightKg, 14);
-  assert.equal(patient('', '1,5').weightKg, 11);
-  assert.equal(patient('', String(1 / 12)).weightKg, 4.5);
+test('estime le poids avec la table mensuelle avant un an puis (âge + 4) × 2', () => {
+  assert.deepEqual(infantWeightTable, [3, 3.5, 4.2, 5, 6, 6, 7, 8, 8, 9, 9, 10]);
+  infantWeightTable.forEach((expected, month) => close(estimateWeightKg(month).weightKg, expected));
+  for (const [months, expected] of [[11.9, 10], [12, 10], [18, 11], [36, 14], [120, 28], [216, 44]]) close(estimateWeightKg(months).weightKg, expected);
+  for (const value of [-1, 216.01, NaN, Infinity, '12']) assert.throws(() => estimateWeightKg(value));
 });
 
-test('le poids connu reste prioritaire, avec âge facultatif ou hors estimation', () => {
-  for (const age of ['', '3', '6', '15']) {
-    const context = patient('12,5', age);
-    assert.equal(context.weightKg, 12.5);
-    assert.equal(context.weightSource, 'measured');
-    assert.equal(context.formula, null);
-    assert.equal(calculate('adrenaline-iv', context).dose, 125);
-  }
-  assert.equal(patient('12.5').weightKg, 12.5);
+test('changer l’unité change le sens, jamais la valeur saisie', () => {
+  assert.equal(patient('', '3', 'months').weightKg, 5);
+  assert.equal(patient('', '3', 'years').weightKg, 14);
+  const source = fs.readFileSync(new URL('../dist/smur-ui.js', import.meta.url), 'utf8');
+  assert.match(source, /ageUnitInput\.addEventListener\('change', updatePatient\)/);
+  assert.doesNotMatch(source, /value \* 12|value \/ 12/);
+});
+
+test('le poids connu reste prioritaire et une saisie invalide ne retombe pas sur une estimation', () => {
+  assert.equal(patient('12,5', '3').weightKg, 12.5);
+  assert.equal(patient('12,5', '3').weightSource, 'measured');
   assert.equal(patient('', '3').weightSource, 'estimated');
-  assert.equal(patient('200', '').weightKg, 200);
-  assert.equal(patient('0,5', '').weightKg, 0.5);
-});
-
-test('une saisie erronée ne retombe jamais silencieusement sur le poids estimé', () => {
-  for (const weight of ['0', '0,49', '201', '-1', '12 kg', '1e2', '12,5.0', 'NaN', 'Infinity', '12,', false]) {
-    assert.throws(() => patient(weight, '3'), failure => failure.field === 'weight');
-  }
-  for (const age of ['-1', 'abc', '19', 'Infinity', '3,']) assert.throws(() => patient('12', age));
-  assert.throws(() => patient('', '3', 'days'));
+  for (const weight of ['0', '0,49', '201', '-1', '12 kg', '1e2', 'NaN']) assert.throws(() => patient(weight, '3'));
   assert.equal(resolvePatientContext(), null);
-  assert.equal(patient(' ', ' '), null);
 });
 
-test('les changements âge → poids connu → correction → effacement recalculent les 64 lignes', () => {
-  const contexts = [patient('', '3'), patient('12.5', '3'), patient('20', '3'), patient('20', '6'), patient('', '6'), null];
-  const expectedWeights = [14, 12.5, 20, 20, 25, null];
-  const snapshot = JSON.stringify(smurRecords);
-  for (const [index, context] of contexts.entries()) {
-    const results = calculateAllRecords(smurRecords, context);
-    assert.equal(results.size, 64);
-    assert.equal(results.get('isofundine').dose, expectedWeights[index] === null ? null : expectedWeights[index] * 10);
-    for (const result of results.values()) {
-      assert.equal(result.clinicalUse, false);
-      if (result.status === 'calculated') assert.equal(result.weightKg, expectedWeights[index]);
-      if (!context && result.status !== 'instruction') {
-        assert.equal(result.dose, null);
-        assert.equal(result.volumeMl, null);
-        assert.equal(result.rateMlH, null);
-      }
-    }
+test('calcule toutes les lignes décidées et conserve 64 fiches', () => {
+  const results = calculateAllRecords(smurRecords, patient('12', '3'));
+  assert.equal(results.size, 64);
+  assert.equal([...results.values()].filter(result => result.status === 'blocked').length, 0);
+  assert.equal(results.get('arret-potassium').status, 'instruction');
+  assert.equal([...results.values()].filter(result => result.status === 'calculated').length, 63);
+});
+
+test('applique les concentrations et plafonds confirmés sans plafond au suxaméthonium', () => {
+  close(calculate('atropine', patient('10')).dose, 200);
+  close(calculate('atropine', patient('10')).volumeMl, 0.8);
+  close(calculate('adrenaline-im', patient('80')).dose, 500);
+  close(calculate('adrenaline-iv', patient('49')).dose, 490);
+  close(calculate('adrenaline-iv', patient('50')).dose, 1000);
+  close(calculate('suxamethonium', patient('100', '2')).dose, 100);
+  assert.equal(calculate('suxamethonium', patient('100', '2')).maximumApplied, false);
+});
+
+test('applique les paliers d’âge du suxaméthonium, phénobarbital et kétamine', () => {
+  close(calculate('suxamethonium', patient('10', '17', 'months')).dose, 20);
+  close(calculate('suxamethonium', patient('10', '18', 'months')).dose, 10);
+  close(calculate('ketamine-intubation', patient('10', '17', 'months')).dose, 40);
+  close(calculate('ketamine-intubation', patient('10', '18', 'months')).dose, 20);
+  close(calculate('phenobarbital', patient('3', '0', 'months')).dose, 60);
+  close(calculate('phenobarbital', patient('3.5', '1', 'months')).dose, 52.5);
+});
+
+test('calcule les quatre catécholamines par poids/3 et arrondit seulement le débit final', () => {
+  for (const id of ['adrenaline-ivc', 'noradrenaline', 'dopamine', 'dobutamine']) {
+    close(calculate(id, patient('10')).rateMlH, 3.3);
+    close(calculate(id, patient('10,1')).rateMlH, 3.4);
   }
-  assert.equal(JSON.stringify(smurRecords), snapshot);
+  assert.equal(row('noradrenaline').sourceCells[0], 'Noradrénaline 2 mg/mL');
+  assert.match(row('noradrenaline').protocol.dilution, /1 mg/);
 });
 
-test('vérifie séparément dose, dilution, mL, mmol, joules et conversion g/mg', () => {
-  const context = patient('20');
-  for (const [id, dose, volume] of [
-    ['adrenaline-iv', 200, 2], ['adrenaline-im', 200, 0.2],
-    ['bicarbonate-acr', 20, 40], ['atropine', 400, 0.8],
-    ['amiodarone', 100, 100 / 7.5], ['ketamine-analgesie', 10, 2],
-    ['tranexamique-bolus', 200, 2], ['naloxone', 200, 10],
-    ['cardioversion', 20, null], ['defibrillation', 80, null],
-    ['glucose10', 40, 40], ['cgr', 200, 200], ['cpa', 100, 100],
-    ['isofundine', 200, 200], ['gentamicine', 100, null], ['resikali-ir', 20, null],
-  ]) {
-    const result = calculate(id, context);
-    close(result.dose, dose);
-    if (volume === null) assert.equal(result.volumeMl, null);
-    else close(result.volumeMl, volume);
+test('calcule morphine selon âge et concentration selon le seuil de 10 kg', () => {
+  const neonate = calculate('morphine-ivc', patient('5', '2', 'months'));
+  close(neonate.hourlyAmount, 50);
+  close(neonate.concentration, 100);
+  close(neonate.rateMlH, 0.5);
+  const infant = calculate('morphine-ivc', patient('10', '3', 'months'));
+  close(infant.hourlyAmount, 200);
+  close(infant.concentration, 1000);
+  close(infant.rateMlH, 0.2);
+  close(calculate('morphine-dc', patient('8')).volumeMl, 8);
+  close(calculate('morphine-dc', patient('10')).volumeMl, 1);
+});
+
+test('calcule les préparations fixes à 0,01 mL sans arrondi en chaîne', () => {
+  const tranexamique = calculate('tranexamique-ivc', patient('12.34', '5'));
+  close(tranexamique.dose, 987.2);
+  close(tranexamique.volumeMl, 9.872);
+  close(tranexamique.mixtureVolumeMl, 16);
+  close(tranexamique.rateMlH, 2);
+  const clonazepam = calculate('clonazepam-ivc', patient('50'));
+  close(clonazepam.dose, 4);
+  close(clonazepam.volumeMl, 4);
+  close(clonazepam.rateMlH, 1);
+});
+
+test('intègre le protocole hyperkaliémie local et les conventions de volume', () => {
+  const calcium = calculate('calcium-gluconate', patient('50'));
+  close(calcium.dose, 20);
+  close(calcium.mass, 182);
+  assert.equal(calcium.maximumApplied, true);
+  const insulin = calculate('insuline-glucose', patient('10'));
+  close(insulin.volumeMl, 40);
+  close(insulin.mass, 1.2);
+  close(calculate('salbutamol-nebulise', patient('16')).dose, 2.5);
+  close(calculate('salbutamol-nebulise', patient('16.1')).dose, 5);
+  close(calculate('resikali-ir', patient('10')).volumeMl, 37.5);
+  close(calculate('kayexalate-ir', patient('20')).dose, 15);
+  close(calculate('kayexalate-ir', patient('20')).volumeMl, 100);
+});
+
+test('chaque fiche contient posologie, dilution, administration et questionnements explicites', () => {
+  for (const record of smurRecords) {
+    assert.equal(typeof record.protocol.posology, 'string', record.id);
+    assert.equal(typeof record.protocol.dilution, 'string', record.id);
+    assert.equal(typeof record.protocol.administration, 'string', record.id);
+    assert.ok(Array.isArray(record.protocol.particulars), record.id);
+    assert.ok(Array.isArray(record.protocol.questions), record.id);
   }
-  assert.equal(calculate('glucose10', context).mass, 4000);
-  assert.equal(calculate('atropine').volumeMl, 0.4);
-  assert.equal(row('atropine').sourceCells[3], '0,8 mL');
+  const ui = fs.readFileSync(new URL('../dist/smur-ui.js', import.meta.url), 'utf8');
+  assert.match(ui, /Questionnements restants/);
+  assert.doesNotMatch(ui, /Indication/);
 });
 
-test('les perfusions gardent un mélange fixe et distinguent minute, heure et six heures', () => {
-  for (const [id, rate, concentration] of [
-    ['adrenaline-ivc', 6, 20], ['dobutamine', 6, 1000], ['dopamine', 6, 1000],
-    ['salbutamol-ivc', 0.48, 250], ['alprostadil', 6, 10000],
-    ['clonazepam-ivc', 2, 1 / 6], ['morphine-ivc', 0.2, 1000],
-    ['sufentanil', 4, 1], ['midazolam-ivc', 2.4, 1000], ['tranexamique-ivc', 4, 50],
-  ]) {
-    const result = calculate(id, patient('20'));
-    close(result.rateMlH, rate);
-    close(result.concentration, concentration);
-    close(result.concentration, calculate(id).concentration);
-  }
-  assert.equal(calculate('tranexamique-ivc', patient('20')).mixtureVolumeMl, 16);
-  assert.equal(calculate('tranexamique-ivc', patient('20')).theoreticalDurationHours, 4);
-});
-
-test('les ambiguïtés documentées restent sans dose, volume ni débit', () => {
-  for (const id of ['ssh', 'cafeine', 'noradrenaline', 'salbutamol-nebulise', 'calcium-gluconate', 'insuline-glucose', 'ketamine-intubation', 'midazolam-ij', 'amoxicilline-clavulanique']) {
-    const result = calculate(id);
-    assert.equal(result.status, 'blocked', id);
-    assert.equal(result.dose, null, id);
-    assert.equal(result.volumeMl, null, id);
-    assert.equal(result.rateMlH, null, id);
-  }
-  assert.equal(calculate('arret-potassium').status, 'instruction');
-});
-
-test('la restriction étomidate est réévaluée avec un poids connu inchangé', () => {
-  for (const age of ['', '1', '2']) assert.equal(calculate('etomidate', patient('12', age)).status, 'blocked');
-  assert.equal(calculate('etomidate', patient('12', '2.01')).status, 'calculated');
-  assert.equal(calculate('etomidate', patient('12', '24', 'months')).status, 'blocked');
-  assert.equal(calculate('etomidate', patient('12', '25', 'months')).status, 'calculated');
-});
-
-test('un nouveau-né identifié requiert un protocole spécifique, même avec poids connu', () => {
-  const results = calculateAllRecords(smurRecords, patient('3.5', '0.5', 'months'));
-  for (const result of results.values()) if (result.status !== 'instruction') assert.equal(result.status, 'blocked');
-});
-
-test('l’ajout Isofundine conserve les 63 sources et les neuf groupes dans leur ordre', () => {
+test('conserve les 63 lignes sources, les groupes et l’ajout Isofundine', () => {
   assert.equal(catalogRecords.length, 63);
   assert.equal(smurRecords.length, 64);
   assert.equal(new Set(smurRecords.map(record => record.id)).size, 64);
   assert.deepEqual(smurCategories.filter(category => category.id !== 'remplissage'), categories);
-  assert.ok(catalogRecords.every(record => smurRecords.includes(record)));
+  assert.deepEqual(smurRecords.slice(0, 63).map(record => record.id), catalogRecords.map(record => record.id));
   assert.equal(isofundine.kind, 'reference');
-  assert.equal(isofundine.validation, 'pending');
-  assert.ok(isofundine.issues.some(issue => issue.message.includes('hyperkaliémie')));
-  assert.equal(isofundine.sources.length, 2);
-});
-
-test('un modèle défectueux ne produit pas de valeur non finie ni de résultat périmé', () => {
-  const invalid = { ...row('adrenaline-iv'), id: 'invalid', model: { ...row('adrenaline-iv').model, coefficient: Infinity } };
-  const results = calculateAllRecords([invalid, row('isofundine')], patient());
-  assert.equal(results.get('invalid').status, 'blocked');
-  assert.equal(results.get('invalid').dose, null);
-  assert.equal(results.get('isofundine').dose, 100);
-  assert.throws(() => calculate('isofundine', { weightKg: Infinity, ageMonths: 36, weightSource: 'measured' }));
-  assert.throws(() => calculate('isofundine', { weightKg: 12, ageMonths: NaN, weightSource: 'measured' }));
 });

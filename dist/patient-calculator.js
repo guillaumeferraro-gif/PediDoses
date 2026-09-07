@@ -1,127 +1,128 @@
 import { CalculationError, parseDecimal, ageInMonths } from './calculator.js';
 import { concentration } from './catalog-audit.js';
 
-// Technical input bounds, not a statement of clinical eligibility.
 export const weightBounds = Object.freeze({ min: 0.5, max: 200 });
-export const weightEstimation = Object.freeze({
-  name: 'APLS', minAgeMonths: 1, maxAgeMonths: 144,
-  source: 'https://bpspubs.onlinelibrary.wiley.com/doi/10.1111/bcp.12876',
-});
+export const infantWeightTable = Object.freeze([3, 3.5, 4.2, 5, 6, 6, 7, 8, 8, 9, 9, 10]);
+export const weightEstimation = Object.freeze({ name: 'Table locale puis (âge + 4) × 2', minAgeMonths: 0, maxAgeMonths: 216 });
 
 const present = value => value !== undefined && value !== null && String(value).trim() !== '';
+const round = (value, decimals) => Number(value.toFixed(decimals));
 function error(code, message, field) {
-  const failure = new CalculationError(code, message);
-  failure.field = field;
-  throw failure;
+  const failure = new CalculationError(code, message); failure.field = field; throw failure;
 }
 function positive(value) {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
-    throw new CalculationError('invalid-result', 'Paramètre de calcul non valide.');
-  }
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) throw new CalculationError('invalid-result', 'Paramètre de calcul non valide.');
   return value;
 }
 function validateWeight(weightKg) {
-  if (!Number.isFinite(weightKg) || weightKg < weightBounds.min || weightKg > weightBounds.max) {
-    error('weight-out-of-range', 'Poids : saisissez une valeur entre 0,5 et 200 kg. Vérifiez l’unité.', 'weight');
-  }
+  if (!Number.isFinite(weightKg) || weightKg < weightBounds.min || weightKg > weightBounds.max) error('weight-out-of-range', 'Poids : saisissez une valeur entre 0,5 et 200 kg. Vérifiez l’unité.', 'weight');
 }
 
-/** Age-only fallback. No extrapolation to newborns or beyond 12 years. */
 export function estimateWeightKg(months) {
-  if (!Number.isFinite(months) || months < weightEstimation.minAgeMonths || months > weightEstimation.maxAgeMonths) {
-    error('estimation-unavailable', 'Estimation disponible de 1 mois à 12 ans. Renseignez le poids connu.', 'age');
+  if (!Number.isFinite(months) || months < 0 || months > 216) error('estimation-unavailable', 'Estimation disponible de la naissance à 18 ans. Renseignez le poids connu si nécessaire.', 'age');
+  if (months < 12) {
+    const index = Math.min(11, Math.floor(months));
+    return Object.freeze({ weightKg: infantWeightTable[index], formula: `table locale : ${index} mois → ${infantWeightTable[index]} kg` });
   }
   const years = months / 12;
-  if (months < 12) return Object.freeze({ weightKg: 0.5 * months + 4, formula: '0,5 × âge en mois + 4' });
-  if (months < 72) return Object.freeze({ weightKg: 2 * years + 8, formula: '2 × âge en années + 8' });
-  return Object.freeze({ weightKg: 3 * years + 7, formula: '3 × âge en années + 7' });
+  return Object.freeze({ weightKg: (years + 4) * 2, formula: '(âge en années + 4) × 2' });
 }
 
-/** A non-empty measured-weight field must be valid; never silently fall back. */
 export function resolvePatientContext({ weight = '', age = '', ageUnit = 'years' } = {}) {
   let ageMonths = null;
   if (present(age)) {
-    try { ageMonths = ageInMonths(age, ageUnit); }
-    catch (failure) { failure.field = 'age'; throw failure; }
-    if (!Number.isFinite(ageMonths) || ageMonths < 0 || ageMonths > 216) {
-      error('age-out-of-range', 'Âge : saisissez une valeur de 0 à 18 ans (216 mois).', 'age');
-    }
-    // Avoid a unit-conversion roundoff pushing an exact month over a boundary.
-    ageMonths = Math.round(ageMonths * 1e9) / 1e9;
+    try { ageMonths = ageInMonths(age, ageUnit); } catch (failure) { failure.field = 'age'; throw failure; }
+    if (!Number.isFinite(ageMonths) || ageMonths < 0 || ageMonths > 216) error('age-out-of-range', 'Âge : saisissez une valeur de 0 à 18 ans (216 mois).', 'age');
+    ageMonths = round(ageMonths, 9);
   }
   if (present(weight)) {
     let weightKg;
-    try { weightKg = parseDecimal(weight, 'Poids'); }
-    catch (failure) { failure.field = 'weight'; throw failure; }
+    try { weightKg = parseDecimal(weight, 'Poids'); } catch (failure) { failure.field = 'weight'; throw failure; }
     validateWeight(weightKg);
     return Object.freeze({ weightKg, ageMonths, weightSource: 'measured', formula: null });
   }
   if (ageMonths === null) return null;
-  const estimate = estimateWeightKg(ageMonths);
-  return Object.freeze({ ...estimate, ageMonths, weightSource: 'estimated' });
+  return Object.freeze({ ...estimateWeightKg(ageMonths), ageMonths, weightSource: 'estimated' });
 }
 
-// Known source ambiguities that must not become weight-adjusted doses.
-const blockingIssues = new Set(['ketamine-route', 'ij-route', 'combination-basis']);
+function effectiveCoefficient(model, context) {
+  if (!model.tiers) return model.coefficient;
+  if (context.ageMonths === null) throw new CalculationError('age-required', 'Âge nécessaire pour appliquer le palier de posologie.');
+  return model.tiers.find(item => item.maxAgeMonthsExclusive === undefined || context.ageMonths < item.maxAgeMonthsExclusive)?.coefficient;
+}
+function effectiveDose(model, context, coefficient) {
+  let dose = coefficient * context.weightKg;
+  if (model.fixedDoseFromWeightKg !== undefined && context.weightKg >= model.fixedDoseFromWeightKg) dose = model.fixedDose;
+  if (model.fixedDoseFromAgeMonths !== undefined) {
+    if (context.ageMonths === null) throw new CalculationError('age-required', 'Âge nécessaire pour appliquer le palier de posologie.');
+    if (context.ageMonths >= model.fixedDoseFromAgeMonths) dose = model.fixedDose;
+  }
+  const uncappedDose = dose;
+  if (Number.isFinite(model.maximumDose)) dose = Math.min(dose, model.maximumDose);
+  return { dose, uncappedDose, maximumApplied: dose < uncappedDose };
+}
 
-/** Arithmetic using documented source coefficients, never a prescription. */
 export function calculateRecordForPatient(record, context) {
   if (!record?.model) throw new CalculationError('invalid-record', 'Ligne de calcul absente.');
   const m = record.model;
   const result = {
     recordId: record.id, clinicalUse: false, status: 'empty', message: 'Renseignez l’âge ou le poids.',
-    weightKg: null, weightSource: null, dose: null, unit: m.unit ?? null,
-    volumeMl: null, rateMlH: null, hourlyAmount: null, concentration: null,
-    mass: null, massUnit: null, mixtureVolumeMl: null, theoreticalDurationHours: null,
-    maximumApplied: false,
+    weightKg: null, weightSource: null, dose: null, uncappedDose: null, unit: m.unit ?? null,
+    coefficient: null, volumeMl: null, rateMlH: null, hourlyAmount: null, concentration: null,
+    mass: null, massUnit: null, mixtureVolumeMl: null, theoreticalDurationHours: null, maximumApplied: false,
   };
-  const blocked = message => Object.freeze({ ...result, status: 'blocked', message });
-  if (m.type === 'instruction') return Object.freeze({ ...result, status: 'instruction', message: 'Consigne du tableau, sans calcul.' });
+  if (m.type === 'instruction') return Object.freeze({ ...result, status: 'instruction', message: record.protocol?.posology || 'Consigne sans calcul.' });
   if (!context) return Object.freeze(result);
   validateWeight(context.weightKg);
-  if (!['measured', 'estimated'].includes(context.weightSource) ||
-      (context.ageMonths !== null && (!Number.isFinite(context.ageMonths) || context.ageMonths < 0 || context.ageMonths > 216))) {
-    throw new CalculationError('invalid-context', 'Âge ou origine du poids non valide.');
-  }
-  result.weightKg = context.weightKg;
-  result.weightSource = context.weightSource;
-  if (context.ageMonths !== null && context.ageMonths < 1) return blocked('Nouveau-né : protocole spécifique à renseigner.');
-  if (m.type === 'unresolved') return blocked('Données sources à clarifier.');
-  if (record.issues?.some(issue => blockingIssues.has(issue.code))) return blocked('Voie ou expression de dose à confirmer.');
+  if (!['measured', 'estimated'].includes(context.weightSource) || (context.ageMonths !== null && (!Number.isFinite(context.ageMonths) || context.ageMonths < 0 || context.ageMonths > 216))) throw new CalculationError('invalid-context', 'Âge ou origine du poids non valide.');
+  result.weightKg = context.weightKg; result.weightSource = context.weightSource;
+  if (m.type === 'unresolved') return Object.freeze({ ...result, status: 'blocked', message: 'Données à confirmer avant calcul.' });
   if (m.minimumAgeMonthsExclusive !== undefined) {
-    if (context.ageMonths === null) return blocked('Âge nécessaire : uniquement au-delà de 2 ans.');
-    if (context.ageMonths <= m.minimumAgeMonthsExclusive) return blocked('Restriction du tableau : âge strictement supérieur à 2 ans.');
+    if (context.ageMonths === null) return Object.freeze({ ...result, status: 'blocked', message: 'Âge nécessaire pour cette posologie.' });
+    if (context.ageMonths <= m.minimumAgeMonthsExclusive) return Object.freeze({ ...result, status: 'blocked', message: 'Non calculé : âge hors du palier indiqué.' });
   }
-  if (!['g', 'mg', 'mcg', 'ng', 'mmol', 'mL', 'J'].includes(m.unit)) {
-    throw new CalculationError('invalid-unit', 'Unité de calcul non reconnue.');
+  if (m.type === 'fixed-rate') {
+    result.rateMlH = round(context.weightKg / positive(m.rateDivisor), 1);
+    return Object.freeze({ ...result, status: 'calculated', message: 'Débit du protocole SMUR arrondi à 0,1 mL/h.' });
   }
-  const coefficient = positive(m.coefficient);
+  if (m.type === 'conditional-dose') {
+    const selected = m.cases.find(item => item.maxWeightKg === undefined || context.weightKg <= item.maxWeightKg);
+    result.dose = positive(selected.dose); result.uncappedDose = result.dose;
+    result.concentration = concentration(m, m.unit);
+    if (result.concentration !== null) result.volumeMl = result.dose / result.concentration;
+    return Object.freeze({ ...result, status: 'calculated', message: 'Palier de poids appliqué.' });
+  }
+  const coefficient = positive(effectiveCoefficient(m, context)); result.coefficient = coefficient;
+  Object.assign(result, effectiveDose(m, context, coefficient));
+  if (m.type === 'fixed-duration-mixture') {
+    result.concentration = concentration(m, m.unit);
+    result.volumeMl = result.dose / positive(result.concentration);
+    result.mixtureVolumeMl = positive(m.finalVolumeMl);
+    result.rateMlH = round(result.mixtureVolumeMl / positive(m.durationHours), 1);
+    result.theoreticalDurationHours = m.durationHours;
+    return Object.freeze({ ...result, status: 'calculated', message: 'Préparation calculée sans arrondi intermédiaire ; débit arrondi à 0,1 mL/h.' });
+  }
   if (m.type === 'dose') {
-    result.dose = positive(coefficient * context.weightKg);
     if (m.unit === 'mL') result.volumeMl = result.dose;
     else if (m.unit !== 'J') {
-      result.concentration = concentration(m, m.unit);
-      if (result.concentration !== null) result.volumeMl = positive(result.dose / positive(result.concentration));
+      result.concentration = m.dynamicConcentration ? (context.weightKg < m.dynamicConcentration.thresholdKg ? m.dynamicConcentration.below : m.dynamicConcentration.atOrAbove) : concentration(m, m.unit);
+      if (result.concentration !== null) result.volumeMl = result.dose / positive(result.concentration);
     }
-    if (m.massPerMl !== undefined) {
-      result.mass = positive(result.volumeMl * positive(m.massPerMl));
-      result.massUnit = m.massUnit;
-    }
+    if (m.volumePerDose !== undefined) result.volumeMl = result.dose * positive(m.volumePerDose);
+    if (m.massPerMl !== undefined && result.volumeMl !== null) { result.mass = result.volumeMl * positive(m.massPerMl); result.massUnit = m.massUnit; }
   } else if (m.type === 'infusion') {
-    result.concentration = positive(concentration(m, m.unit));
-    result.hourlyAmount = positive(coefficient * context.weightKg * 60 / positive(m.periodMinutes));
-    result.rateMlH = positive(result.hourlyAmount / result.concentration);
-    if (m.mix) {
-      result.mixtureVolumeMl = positive(m.mix.takeMl + m.mix.addMl);
-      result.theoreticalDurationHours = positive(result.mixtureVolumeMl / result.rateMlH);
-    }
+    result.concentration = m.dynamicConcentration ? (context.weightKg < m.dynamicConcentration.thresholdKg ? m.dynamicConcentration.below : m.dynamicConcentration.atOrAbove) : positive(concentration(m, m.unit));
+    result.hourlyAmount = coefficient * context.weightKg * 60 / positive(m.periodMinutes);
+    const exactRate = result.hourlyAmount / result.concentration;
+    result.rateMlH = round(exactRate, 1);
+    if (m.mix) { result.mixtureVolumeMl = positive(m.mix.takeMl + m.mix.addMl); result.theoreticalDurationHours = result.mixtureVolumeMl / exactRate; }
   } else throw new CalculationError('invalid-model', 'Type de calcul non reconnu.');
-  return Object.freeze({ ...result, status: 'calculated', message: 'Calcul arithmétique sans plafond clinique.' });
+  return Object.freeze({ ...result, status: 'calculated', message: result.maximumApplied ? 'Plafond confirmé appliqué.' : 'Calcul effectué sans arrondi intermédiaire.' });
 }
 
 export function calculateAllRecords(records, context) {
   return new Map(records.map(record => {
     try { return [record.id, calculateRecordForPatient(record, context)]; }
-    catch { return [record.id, Object.freeze({ recordId: record.id, status: 'blocked', clinicalUse: false, message: 'Calcul indisponible : données de cette ligne à vérifier.', dose: null, volumeMl: null, rateMlH: null })]; }
+    catch (failure) { return [record.id, Object.freeze({ recordId: record.id, status: 'blocked', clinicalUse: false, message: failure.message || 'Calcul indisponible.', dose: null, volumeMl: null, rateMlH: null })]; }
   }));
 }

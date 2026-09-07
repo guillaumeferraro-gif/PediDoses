@@ -1,16 +1,17 @@
 # PediDoses — France
 
-Version 0.3 : âge, poids connu prioritaire et recalcul automatique. Les 63 lignes du tableau fourni sont conservées dans leurs neuf rubriques ; l’Isofundine est ajouté dans un groupe « Remplissage ».
+Version 0.4 : protocole SMUR enrichi à partir du tableau fourni et des décisions prises avec l’utilisateur. Les 63 lignes d’origine sont conservées ; l’Isofundine reste ajouté dans le groupe « Remplissage ».
 
-**Prototype non validé pour les soins. Les calculs appliquent les coefficients sources sans plafond clinique, sans choix d’indication et sans génération d’ordonnance.**
+**Validation clinique à finaliser. L’application calcule les règles confirmées et affiche les questionnements restants dans chaque fiche, sans générer d’ordonnance.**
 
 ## Fonctions
 
 - « Calculs rapides » s’ouvre directement sur les champs âge / poids. L’âge seul fournit un poids estimé ; tout poids connu valide saisi prend la priorité et rend l’âge facultatif, sauf restriction particulière.
 - Modifier l’âge ou le poids recalcule immédiatement toutes les lignes calculables, y compris celles masquées par le filtre. Effacer le poids connu revient à l’estimation ; « Nouveau patient » efface les saisies et résultats.
-- Une saisie invalide efface les résultats. Un poids invalide n’est jamais remplacé silencieusement par une estimation. Changer l’unité convertit l’âge déjà saisi : 2 ans deviennent 24 mois.
-- Les mélanges de perfusion restent fixes : seul le débit calculé varie avec le poids. L’autonomie du mélange d’acide tranexamique est distinguée de sa durée source.
-- Quantités, volumes documentés et débits groupés par rubrique, avec préparations, calculs et précautions en détail. Aucun arrondi d’administration ni plafond clinique appliqué.
+- Une saisie invalide efface les résultats. Un poids invalide n’est jamais remplacé silencieusement par une estimation. Changer l’unité d’âge conserve la valeur numérique : « 3 mois » devient « 3 ans » si l’unité est changée.
+- Chaque fiche de calcul rapide affiche posologie, particularités de poids ou d’âge, dilution, modalités d’administration et questionnements restants. Les indications ne sont pas affichées.
+- Les débits de pompe sont arrondis seulement à la fin à 0,1 mL/h. Les volumes de préparation sont affichés à 0,01 mL ; aucun arrondi intermédiaire n’est réutilisé.
+- Adrénaline, noradrénaline, dopamine et dobutamine IVSE utilisent les préparations fixes locales et le débit approché poids/3.
 - Recherche par nom, présentation ou texte et filtre par rubrique.
 - Consultation des six cellules sources, y compris les cases vides et les colonnes décalées.
 - Audit numérique à 10 kg présumés : hypothèse de contrôle déduite des doses totales, à confirmer.
@@ -23,17 +24,16 @@ Les neuf rubriques d’origine sont ACR, antibiotiques, cardio, sédation/curare
 
 ## Estimation du poids
 
-Formules APLS décrites par [Carasco et al., 2016](https://bpspubs.onlinelibrary.wiley.com/doi/10.1111/bcp.12876), consultées le 6 septembre 2026 :
+Règle locale confirmée :
 
 | Âge saisi | Poids estimé en kg |
 | --- | --- |
-| De 1 à moins de 12 mois | 0,5 × âge en mois + 4 |
-| De 1 à moins de 6 ans | 2 × âge en années + 8 |
-| De 6 à 12 ans inclus | 3 × âge en années + 7 |
+| De 0 à 11 mois | Table mensuelle du fichier source : 3 ; 3,5 ; 4,2 ; 5 ; 6 ; 6 ; 7 ; 8 ; 8 ; 9 ; 9 ; 10 kg |
+| À partir de 1 an | (âge en années + 4) × 2 |
 
-Les âges décimaux sont conservés. Pas d’extrapolation avant 1 mois ou au-delà de 144 mois. Le changement de formule à 6 ans peut entraîner un saut de l’estimation. Privilégier un poids connu ; les [recommandations RCUK 2025](https://www.resus.org.uk/professional-library/2025-resuscitation-guidelines/paediatric-basic-life-support-guidelines) privilégient l’information parentale et les méthodes fondées sur la taille, idéalement ajustées à la corpulence. Aucune adaptation au poids idéal ou à l’obésité n’est automatisée.
+Les âges décimaux sont conservés. Avant un an, la borne mensuelle inférieure de la table est utilisée, sans interpolation. Le poids connu reste prioritaire. Aucune adaptation au poids idéal ou à l’obésité n’est automatisée.
 
-Les bornes de saisie (poids connu de 0,5 à 200 kg ; âge de 0 à 18 ans) sont des contrôles techniques, pas des critères d’éligibilité clinique. Un nouveau-né identifié de moins d’un mois reste sans résultat médicamenteux, faute de protocole néonatal documenté.
+Les bornes de saisie (poids connu de 0,5 à 200 kg ; âge de 0 à 18 ans) sont des contrôles techniques, pas des critères d’éligibilité clinique.
 
 ## Isofundine
 
@@ -43,9 +43,9 @@ Ce repère n’est pas la posologie journalière du [RCP français de l’Isofun
 
 ## Limites
 
-Cinq écarts numériques sont signalés : atropine, adrénaline IVC, dobutamine, dopamine et salbutamol IVC. Les calculs au poids saisi suivent le coefficient par kg et la concentration du modèle, jamais le volume ou débit d’exemple recopié. Neuf lignes restent sans résultat dans « Calculs rapides » : SSH, caféine, noradrénaline, salbutamol nébulisé, gluconate de calcium, insuline/G5 %, kétamine d’intubation, midazolam IJ et amoxicilline/acide clavulanique. Leurs préparations, voies ou expressions de dose restent ambiguës. L’étomidate exige un âge connu strictement supérieur à 2 ans. Les volumes des suspensions de résines et des antibiotiques sans concentration ne sont pas déduits.
+Les règles validées au cours de la relecture sont intégrées, notamment l’atropine locale à 0,25 mg/mL, l’adrénaline IM plafonnée à 0,5 mg, les paliers d’âge transcrits, le SSH 7,5 % prêt à l’emploi, la caféine exprimée en citrate, le gluconate de calcium PROAMP 10 %, l’insuline/G5 locale, les résines et la morphine. L’étomidate exige un âge connu strictement supérieur à 2 ans. Les antibiotiques restent calculés en masse sans volume standardisé, leur dilution étant laissée à l’IDE.
 
-Les indications détaillées, plafonds, intervalles, populations et modalités d’administration restent à compléter avec le protocole daté du service. « Non » dans la colonne de dilution n’est pas interprété comme une autorisation d’injection directe. Les documents de la BDPM sont des références de relecture ciblée ; ils ne valident pas le tableau complet.
+Les plafonds, intervalles, présentations ou modalités encore incertains sont listés dans les fiches concernées et ne sont pas appliqués comme des règles confirmées. Les documents de la BDPM et Pédiadol sont des références ciblées ; ils ne valident pas le tableau complet.
 
 Voir [REVUE-DU-TABLEAU.md](./REVUE-DU-TABLEAU.md), [TABLEAU-IMPORTE.md](./TABLEAU-IMPORTE.md) et [CLINICAL-SCOPE.md](./CLINICAL-SCOPE.md).
 
