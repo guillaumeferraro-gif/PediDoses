@@ -1,5 +1,6 @@
 import { CalculationError, parseDecimal, ageInMonths } from './calculator.js';
 import { concentration } from './catalog-audit.js';
+import { preparationForWeight } from './smur-preparation.js';
 
 export const weightBounds = Object.freeze({ min: 0.5, max: 200 });
 export const infantWeightTable = Object.freeze([3, 3.5, 4.2, 5, 6, 6, 7, 8, 8, 9, 9, 10]);
@@ -68,21 +69,27 @@ export function calculateRecordForPatient(record, context) {
   const result = {
     recordId: record.id, clinicalUse: false, status: 'empty', message: 'Renseignez l’âge ou le poids.',
     weightKg: null, weightSource: null, dose: null, uncappedDose: null, unit: m.unit ?? null,
-    coefficient: null, volumeMl: null, rateMlH: null, hourlyAmount: null, concentration: null,
+    coefficient: null, volumeMl: null, withdrawalMl: null, addMl: null, rateMlH: null, exactRateMlH: null, hourlyAmount: null, concentration: null,
+    preparation: null, stockConcentration: null,
     mass: null, massUnit: null, mixtureVolumeMl: null, theoreticalDurationHours: null, maximumApplied: false,
   };
   if (m.type === 'instruction') return Object.freeze({ ...result, status: 'instruction', message: record.protocol?.posology || 'Consigne sans calcul.' });
+  if (m.type === 'unresolved') return Object.freeze({ ...result, status: 'blocked', message: m.blockReason || 'Données à confirmer avant calcul.' });
   if (!context) return Object.freeze(result);
   validateWeight(context.weightKg);
   if (!['measured', 'estimated'].includes(context.weightSource) || (context.ageMonths !== null && (!Number.isFinite(context.ageMonths) || context.ageMonths < 0 || context.ageMonths > 216))) throw new CalculationError('invalid-context', 'Âge ou origine du poids non valide.');
   result.weightKg = context.weightKg; result.weightSource = context.weightSource;
-  if (m.type === 'unresolved') return Object.freeze({ ...result, status: 'blocked', message: 'Données à confirmer avant calcul.' });
+  result.preparation = preparationForWeight(m, context.weightKg);
+  result.stockConcentration = result.preparation.stockConcentration;
   if (m.minimumAgeMonthsExclusive !== undefined) {
     if (context.ageMonths === null) return Object.freeze({ ...result, status: 'blocked', message: 'Âge nécessaire pour cette posologie.' });
     if (context.ageMonths <= m.minimumAgeMonthsExclusive) return Object.freeze({ ...result, status: 'blocked', message: 'Non calculé : âge hors du palier indiqué.' });
   }
   if (m.type === 'fixed-rate') {
-    result.rateMlH = round(context.weightKg / positive(m.rateDivisor), 1);
+    result.exactRateMlH = context.weightKg / positive(m.rateDivisor);
+    result.rateMlH = round(result.exactRateMlH, 1);
+    result.concentration = result.preparation.concentration;
+    result.mixtureVolumeMl = result.preparation.finalVolumeMl;
     return Object.freeze({ ...result, status: 'calculated', message: 'Débit du protocole SMUR arrondi à 0,1 mL/h.' });
   }
   if (m.type === 'conditional-dose') {
@@ -95,29 +102,39 @@ export function calculateRecordForPatient(record, context) {
   const coefficient = positive(effectiveCoefficient(m, context)); result.coefficient = coefficient;
   Object.assign(result, effectiveDose(m, context, coefficient));
   if (m.type === 'fixed-duration-mixture') {
-    result.concentration = concentration(m, m.unit);
-    result.volumeMl = result.dose / positive(result.concentration);
+    result.withdrawalMl = result.dose / positive(result.stockConcentration);
     result.mixtureVolumeMl = positive(m.finalVolumeMl);
-    result.rateMlH = round(result.mixtureVolumeMl / positive(m.durationHours), 1);
+    result.addMl = result.mixtureVolumeMl - result.withdrawalMl;
+    if (result.addMl < 0) throw new CalculationError('invalid-preparation', 'Le volume de produit dépasse le volume final.');
+    result.concentration = result.dose / result.mixtureVolumeMl;
+    result.exactRateMlH = result.mixtureVolumeMl / positive(m.durationHours);
+    result.rateMlH = round(result.exactRateMlH, 1);
     result.theoreticalDurationHours = m.durationHours;
     return Object.freeze({ ...result, status: 'calculated', message: 'Préparation calculée sans arrondi intermédiaire ; débit arrondi à 0,1 mL/h.' });
   }
   if (m.type === 'dose') {
     if (m.unit === 'mL') result.volumeMl = result.dose;
     else if (m.unit !== 'J') {
-      result.concentration = m.dynamicConcentration ? (context.weightKg < m.dynamicConcentration.thresholdKg ? m.dynamicConcentration.below : m.dynamicConcentration.atOrAbove) : concentration(m, m.unit);
+      result.concentration = result.preparation.concentration;
       if (result.concentration !== null) result.volumeMl = result.dose / positive(result.concentration);
     }
     if (m.volumePerDose !== undefined) result.volumeMl = result.dose * positive(m.volumePerDose);
     if (m.massPerMl !== undefined && result.volumeMl !== null) { result.mass = result.volumeMl * positive(m.massPerMl); result.massUnit = m.massUnit; }
+    if (m.volumeKind === 'withdrawal') {
+      result.withdrawalMl = result.volumeMl;
+      result.volumeMl = null;
+      result.concentration = null;
+    }
   } else if (m.type === 'infusion') {
-    result.concentration = m.dynamicConcentration ? (context.weightKg < m.dynamicConcentration.thresholdKg ? m.dynamicConcentration.below : m.dynamicConcentration.atOrAbove) : positive(concentration(m, m.unit));
+    result.dose = null; result.uncappedDose = null;
+    result.concentration = positive(result.preparation.concentration);
     result.hourlyAmount = coefficient * context.weightKg * 60 / positive(m.periodMinutes);
     const exactRate = result.hourlyAmount / result.concentration;
+    result.exactRateMlH = exactRate;
     result.rateMlH = round(exactRate, 1);
-    if (m.mix) { result.mixtureVolumeMl = positive(m.mix.takeMl + m.mix.addMl); result.theoreticalDurationHours = result.mixtureVolumeMl / exactRate; }
+    if (result.preparation.finalVolumeMl) { result.mixtureVolumeMl = result.preparation.finalVolumeMl; result.theoreticalDurationHours = result.mixtureVolumeMl / exactRate; }
   } else throw new CalculationError('invalid-model', 'Type de calcul non reconnu.');
-  return Object.freeze({ ...result, status: 'calculated', message: result.maximumApplied ? 'Plafond confirmé appliqué.' : 'Calcul effectué sans arrondi intermédiaire.' });
+  return Object.freeze({ ...result, status: 'calculated', message: result.maximumApplied ? 'Plafond du modèle appliqué ; statut précisé dans la fiche.' : 'Calcul effectué sans arrondi intermédiaire.' });
 }
 
 export function calculateAllRecords(records, context) {

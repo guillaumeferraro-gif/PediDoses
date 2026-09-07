@@ -1,20 +1,22 @@
 # PediDoses — France
 
-Version 0.4 : protocole SMUR enrichi à partir du tableau fourni et des décisions prises avec l’utilisateur. Les 63 lignes d’origine sont conservées ; l’Isofundine reste ajouté dans le groupe « Remplissage ».
+Version 0.5 : fiches complètes pour la validation collective du protocole SMUR, à partir du Google Sheet fourni et des décisions locales. Les 63 lignes de la transcription initiale sont conservées ; l’Isofundine apparaît dans « Remplissage ».
 
-**Validation clinique à finaliser. L’application calcule les règles confirmées et affiche les questionnements restants dans chaque fiche, sans générer d’ordonnance.**
+**Support de relecture avant production. Les simulations et les références consultées ne constituent pas une validation clinique.**
 
 ## Fonctions
 
 - « Calculs rapides » s’ouvre directement sur les champs âge / poids. L’âge seul fournit un poids estimé ; tout poids connu valide saisi prend la priorité et rend l’âge facultatif, sauf restriction particulière.
 - Modifier l’âge ou le poids recalcule immédiatement toutes les lignes calculables, y compris celles masquées par le filtre. Effacer le poids connu revient à l’estimation ; « Nouveau patient » efface les saisies et résultats.
 - Une saisie invalide efface les résultats. Un poids invalide n’est jamais remplacé silencieusement par une estimation. Changer l’unité d’âge conserve la valeur numérique : « 3 mois » devient « 3 ans » si l’unité est changée.
-- Chaque fiche de calcul rapide affiche posologie, particularités de poids ou d’âge, dilution, modalités d’administration et questionnements restants. Les indications ne sont pas affichées.
+- Chaque fiche affiche directement l’ampoule ou présentation, toutes les posologies et leurs seuils, la concentration finale, l’équivalent en mL/kg/dose ou mL/kg/h, chaque préparation, l’administration et les questions à résoudre. Tous les paliers restent visibles même sans âge ou poids saisi. Les indications ne sont pas affichées.
+- Les dilutions changent à 15 kg pour la kétamine analgésique et à 10 kg pour midazolam IV, atracurium bolus et morphine. Fiches et moteur utilisent les mêmes préparations. La morphine IVSE affiche les quatre combinaisons d’âge et de poids.
+- Le bouton « Imprimer les fiches affichées » respecte le filtre de recherche et conserve les sections de validation ouvertes.
 - Les débits de pompe sont arrondis seulement à la fin à 0,1 mL/h. Les volumes de préparation sont affichés à 0,01 mL ; aucun arrondi intermédiaire n’est réutilisé.
 - Adrénaline, noradrénaline, dopamine et dobutamine IVSE utilisent les préparations fixes locales et le débit approché poids/3.
 - Recherche par nom, présentation ou texte et filtre par rubrique.
 - Consultation des six cellules sources, y compris les cases vides et les colonnes décalées.
-- Audit numérique à 10 kg présumés : hypothèse de contrôle déduite des doses totales, à confirmer.
+- L’audit de la transcription initiale reste inchangé. La cellule C5 du fichier Sheet fourni confirme un poids saisi de 10 kg pour cet exemple.
 - Valeurs originales conservées, avec distinction des écarts numériques et des données ambiguës.
 - Unités g, mg, mcg, ng, mmol, mL et J distinguées ; perfusions par minute, heure ou 6 heures.
 - Références françaises ciblées pour la relecture.
@@ -37,15 +39,17 @@ Les bornes de saisie (poids connu de 0,5 à 200 kg ; âge de 0 à 18 ans) sont d
 
 ## Isofundine
 
-Ajout distinct de la transcription utilisateur. Le repère de 10 mL/kg correspond au bolus de cristalloïde isotonique équilibré décrit dans les [recommandations RCUK 2025, section Circulation](https://www.resus.org.uk/professional-library/2025-resuscitation-guidelines/paediatric-basic-life-support-guidelines), pour un choc hypovolémique, obstructif ou distributif, avec réévaluation après chaque bolus. Son application à l’Isofundine est un choix de développement fondé sur sa classe de solution, à confirmer dans le protocole local.
-
-Ce repère n’est pas la posologie journalière du [RCP français de l’Isofundine](https://base-donnees-publique.medicaments.gouv.fr/medicament/66312310/extrait#tab-rcp), consulté le 6 septembre 2026. Aucune répétition ni vitesse n’est calculée. Les contre-indications et l’incompatibilité avec un dispositif de transfusion commun sont indiquées dans la fiche.
+La ligne 17 du fichier Sheet contient l’Isofundine à 10 mL/kg, avec un plafond de 500 mL dans la formule. Ce plafond est affiché comme question à valider et n’est pas ajouté automatiquement au calcul. La vitesse et les répétitions restent à préciser.
 
 ## Limites
 
-Les règles validées au cours de la relecture sont intégrées, notamment l’atropine locale à 0,25 mg/mL, l’adrénaline IM plafonnée à 0,5 mg, les paliers d’âge transcrits, le SSH 7,5 % prêt à l’emploi, la caféine exprimée en citrate, le gluconate de calcium PROAMP 10 %, l’insuline/G5 locale, les résines et la morphine. L’étomidate exige un âge connu strictement supérieur à 2 ans. Les antibiotiques restent calculés en masse sans volume standardisé, leur dilution étant laissée à l’IDE.
+Les décisions locales intégrées incluent l’atropine à 0,25 mg/mL, l’adrénaline IM plafonnée à 0,5 mg, le SSH 7,5 % prêt à l’emploi, la caféine exprimée en citrate, l’insuline/G5 et les conventions des résines. Les paliers d’âge transcrits de kétamine, suxaméthonium et phénobarbital restent explicitement à confirmer. L’étomidate exige un âge connu strictement supérieur à 2 ans. Les antibiotiques restent calculés en masse sans volume standardisé, leur dilution étant laissée à l’IDE.
 
-Les plafonds, intervalles, présentations ou modalités encore incertains sont listés dans les fiches concernées et ne sont pas appliqués comme des règles confirmées. Les documents de la BDPM et Pédiadol sont des références ciblées ; ils ne valident pas le tableau complet.
+Le gluconate de calcium n’a plus de dose automatiquement retenue : la fiche compare 0,4 mL/kg du tableau et 0,5 mL/kg de l’ERC 2025, les deux plafonnés à 20 mL de produit à 10 %, et demande de trancher la dose, la fraction de calcium et la dilution. Le calcul patient est suspendu pour cette seule ligne. Le RCP PROAMP documente la composition et la dilution, sans valider le schéma local.
+
+Pour le phénobarbital et le lévétiracétam, le volume prélevé n’est pas présenté comme un volume final à administrer tant que la préparation finale manque. Pour tranexamique et clonazépam IVSE, le résultat sépare volume prélevé, complément de diluant et concentration finale.
+
+Les plafonds du tableau non confirmés sont affichés avec leur seuil pondéral et la mention « non appliqué au calcul ». Le plafond de clonazépam IVSE à 4 mg/6 h, déjà utilisé par la version précédente, reste signalé comme utilisé pour la simulation mais à valider. La morphine IVSE applique le tableau dès 3 mois ; le schéma au-delà de 5 ans reste une question explicite par rapport à Pédiadol. Les documents de la BDPM, Pédiadol et ERC sont des références ciblées, pas une validation du tableau complet.
 
 Voir [REVUE-DU-TABLEAU.md](./REVUE-DU-TABLEAU.md), [TABLEAU-IMPORTE.md](./TABLEAU-IMPORTE.md) et [CLINICAL-SCOPE.md](./CLINICAL-SCOPE.md).
 
@@ -65,7 +69,7 @@ Ouvrir http://localhost:8080. Les modules JavaScript nécessitent un serveur HTT
 
 Copier le contenu du dossier à la racine d’un dépôt GitHub, y compris .github/workflows, puis utiliser la branche main. Les tests se lancent sur les pushes et les pull requests.
 
-La publication Pages reste manuelle : sélectionner Settings > Pages > Build and deployment > Source > GitHub Actions, puis lancer « Publier la démonstration sur GitHub Pages » depuis Actions. L’importation du dépôt ne publie pas le site. Cette publication concerne uniquement le prototype de relecture.
+La publication Pages reste manuelle : dans Actions, ouvrir « Publier la démonstration sur GitHub Pages », puis cliquer sur **Run workflow** en sélectionnant **main**. **Re-run all jobs** relance l’ancien commit et peut donc conserver une ancienne version. Le badge de cette version est **v0.5**. L’intégration du code ne publie pas le site.
 
 Ne pas importer de .git existant, de secrets ni de données patient. L’archive exclut l’identité de l’aperçu hébergé. La visibilité de Pages dépend du dépôt et de l’offre GitHub ; consulter les [sources de publication](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site). Le workflow suit la [documentation officielle Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages), consultée le 6 septembre 2026.
 
@@ -75,6 +79,8 @@ Ne pas importer de .git existant, de secrets ni de données patient. L’archive
 | --- | --- |
 | dist/patient-calculator.js | Résolution du poids, estimation et calculs par ligne |
 | dist/smur-data.js | Groupes du calculateur et référence Isofundine |
+| dist/smur-preparation.js | Préparations communes au calcul et à la fiche de validation |
+| dist/smur-sheets.js | Présentations, tous les paliers, équivalents volumiques et questions |
 | dist/smur-ui.js et dist/smur.css | Saisie immédiate et résultats groupés |
 | dist/catalog-data.js | Transcription, provenance et points à clarifier |
 | dist/catalog-audit.js | Audit à 10 kg présumés, sans prescription |
@@ -88,4 +94,4 @@ Ne pas importer de .git existant, de secrets ni de données patient. L’archive
 
 Aucun nom ni identifiant n’est demandé. Les saisies du calculateur restent uniquement en mémoire dans la page, sans stockage local ni transmission au serveur. Le retour depuis le cache de navigation efface les champs et les résultats. Le chargement du site reste une requête normale auprès de l’hébergeur.
 
-Les tests logiciels ne constituent pas une validation clinique. Aucun test navigateur ni test en situation de soins n’a été réalisé pour cette version.
+36 tests automatisés couvrent notamment les seuils de dilution, paliers d’âge, préparations fixes et précision des calculs. L’aperçu local n’a pas pu être ouvert dans le navigateur distant : le rendu visuel et l’impression restent à contrôler. Les tests logiciels ne constituent pas une validation clinique ; aucun test en situation de soins n’a été réalisé.

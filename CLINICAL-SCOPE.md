@@ -2,9 +2,9 @@
 
 ## Éléments confirmés
 
-Pays : France. Usage envisagé par l’utilisateur : accès rapide aux calculs en intervention SMUR, avec modification immédiate de l’âge ou du poids. Tableau utilisateur de 63 lignes couvrant neuf rubriques, dont 14 perfusions IV continues. Les cellules sources sont conservées et toutes les lignes sont marquées comme importées et non validées. L’établissement, l’auteur, la date et la version du document original restent inconnus. L’Isofundine est ajouté séparément en version 0.3, sans modifier la transcription.
+Pays : France. Usage envisagé : calculs rapides en SMUR. La transcription initiale de 63 lignes est conservée. Le Sheet fourni porte l’en-tête CHU Toulouse / SMUR pédiatrique 31 ; son auteur, sa date et sa version de validation restent à documenter. Sa ligne 17 contient aussi l’Isofundine, affiché séparément dans le calcul rapide, soit 64 fiches.
 
-Les correspondances 10 mcg/kg → 100 mcg, 1 mmol/kg → 10 mmol et 10 mL/kg → 100 mL suggèrent 10 kg. Cela constitue une hypothèse de contrôle, sans garantir que toutes les lignes correspondent à ce poids. L’âge n’est pas connu.
+La cellule Prescription!C5 du fichier fourni contient un poids saisi de 10 kg. L’audit historique de la transcription initiale est conservé indépendamment des simulations patient et des corrections locales.
 
 ## Prochaine étape de validation
 
@@ -13,24 +13,26 @@ Répondre aux questionnements affichés dans chaque fiche, puis faire relire l�
 | Élément | État |
 | --- | --- |
 | Pays | France |
-| Service / établissement | À préciser |
+| Service / établissement | En-tête du fichier : CHU Toulouse / SMUR pédiatrique 31 ; validation datée à fournir |
 | Utilisateurs et usage | SMUR confirmé ; qualification et validation clinique du logiciel non réalisées |
 | Population | 0 à 18 ans ; estimation locale avant 1 an puis (âge + 4) × 2 |
-| Posologies | Règles confirmées calculées ; autres plafonds et intervalles affichés comme questions |
+| Posologies | Paliers du tableau et décisions locales, avec questions explicites sur les règles encore à valider |
 | Antibiotiques | Masse calculée ; dilution laissée à l’IDE ; intervalle et plusieurs plafonds à préciser |
 | Voies | IV par défaut ; exceptions IVSE, IM, IJ/intergingivojugale, IR et nébulisation explicites |
-| Fraction active | Caféine exprimée en citrate ; calcium PROAMP documenté en volume et calcium élément |
+| Fraction active | Caféine en citrate ; dose et dilution du gluconate de calcium non tranchées, calcul suspendu |
 | Préparations | Volumes affichés à 0,01 mL sans arrondi intermédiaire |
 | Perfusions | Débits finaux à 0,1 mL/h ; quatre catécholamines selon le protocole SMUR poids/3 |
 | Relecture clinique / pharmaceutique | Non effectuée |
 
 ## Suite du développement
 
-La version 0.4 recalcule le tableau selon le poids saisi ou estimé. Le poids connu valide est toujours prioritaire. Avant un an, l’estimation reprend la table mensuelle du fichier source ; à partir d’un an elle applique (âge + 4) × 2. Une saisie invalide efface les résultats.
+La version 0.5 recalcule les lignes déterminées selon le poids saisi ou estimé. Le poids connu valide est toujours prioritaire. Avant un an, l’estimation reprend la table mensuelle ; à partir d’un an elle applique (âge + 4) × 2. Une saisie invalide efface les résultats.
 
-Le moteur applique uniquement les plafonds confirmés. Chaque fiche de calcul rapide expose la posologie, ses paliers éventuels, la dilution, l’administration et les questions non résolues. Les indications ne sont pas affichées. L’audit de l’exemple et la simulation fictive restent indépendants.
+Chaque fiche expose directement l’ampoule utilisée, toutes les posologies et leurs seuils, les équivalents volumiques après dilution, toutes les préparations, l’administration et les questions. Ces informations restent visibles sans contexte patient et à l’impression. Les indications ne sont pas affichées. Les plafonds non confirmés du Sheet sont identifiés comme non appliqués ; le plafond de clonazépam IVSE déjà utilisé reste signalé comme provisoire.
 
-L’Isofundine est un ajout de développement, avec un repère de remplissage de 10 mL/kg fondé sur les recommandations RCUK 2025 pour la classe des cristalloïdes équilibrés. Ce choix doit être confirmé localement ; il ne provient pas du tableau utilisateur et ne remplace pas les posologies du RCP. Réévaluation, contre-indications, vitesse, indication et éventuelles répétitions relèvent de la décision clinique. Les références et précautions sont jointes à la fiche.
+Le gluconate de calcium compare le tableau (0,4 mL/kg) et l’ERC 2025 (0,5 mL/kg), avant dilution, maximum 20 mL. Aucune des deux propositions n’est choisie automatiquement. La mention source « 20 mg/kg », la dilution et la durée restent à trancher. L’écart entre insuline/G5 local et schéma ERC est également explicite. Pour la morphine IVSE, le schéma au-delà de 5 ans reste à préciser par rapport à la référence Pédiadol.
+
+Les seuils de dilution et les concentrations des fiches sont issus des mêmes données que le moteur. Les résultats distinguent produit prélevé, diluant ajouté, volume administré et débit final. Les coefficients en mL/kg ne sont pas ramenés à deux décimales ; l’affichage à 0,01 mL concerne les volumes, sans réutilisation dans les calculs.
 
 Un moteur destiné aux soins nécessite des règles documentées : population, indications, unités et fraction active, voies et concentrations, plafonds et répétitions, conditions particulières, préparation, arrondis et cas de référence vérifiés indépendamment avec les professionnels concernés.
 
