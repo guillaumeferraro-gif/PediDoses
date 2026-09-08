@@ -1,6 +1,6 @@
 # PediDoses — France
 
-Version 0.5 : fiches complètes pour la validation collective du protocole SMUR, à partir du Google Sheet fourni et des décisions locales. Les 63 lignes de la transcription initiale sont conservées ; l’Isofundine apparaît dans « Remplissage ».
+Version 0.6 : fiches de validation collective du protocole SMUR et ampoules modifiables par tableau CSV. Après suppression de la lidocaïne, 62 lignes sources sont conservées ; l’Isofundine porte le total à 63 fiches. L’adrénaline IM figure dans « Anaphylaxie ».
 
 **Support de relecture avant production. Les simulations et les références consultées ne constituent pas une validation clinique.**
 
@@ -22,7 +22,17 @@ Version 0.5 : fiches complètes pour la validation collective du protocole SMUR,
 - Références françaises ciblées pour la relecture.
 - Simulation logicielle initiale conservée dans un onglet séparé, avec substance et unités fictives.
 
-Les neuf rubriques d’origine sont ACR, antibiotiques, cardio, sédation/curares, neuro, antidotes/G10/Exacyl, perfusions IV continues, hyperkaliémie et transfusion. Leur ordre est conservé ; « Remplissage » est ajouté après ACR. Les 64 lignes incluent des gestes électriques et des produits sanguins, pas seulement des médicaments.
+Les neuf rubriques d’origine sont ACR, antibiotiques, cardio, sédation/curares, neuro, antidotes/G10/Exacyl, perfusions IV continues, hyperkaliémie et transfusion. « Anaphylaxie » et « Remplissage » sont ajoutés après ACR. Les 63 fiches incluent des gestes électriques et des produits sanguins.
+
+## Ampoules modifiables sans coder
+
+L’onglet « Ampoules » propose le téléchargement du tableau Excel (importable dans Google Sheets), l’export CSV, l’import avec aperçu des changements et le retour aux ampoules de la version. Une ligne distincte est conservée pour chaque fiche, y compris les voies différentes d’un même médicament.
+
+Dans le tableau, renseigner quantité totale et volume du contenant ; la concentration se calcule sans arrondi. Si le volume est inconnu, seule la concentration déclarée est utilisée. Exporter l’onglet Ampoules en CSV, l’importer dans l’application puis appliquer les changements. Les configurations sont enregistrées sur l’appareil, sans donnée patient. Pour plusieurs appareils, importer le même CSV sur chacun. Aucune publication publique de Google Sheets n’est nécessaire.
+
+Les posologies ne sont pas modifiées par le tableau. Les préparations diluées conservent les quantités de médicament et volumes finaux du protocole ; le prélèvement s’adapte à la nouvelle ampoule. Les produits purs utilisent la nouvelle concentration. L’import refuse les lignes manquantes ou doublons, unités incompatibles, concentrations contradictoires et préparations impossibles. La colonne « Concentration calculée » est informative à l’import : les calculs repartent des données brutes.
+
+Les logos CHU Toulouse et SAMU 31 proviennent des images fournies dans la conversation. Ils sont intégrés sans modification ni déformation.
 
 ## Estimation du poids
 
@@ -39,13 +49,27 @@ Les bornes de saisie (poids connu de 0,5 à 200 kg ; âge de 0 à 18 ans) sont d
 
 ## Isofundine
 
-La ligne 17 du fichier Sheet contient l’Isofundine à 10 mL/kg, avec un plafond de 500 mL dans la formule. Ce plafond est affiché comme question à valider et n’est pas ajouté automatiquement au calcul. La vitesse et les répétitions restent à préciser.
+Isofundine : 10 mL/kg, maximum confirmé de 500 mL par bolus, flacon de 1 L. Modalité : IVD, à passer le plus rapidement possible. Aucune vitesse chiffrée ni nombre maximal de bolus ajouté.
+
+## Corrections v0.6
+
+- Adrénaline IV : 10 mcg/kg sous 50 kg avec dilution ; 1 mg pur dès 50 kg. IVD flash, puis rinçage de 5 mL de NaCl 0,9 %. IM : maximum 500 mcg.
+- Bicarbonate : 5 mmol dans 10 mL, IVL. Cardioversion : 1 J/kg, mode « Synchrone », sans plafond ; défibrillation : maximum 200 J.
+- Gentamicine : 40 mg/2 mL, sans plafond, IVL sur 30 min ; volume prélevé distingué du volume final choisi par l’IDE.
+- Amoxicilline : maximum 2 g ; amoxicilline-clavulanate : (80/3) mg/kg par dose exprimée en amoxicilline, maximum 2 g ; céfotaxime : maximum 3 g ; ceftriaxone : maximum 4 g. Une seule dose, IV, sans intervalle, durée ou dilution imposés.
+- Amiodarone : maximum 300 mg, IVD puis rinçage 5 mL de NaCl 0,9 % ; atropine : maximum 2 mg, IVD ; hydrocortisone : maximum 100 mg, IVD.
+- Magnésium : 50 mg/kg de sulfate, maximum 2 g, IVL sur 20 min. L’ambiguïté 0,15 g par mL/par ampoule de 10 mL empêche le calcul d’un volume ; la quantité du contenant reste vide dans le tableau.
+- Triphosadénine : laissée en suspens, sans calcul automatique.
+- Étomidate : IVL sans durée. Filtre demandé masquant la fiche après 2 ans, âge absent visible ; le calcul avant ou à 2 ans reste bloqué. Le sens du filtre, opposé à la restriction historique de calcul, est à confirmer.
+- Kétamine analgésique : plafond proposé 80 mg maintenu en suspens ; kétamine d’intubation : palier confirmé à 18 mois.
+- Midazolam IV : aucun plafond documenté, 50 mg/10 mL, IVL sans durée ni vitesse ; morphine DC : 10 mg/10 mL, IVL sans durée ni vitesse.
+- Microgrammes affichés « mcg » dans l’interface.
 
 ## Limites
 
-Les décisions locales intégrées incluent l’atropine à 0,25 mg/mL, l’adrénaline IM plafonnée à 0,5 mg, le SSH 7,5 % prêt à l’emploi, la caféine exprimée en citrate, l’insuline/G5 et les conventions des résines. Les paliers d’âge transcrits de kétamine, suxaméthonium et phénobarbital restent explicitement à confirmer. L’étomidate exige un âge connu strictement supérieur à 2 ans. Les antibiotiques restent calculés en masse sans volume standardisé, leur dilution étant laissée à l’IDE.
+Les décisions locales intégrées incluent l’atropine à 0,25 mg/mL, l’adrénaline IM plafonnée à 0,5 mg, le SSH 7,5 % prêt à l’emploi, la caféine exprimée en citrate, l’insuline/G5 et les conventions des résines. Le seuil de kétamine d’intubation à 18 mois est confirmé. Les paliers de suxaméthonium et de phénobarbital restent à confirmer. L’étomidate exige un âge connu strictement supérieur à 2 ans. Les antibiotiques restent calculés en masse sans volume standardisé, leur dilution étant laissée à l’IDE.
 
-Le gluconate de calcium n’a plus de dose automatiquement retenue : la fiche compare 0,4 mL/kg du tableau et 0,5 mL/kg de l’ERC 2025, les deux plafonnés à 20 mL de produit à 10 %, et demande de trancher la dose, la fraction de calcium et la dilution. Le calcul patient est suspendu pour cette seule ligne. Le RCP PROAMP documente la composition et la dilution, sans valider le schéma local.
+Le gluconate de calcium n’a plus de dose automatiquement retenue : la fiche compare 0,4 mL/kg du tableau et 0,5 mL/kg de l’ERC 2025, les deux plafonnés à 20 mL de produit à 10 %, et demande de trancher la dose, la fraction de calcium et la dilution. Le calcul patient est suspendu pour cette ligne et pour la triphosadénine. Le RCP PROAMP documente la composition et la dilution, sans valider le schéma local.
 
 Pour le phénobarbital et le lévétiracétam, le volume prélevé n’est pas présenté comme un volume final à administrer tant que la préparation finale manque. Pour tranexamique et clonazépam IVSE, le résultat sépare volume prélevé, complément de diluant et concentration finale.
 
@@ -69,7 +93,7 @@ Ouvrir http://localhost:8080. Les modules JavaScript nécessitent un serveur HTT
 
 Copier le contenu du dossier à la racine d’un dépôt GitHub, y compris .github/workflows, puis utiliser la branche main. Les tests se lancent sur les pushes et les pull requests.
 
-La publication Pages reste manuelle : dans Actions, ouvrir « Publier la démonstration sur GitHub Pages », puis cliquer sur **Run workflow** en sélectionnant **main**. **Re-run all jobs** relance l’ancien commit et peut donc conserver une ancienne version. Le badge de cette version est **v0.5**. L’intégration du code ne publie pas le site.
+La publication Pages reste manuelle : dans Actions, ouvrir « Publier la démonstration sur GitHub Pages », puis cliquer sur **Run workflow** en sélectionnant **main**. **Re-run all jobs** relance l’ancien commit et peut donc conserver une ancienne version. Le badge de cette version est **v0.6**. L’intégration du code ne publie pas le site.
 
 Ne pas importer de .git existant, de secrets ni de données patient. L’archive exclut l’identité de l’aperçu hébergé. La visibilité de Pages dépend du dépôt et de l’offre GitHub ; consulter les [sources de publication](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site). Le workflow suit la [documentation officielle Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages), consultée le 6 septembre 2026.
 
@@ -94,4 +118,4 @@ Ne pas importer de .git existant, de secrets ni de données patient. L’archive
 
 Aucun nom ni identifiant n’est demandé. Les saisies du calculateur restent uniquement en mémoire dans la page, sans stockage local ni transmission au serveur. Le retour depuis le cache de navigation efface les champs et les résultats. Le chargement du site reste une requête normale auprès de l’hébergeur.
 
-36 tests automatisés couvrent notamment les seuils de dilution, paliers d’âge, préparations fixes et précision des calculs. L’aperçu local n’a pas pu être ouvert dans le navigateur distant : le rendu visuel et l’impression restent à contrôler. Les tests logiciels ne constituent pas une validation clinique ; aucun test en situation de soins n’a été réalisé.
+46 tests automatisés couvrent notamment les seuils de dilution, paliers d’âge, préparations fixes et précision des calculs. L’aperçu local n’a pas pu être ouvert dans le navigateur distant : le rendu visuel et l’impression restent à contrôler. Les tests logiciels ne constituent pas une validation clinique ; aucun test en situation de soins n’a été réalisé.

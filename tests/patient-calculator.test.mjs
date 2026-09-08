@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { catalogRecords, categories } from '../dist/catalog-data.js';
 import { smurRecords, smurCategories, isofundine } from '../dist/smur-data.js';
-import { resolvePatientContext, estimateWeightKg, infantWeightTable, calculateRecordForPatient, calculateAllRecords } from '../dist/patient-calculator.js';
+import { resolvePatientContext, estimateWeightKg, infantWeightTable, calculateRecordForPatient, calculateAllRecords, isRecordVisibleForPatient } from '../dist/patient-calculator.js';
 import { buildMedicationSheet, volumeText } from '../dist/smur-sheets.js';
 
 const row = id => smurRecords.find(record => record.id === id);
@@ -34,12 +34,12 @@ test('le poids connu reste prioritaire et une saisie invalide ne retombe pas sur
   assert.equal(resolvePatientContext(), null);
 });
 
-test('calcule toutes les lignes décidées et conserve 64 fiches', () => {
+test('calcule toutes les lignes décidées et conserve 63 fiches', () => {
   const results = calculateAllRecords(smurRecords, patient('12', '3'));
-  assert.equal(results.size, 64);
-  assert.deepEqual([...results.values()].filter(result => result.status === 'blocked').map(result => result.recordId), ['calcium-gluconate']);
+  assert.equal(results.size, 63);
+  assert.deepEqual([...results.values()].filter(result => result.status === 'blocked').map(result => result.recordId), ['triphosadenine', 'calcium-gluconate']);
   assert.equal(results.get('arret-potassium').status, 'instruction');
-  assert.equal([...results.values()].filter(result => result.status === 'calculated').length, 62);
+  assert.equal([...results.values()].filter(result => result.status === 'calculated').length, 60);
 });
 
 test('applique les concentrations et plafonds confirmés sans plafond au suxaméthonium', () => {
@@ -122,20 +122,22 @@ test('intègre le protocole hyperkaliémie local et les conventions de volume', 
   close(calculate('kayexalate-ir', patient('20')).volumeMl, 100);
 });
 
-test('les 64 fiches sont complètes sans contexte patient et signalent les données manquantes', () => {
+test('les 63 fiches sont complètes et les antibiotiques sans dilution respectent la décision locale', () => {
   for (const record of smurRecords) {
     const sheet = buildMedicationSheet(record);
-    assert.ok(sheet.presentation && sheet.administration && sheet.preparations.length && sheet.doseRows.length, record.id);
+    assert.ok(sheet.presentation && sheet.administration && (sheet.preparations.length || record.protocol.dilution === '') && sheet.doseRows.length, record.id);
     assert.ok(Array.isArray(sheet.questions), record.id);
     for (const dose of sheet.doseRows) assert.ok(dose.condition && dose.dose && dose.volume && dose.concentration, record.id);
     assert.doesNotMatch(JSON.stringify(sheet), /NaN|undefined|Infinity/, record.id);
   }
   const amoxicillin = buildMedicationSheet(row('amoxicilline'));
-  assert.match(amoxicillin.presentation, /à renseigner/);
-  assert.match(amoxicillin.doseRows[0].dose, /période à confirmer/);
-  assert.match(amoxicillin.doseRows[0].volume, /dilution finale à préciser/);
-  assert.match(amoxicillin.ceiling, /non appliqué au calcul/);
-  assert.equal(calculate('amoxicilline', patient('30')).dose, 3000);
+  assert.match(amoxicillin.presentation, /500 mg/);
+  assert.match(amoxicillin.doseRows[0].dose, /mg\/kg\/dose.*une seule dose/);
+  assert.equal(amoxicillin.preparations.length, 0);
+  assert.equal(amoxicillin.administration, 'IV');
+  assert.deepEqual(amoxicillin.questions, []);
+  assert.match(amoxicillin.ceiling, /retenu/);
+  assert.equal(calculate('amoxicilline', patient('30')).dose, 2000);
 });
 
 test('affiche les deux doses de kétamine et les quatre combinaisons âge/poids de morphine IVSE', () => {
@@ -150,11 +152,16 @@ test('affiche les deux doses de kétamine et les quatre combinaisons âge/poids 
   assert.match(morphine.preparations[0].text, /5,00 mL.*45,00 mL/);
 });
 
-test('affiche 0,1 mL/kg/dose pour adrénaline ACR et 10 mL dès 50 kg', () => {
+test('adrénaline IV diluée sous 50 kg et pure dès 50 kg, dans les fiches et les résultats', () => {
   const sheet = buildMedicationSheet(row('adrenaline-iv'));
   assert.equal(sheet.doseRows[0].volume, '0,1 mL/kg/dose');
   assert.equal(sheet.doseRows[1].dose, '1 mg/dose');
-  assert.equal(sheet.doseRows[1].volume, '10 mL/dose');
+  assert.equal(sheet.doseRows.length, 2);
+  assert.equal(sheet.doseRows[1].volume, '1 mL/dose');
+  close(calculate('adrenaline-iv', patient('49.999')).volumeMl, 4.9999);
+  close(calculate('adrenaline-iv', patient('50')).volumeMl, 1);
+  close(calculate('adrenaline-iv', patient('80')).volumeMl, 1);
+  assert.match(sheet.administration, /IVD flash.*5 mL.*NaCl/);
   assert.match(sheet.ceiling, /50 kg/);
   assert.doesNotMatch(sheet.ceiling, /100 kg/);
 });
@@ -210,11 +217,26 @@ test('conserve les coefficients fins et arrondit uniquement les volumes affiché
   assert.equal(volumeText(0), '0,00');
 });
 
-test('conserve les 63 lignes sources, les groupes et l’ajout Isofundine', () => {
-  assert.equal(catalogRecords.length, 63);
-  assert.equal(smurRecords.length, 64);
-  assert.equal(new Set(smurRecords.map(record => record.id)).size, 64);
-  assert.deepEqual(smurCategories.filter(category => category.id !== 'remplissage'), categories);
-  assert.deepEqual(smurRecords.slice(0, 63).map(record => record.id), catalogRecords.map(record => record.id));
+test('retire la lidocaïne et classe adrénaline IM dans Anaphylaxie', () => {
+  assert.equal(catalogRecords.length, 62);
+  assert.equal(smurRecords.length, 63);
+  assert.equal(new Set(smurRecords.map(record => record.id)).size, 63);
+  assert.deepEqual(smurCategories.filter(category => !['remplissage', 'anaphylaxie'].includes(category.id)), categories);
+  assert.deepEqual(smurRecords.slice(0, 62).map(record => record.id), catalogRecords.map(record => record.id));
+  assert.equal(row('adrenaline-im').category, 'anaphylaxie');
+  assert.equal(row('lidocaine'), undefined);
   assert.equal(isofundine.kind, 'reference');
+});
+
+test('étomidate : filtre demandé après 2 ans, âge absent visible, restriction de calcul préservée', () => {
+  const record = row('etomidate');
+  assert.equal(isRecordVisibleForPatient(record, null), true);
+  assert.equal(isRecordVisibleForPatient(record, patient('12', '')), true);
+  assert.equal(isRecordVisibleForPatient(record, patient('12', '24', 'months')), true);
+  assert.equal(isRecordVisibleForPatient(record, patient('12', '24.01', 'months')), false);
+  assert.equal(isRecordVisibleForPatient(record, patient('12', '3', 'years')), false);
+  assert.equal(calculate('etomidate', patient('12', '2', 'years')).status, 'blocked');
+  assert.equal(calculate('etomidate', patient('12', '')).status, 'blocked');
+  assert.equal(buildMedicationSheet(record).administration, 'IVL');
+  assert.match(buildMedicationSheet(record).questions.join(' '), /sens du filtre/);
 });

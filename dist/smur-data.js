@@ -14,6 +14,7 @@ export const smurSources = freeze({
   calcium: { title: 'BDPM · Gluconate de calcium PROAMP 10 %', url: 'https://base-donnees-publique.medicaments.gouv.fr/medicament/68332774/extrait' },
   morphine: { title: 'Pédiadol · Morphine IV continue', url: 'https://pediadol.org/morphine-en-iv-continu/' },
   erc: { title: 'ERC 2025 · Paediatric Life Support, p. 24–25', url: 'https://doi.org/10.1016/j.resuscitation.2025.110767' },
+  magnesium: { title: 'BDPM · Sulfate de magnésium Lavoisier 15 %', url: 'https://base-donnees-publique.medicaments.gouv.fr/medicament/61106121/extrait' },
 });
 
 const protocolDefaults = record => ({
@@ -25,35 +26,34 @@ const protocolDefaults = record => ({
 });
 
 const overrides = {
-  'adrenaline-iv': { model: { maximumDose: 1000, fixedDoseFromWeightKg: 50, fixedDose: 1000 }, protocol: { particulars: ['À partir de 50 kg : 1 mg, comme chez l’adulte.'], administration: 'IV' } },
-  'adrenaline-im': { model: { maximumDose: 500 }, protocol: { particulars: ['Dose maximale : 0,5 mg.'], dilution: 'Sans dilution', administration: 'IM' } },
-  'bicarbonate-acr': { protocol: { dilution: 'Sans dilution' } },
+  'adrenaline-iv': { model: { maximumDose: 1000, fixedDoseFromWeightKg: 50, fixedDose: 1000, mix: null, weightMix: { thresholdKg: 50, below: { takeMl: 1, addMl: 9 }, atOrAbove: null } }, protocol: { particulars: ['À partir de 50 kg : 1 mg de produit pur, sans dilution.'], administration: 'IVD flash, puis rincer avec 5 mL de NaCl 0,9 %' } },
+  'adrenaline-im': { category: 'anaphylaxie', model: { maximumDose: 500 }, protocol: { particulars: ['Dose maximale confirmée : 500 mcg (0,5 mg).'], dilution: 'Sans dilution', administration: 'IM' } },
+  'bicarbonate-acr': { model: { stock: { amount: 5, unit: 'mmol', volumeMl: 10 } }, protocol: { dilution: 'Sans dilution', administration: 'IVL' } },
   'calcium-chlorure': { protocol: { dilution: 'Sans dilution', questions: ['Confirmer si les 20 mg/kg sont exprimés en chlorure de calcium ou en calcium élément, ainsi que le plafond de 1 000 mg.'] } },
-  cardioversion: { protocol: { dilution: 'Sans objet', administration: 'Choc synchronisé', questions: ['Préciser la séquence et le plafond d’énergie.'] } },
-  defibrillation: { protocol: { dilution: 'Sans objet', administration: 'Défibrillation', questions: ['Confirmer le plafond de 200 J et la séquence des chocs.'] } },
+  cardioversion: { model: { maximumDose: null }, protocol: { dilution: 'Sans objet', administration: 'Mettre le défibrillateur en mode « Synchrone »', questions: [] } },
+  defibrillation: { model: { maximumDose: 200 }, protocol: { dilution: 'Sans objet', administration: 'Défibrillation', questions: [] } },
 
-  gentamicine: { protocol: { dilution: 'Dilution laissée à l’IDE', administration: 'IVL sur 30 min', questions: ['Confirmer l’intervalle et le plafond de dose.'] } },
-  amoxicilline: { protocol: { dilution: 'Dilution laissée à l’IDE', questions: ['Confirmer si la dose est par administration ou par jour, l’intervalle et le plafond de 2 g.'] } },
-  'amoxicilline-clavulanique': { protocol: { dilution: 'Dilution laissée à l’IDE', questions: ['Confirmer que les 80 mg/kg sont exprimés en amoxicilline, ainsi que l’intervalle et le plafond de 2 g.'] } },
-  cefotaxime: { protocol: { dilution: 'Dilution laissée à l’IDE', questions: ['Confirmer si la dose est par administration ou par jour, l’intervalle et le plafond de 3 g.'] } },
-  ceftriaxone: { protocol: { dilution: 'Dilution laissée à l’IDE', questions: ['Confirmer si la dose est par administration ou par jour et le plafond de 4 g.'] } },
+  gentamicine: { model: { stock: { amount: 40, unit: 'mg', volumeMl: 2 }, volumeKind: 'withdrawal', maximumDose: null }, protocol: { posology: '5 mg/kg/dose', dilution: 'Dilution laissée à l’IDE', administration: 'IVL sur 30 min', questions: [] } },
+  amoxicilline: { protocol: { posology: '100 mg/kg/dose — une seule dose', dilution: '', administration: 'IV', questions: [] }, model: { maximumDose: 2000 } },
+  'amoxicilline-clavulanique': { model: { coefficient: 80 / 3, maximumDose: 2000 }, protocol: { posology: '(80 ÷ 3) mg/kg/dose d’amoxicilline — une seule dose', particulars: ['La dose de 80 mg/kg/jour est répartie en trois administrations ; une seule de ces doses est calculée ici.'], dilution: '', administration: 'IV', questions: ['Renseigner la présentation disponible et son rapport amoxicilline/acide clavulanique.'] } },
+  cefotaxime: { model: { maximumDose: 3000 }, protocol: { posology: '75 mg/kg/dose — une seule dose', dilution: '', administration: 'IV', questions: [] } },
+  ceftriaxone: { model: { maximumDose: 4000 }, protocol: { posology: '100 mg/kg/dose — une seule dose', dilution: '', administration: 'IV', questions: [] } },
 
-  amiodarone: { protocol: { questions: ['Confirmer le plafond de 300 mg et la durée d’administration.'] } },
+  amiodarone: { model: { maximumDose: 300 }, protocol: { administration: 'IVD, puis rincer avec 5 mL de NaCl 0,9 %', questions: [] } },
   atropine: {
     sourceCells: ['Atropine 0,25 mg/1 mL', '20 mcg/kg', 'Sans dilution', '0,8 mL', '', '200 mcg'],
-    model: { stock: { amount: 0.25, unit: 'mg', volumeMl: 1 }, mix: null },
-    protocol: { dilution: 'Sans dilution', questions: ['Confirmer le plafond de 3 mg.'] },
+    model: { stock: { amount: 0.25, unit: 'mg', volumeMl: 1 }, mix: null, maximumDose: 2000 },
+    protocol: { dilution: 'Sans dilution', administration: 'IVD', questions: [] },
   },
-  hydrocortisone: { protocol: { questions: ['Confirmer le plafond de 100 mg.'] } },
-  lidocaine: { protocol: { dilution: 'Sans dilution', questions: ['Confirmer le plafond de 100 mg.'] } },
-  magnesium: { protocol: { dilution: 'Sans dilution', questions: ['Confirmer la présentation à 15 %, l’expression en sulfate de magnésium, le plafond de 2 g et la durée.'] } },
-  triphosadenine: { protocol: { dilution: 'Sans dilution', administration: 'Bolus IV', questions: ['Confirmer les répétitions et le plafond de 12 mg propres à la triphosadénine.'] } },
+  hydrocortisone: { model: { maximumDose: 100 }, protocol: { administration: 'IVD', questions: [] } },
+  magnesium: { model: { coefficient: 50, maximumDose: 2000, stock: null, mix: null }, protocol: { posology: '50 mg/kg/dose de sulfate de magnésium, maximum 2 g', dilution: 'Préparation à préciser après confirmation de la concentration de l’ampoule.', administration: 'IVL sur 20 min', questions: ['Confirmer si « 0,15 g » désigne la quantité par mL ou par ampoule de 10 mL. Une solution à 15 % contient 0,15 g/mL, soit 1,5 g/10 mL ; 0,15 g/10 mL correspondrait à 15 mg/mL. Aucun volume calculé en attendant.'] }, sources: ['magnesium'] },
+  triphosadenine: { model: { type: 'unresolved', blockReason: 'Triphosadénine laissée en suspens : posologie et modalités à documenter.' }, protocol: { posology: 'En suspens', dilution: 'En suspens', administration: 'En suspens', questions: ['Documenter la posologie, la préparation, l’administration, les répétitions et le plafond propres à la triphosadénine. Aucun calcul automatique en attendant.'] } },
 
-  etomidate: { protocol: { particulars: ['Uniquement si âge strictement supérieur à 2 ans.'], dilution: 'Sans dilution', questions: ['Confirmer le plafond de 20 mg.'] } },
-  'ketamine-analgesie': { model: { mix: null, weightMix: { thresholdKg: 15, below: { takeMl: 1, addMl: 9 }, atOrAbove: null } }, protocol: { administration: 'IVL sur 2 à 3 min', questions: ['Confirmer le plafond de 80 mg.'] } },
-  'ketamine-intubation': { model: { tiers: [{ maxAgeMonthsExclusive: 18, coefficient: 4 }, { coefficient: 2 }] }, protocol: { posology: '4 mg/kg avant 18 mois ; 2 mg/kg à partir de 18 mois', particulars: ['Palier d’âge issu du tableau à confirmer.'], administration: 'IVL sur 2 à 3 min', questions: ['Confirmer le palier à 18 mois.'] } },
-  'midazolam-iv': { model: { weightMix: { thresholdKg: 10, below: { takeMl: 1, addMl: 9 }, atOrAbove: null } }, protocol: { questions: ['Confirmer le plafond de 5 mg.'] } },
-  'morphine-dc': { model: { maximumDose: 6, dynamicConcentration: { thresholdKg: 10, below: 0.1, atOrAbove: 1 } }, protocol: { posology: 'Dose de charge : 0,1 mg/kg, maximum 6 mg', particulars: ['DC = dose de charge.'], dilution: 'Si poids < 10 kg : 1 mL de morphine 1 mg/mL + 9 mL de NaCl 0,9 % ; sinon sans dilution', questions: [] } },
+  etomidate: { name: 'Étomidate', hideAboveAgeMonths: 24, protocol: { particulars: ['Filtre demandé : fiche masquée si âge > 2 ans ; visible si âge non renseigné. Le sens de ce filtre reste à confirmer.'], dilution: 'Sans dilution', administration: 'IVL', questions: ['Confirmer le sens du filtre « masquer si âge > 2 ans » : il contredit la règle existante qui réserve le calcul à un âge strictement supérieur à 2 ans. Le calcul avant ou à 2 ans reste bloqué.', 'Confirmer le plafond de 20 mg.'] } },
+  'ketamine-analgesie': { model: { mix: null, weightMix: { thresholdKg: 15, below: { takeMl: 1, addMl: 9 }, atOrAbove: null } }, protocol: { administration: 'IVL sur 2 à 3 min', questions: ['Plafond proposé de 80 mg conservé en suspens ; non appliqué au calcul en attendant la validation collective.'] } },
+  'ketamine-intubation': { model: { tiers: [{ maxAgeMonthsExclusive: 18, coefficient: 4 }, { coefficient: 2 }] }, protocol: { posology: '4 mg/kg avant 18 mois ; 2 mg/kg à partir de 18 mois', particulars: ['Palier d’âge confirmé à 18 mois.'], administration: 'IVL sur 2 à 3 min', questions: [] } },
+  'midazolam-iv': { model: { maximumDose: null, stock: { amount: 50, unit: 'mg', volumeMl: 10 }, weightMix: { thresholdKg: 10, below: { takeMl: 1, addMl: 9 }, atOrAbove: null } }, protocol: { administration: 'IVL', questions: [] } },
+  'morphine-dc': { model: { maximumDose: 6, stock: { amount: 10, unit: 'mg', volumeMl: 10 }, dynamicConcentration: { thresholdKg: 10, below: 0.1, atOrAbove: 1 } }, protocol: { posology: 'Dose de charge : 0,1 mg/kg, maximum 6 mg', particulars: ['DC = dose de charge.'], dilution: 'Si poids < 10 kg : 1 mL de morphine 1 mg/mL + 9 mL de NaCl 0,9 % ; sinon sans dilution', administration: 'IVL', questions: [] } },
   'morphine-titration': { model: { dynamicConcentration: { thresholdKg: 10, below: 0.1, atOrAbove: 1 } }, protocol: { posology: '0,025 mg/kg toutes les 5 min après la dose de charge, jusqu’à analgésie', dilution: 'Si poids < 10 kg : 1 mL de morphine 1 mg/mL + 9 mL de NaCl 0,9 % ; sinon sans dilution', questions: ['Définir les critères locaux d’arrêt et de surveillance de la titration.'] } },
   propofol: { protocol: { dilution: 'Sans dilution', questions: ['Confirmer le plafond de 500 mg.'] } },
   suxamethonium: { model: { tiers: [{ maxAgeMonthsExclusive: 18, coefficient: 2 }, { coefficient: 1 }], maximumDose: null }, protocol: { posology: '2 mg/kg avant 18 mois ; 1 mg/kg à partir de 18 mois', particulars: ['Aucun plafond de dose. Palier d’âge issu du tableau à confirmer.'], questions: ['Confirmer le palier à 18 mois.'] } },
@@ -69,7 +69,7 @@ const overrides = {
 
   'tranexamique-bolus': { model: { maximumDose: 1000, fixedDoseFromAgeMonths: 120, fixedDose: 1000 }, protocol: { posology: '10 mg/kg avant 10 ans ; 1 g à partir de 10 ans', particulars: ['Maximum 1 g.'], dilution: 'Sans dilution' } },
   cafeine: { model: { type: 'dose', coefficient: 20, unit: 'mg', stock: { amount: 25, unit: 'mg', volumeMl: 1 }, mix: null }, protocol: { posology: 'Dose de charge : 20 mg/kg de citrate de caféine', particulars: ['Dose exprimée en citrate de caféine.'], dilution: 'Sans dilution', questions: ['Confirmer le plafond et la durée d’administration.'] } },
-  flumazenil: { protocol: { dilution: 'Sans dilution', questions: ['Confirmer le plafond de 200 µg et les répétitions.'] } },
+  flumazenil: { protocol: { dilution: 'Sans dilution', questions: ['Confirmer le plafond de 200 mcg et les répétitions.'] } },
   sugammadex: { protocol: { questions: ['Confirmer le plafond.'] } },
   glucose10: { protocol: { dilution: 'Sans dilution', questions: ['Confirmer le plafond de 40 mL.'] } },
   naloxone: { protocol: { questions: ['Confirmer le plafond de 2 mg et les répétitions.'] } },
@@ -84,13 +84,13 @@ const overrides = {
   'clonazepam-ivc': { model: { type: 'fixed-duration-mixture', coefficient: 0.1, unit: 'mg', durationHours: 6, maximumDose: 4, stock: { amount: 1, unit: 'mg', volumeMl: 1 }, mix: null, finalVolumeMl: 6 }, protocol: { posology: '0,1 mg/kg sur 6 h, maximum 4 mg/6 h', dilution: 'Prélever la dose de clonazépam puis compléter à 6 mL', administration: 'IVSE à 1 mL/h pendant 6 h', questions: ['Confirmer le plafond de 4 mg/6 h.'] } },
   isoprenaline: { protocol: { questions: ['Confirmer le plafond et la plage de débit.'] } },
   'midazolam-ivc': { protocol: { questions: ['Confirmer le plafond et la plage de débit.'] } },
-  'morphine-ivc': { model: { tiers: [{ maxAgeMonthsExclusive: 3, coefficient: 10 }, { coefficient: 20 }], dynamicConcentration: { thresholdKg: 10, below: 100, atOrAbove: 1000 } }, protocol: { posology: '10 µg/kg/h avant 3 mois ; 20 µg/kg/h de 3 mois à 5 ans', particulars: ['Concentration : 0,1 mg/mL si < 10 kg ; 1 mg/mL si ≥ 10 kg.'], dilution: 'Si poids < 10 kg : 5 mL de morphine 1 mg/mL + 45 mL de NaCl 0,9 % ; si poids ≥ 10 kg : morphine 1 mg/mL non diluée', administration: 'IVSE ; débit arrondi à 0,1 mL/h', questions: ['Au-delà de 5 ans, préciser le schéma local hors PCA.'] }, sources: ['morphine'] },
+  'morphine-ivc': { model: { tiers: [{ maxAgeMonthsExclusive: 3, coefficient: 10 }, { coefficient: 20 }], dynamicConcentration: { thresholdKg: 10, below: 100, atOrAbove: 1000 } }, protocol: { posology: '10 mcg/kg/h avant 3 mois ; 20 mcg/kg/h de 3 mois à 5 ans', particulars: ['Concentration : 0,1 mg/mL si < 10 kg ; 1 mg/mL si ≥ 10 kg.'], dilution: 'Si poids < 10 kg : 5 mL de morphine 1 mg/mL + 45 mL de NaCl 0,9 % ; si poids ≥ 10 kg : morphine 1 mg/mL non diluée', administration: 'IVSE ; débit arrondi à 0,1 mL/h', questions: ['Au-delà de 5 ans, préciser le schéma local hors PCA.'] }, sources: ['morphine'] },
   nicardipine: { protocol: { dilution: 'Sans dilution', questions: ['Confirmer le plafond et la plage de débit.'] } },
   'salbutamol-ivc': { protocol: { questions: ['Confirmer le plafond et la plage de débit.'] } },
   sufentanil: { protocol: { questions: ['Confirmer le plafond et la plage de débit.'] } },
 
   'arret-potassium': { protocol: { posology: 'Arrêter tous les apports en potassium', dilution: 'Sans objet', administration: 'Consigne' } },
-  'bicarbonate-hyperk': { protocol: { dilution: 'Sans dilution', questions: ['Confirmer la durée d’administration.'] } },
+  'bicarbonate-hyperk': { model: { stock: { amount: 5, unit: 'mmol', volumeMl: 10 } }, protocol: { dilution: 'Sans dilution', administration: 'IVL', questions: [] } },
   'salbutamol-nebulise': { model: { type: 'conditional-dose', unit: 'mg', cases: [{ maxWeightKg: 16, dose: 2.5 }, { dose: 5 }], stock: { amount: 2.5, unit: 'mg', volumeMl: 2.5 } }, protocol: { posology: '2,5 mg si poids ≤ 16 kg ; 5 mg si poids > 16 kg', particulars: ['Le seuil de 16 kg provient du tableau local.'], dilution: 'Solution pour nébulisation 2,5 mg/2,5 mL', administration: 'Nébulisation', questions: ['Confirmer le nombre maximal de répétitions.'] } },
   'calcium-gluconate': { model: { type: 'unresolved', stock: null, mix: null, blockReason: 'Dose et dilution du gluconate de calcium à trancher : voir les deux schémas dans la fiche.' }, sourceCells: ['Gluconate de calcium PROAMP 10 % · ampoule 10 mL', 'Dose à trancher', 'Dilution à confirmer', '', 'IVL/20 min dans le tableau', ''], protocol: { posology: 'Tableau : 0,4 mL/kg ; ERC 2025 : 0,5 mL/kg. Maximum 20 mL dans les deux schémas.', particulars: ['10 mL = 91 mg de calcium élément, soit 9,1 mg/mL. Les volumes ci-dessous désignent le produit à 10 %, avant dilution.'], dilution: 'Le RCP prévoit une dilution pour l’administration pédiatrique ; pour la perfusion, dilution au 1/10 dans NaCl 0,9 % ou G5 %. Préparation finale locale à fixer.', administration: 'Tableau : IVL sur 20 min. Modalité finale à valider, sous surveillance ECG.', questions: ['Choisir entre 0,4 mL/kg (tableau) et 0,5 mL/kg (ERC 2025), maximum 20 mL de produit à 10 %.', 'Corriger la mention « 20 mg/kg » : elle ne correspond pas à 0,4 mL/kg de PROAMP 10 % ; préciser la fraction de calcium utilisée.', 'Valider la dilution finale, le volume administré après dilution et la durée ; le RCP pédiatrique prévoit une dilution.'] }, sources: ['calcium', 'erc'] },
   'insuline-glucose': { model: { type: 'dose', coefficient: 4, unit: 'mL', stock: null, mix: null, massPerMl: 0.03, massUnit: 'UI d’insuline' }, sourceCells: ['Insuline rapide + G5 %', '4 mL/kg de la préparation', '15 UI dans 500 mL de G5 %', '', 'IVL/20 min', ''], protocol: { posology: '4 mL/kg de la préparation', particulars: ['Correspond à 0,12 UI/kg d’insuline avec la préparation nominale.'], dilution: '15 UI d’insuline rapide dans 500 mL de G5 %', administration: 'IV sur 20 min', questions: ['Préciser l’insuline rapide disponible, sa concentration et sa compatibilité avec le G5 %.'] } },
@@ -123,11 +123,11 @@ function mergeRecord(record) {
 
 export const isofundine = freeze({
   id: 'isofundine', category: 'remplissage', name: 'Isofundine', kind: 'reference', validation: 'pending', maximumDose: null,
-  sourceCells: ['Isofundine, solution pour perfusion', '10 mL/kg', 'Solution prête à l’emploi', '', '', ''],
-  model: { type: 'dose', coefficient: 10, unit: 'mL', stock: null, mix: null },
-  protocol: { posology: '10 mL/kg par bolus', particulars: ['Réévaluer après chaque bolus.'], dilution: 'Solution prête à l’emploi', administration: 'IV', questions: ['Confirmer localement la vitesse, le nombre maximal de bolus et les limites propres au contexte SMUR.'] },
+  sourceCells: ['Isofundine, solution pour perfusion — flacon de 1 L', '10 mL/kg', 'Solution prête à l’emploi', '', '', ''],
+  model: { type: 'dose', coefficient: 10, unit: 'mL', stock: null, mix: null, maximumDose: 500 },
+  protocol: { posology: '10 mL/kg par bolus, maximum 500 mL par bolus', particulars: [], dilution: 'Solution prête à l’emploi', administration: 'IVD — à passer le plus rapidement possible', questions: [] },
   sources: ['isofundine', 'remplissage'], issues: [],
 });
 
-export const smurCategories = freeze([categories[0], { id: 'remplissage', label: 'Remplissage' }, ...categories.slice(1)]);
+export const smurCategories = freeze([categories[0], { id: 'anaphylaxie', label: 'Anaphylaxie' }, { id: 'remplissage', label: 'Remplissage' }, ...categories.slice(1)]);
 export const smurRecords = freeze([...catalogRecords.map(mergeRecord), isofundine]);

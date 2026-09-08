@@ -42,7 +42,7 @@
   .dosage-table tr+tr{margin-top:12px}
 }
 @media print{
-  body:before{content:"PEDIDOSES v0.5 — FICHES À VALIDER AVANT PRODUCTION";font-size:16px;padding:12px}
+  body:before{content:"PEDIDOSES v0.6 — FICHES À VALIDER AVANT PRODUCTION";font-size:16px;padding:12px}
   .review-actions,.patient-calculation{display:none}
   .dose-card{display:block;break-inside:auto;padding:14px 0}
   .dose-info{break-after:avoid}
@@ -53,3 +53,23 @@
   .dose-values{text-align:left;margin:6px 0}
   .dose-values .dose-volume{margin-left:0}
 }
+
+.header-inner{flex-wrap:wrap;gap:12px}
+.institution-logos{display:flex;align-items:center;gap:18px;margin-left:auto;background:white;padding:5px 14px}
+.institution-logos img{object-fit:contain;display:block;flex-shrink:0}
+.chu-logo{width:150px;height:76px}.samu-logo{width:66px;height:66px}
+#ampoules-panel>p{margin:12px 0;max-width:95ch}
+.ampoules-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:18px 0}
+.ampoules-import{margin:20px 0;max-width:580px}
+.ampoules-preview{padding:18px;border:1px solid #dce5ea;border-radius:6px;background:#f5f8fa}
+.ampoules-preview ul{max-height:300px;overflow:auto;margin:15px 0;padding-left:24px;overflow-wrap:anywhere}
+.ampoules-preview li+li{margin-top:10px}
+.ampoules-scroll{max-width:100%;overflow:auto;margin-top:16px;border:1px solid #dce5ea;border-radius:6px}
+#ampoules-table{width:100%;border-collapse:collapse;font-size:.875rem;line-height:1.5}
+#ampoules-table th,#ampoules-table td{padding:12px;text-align:left;vertical-align:top;border-bottom:1px solid #dce5ea;min-width:95px}
+#ampoules-table thead th{background:#eaf1f5}
+#ampoules-table tbody th{min-width:175px;max-width:240px}
+#ampoules-table td:last-child{min-width:260px;max-width:360px}
+#ampoules-table tbody tr:nth-child(even){background:#f8fafb}
+@media(max-width:670px){.institution-logos{order:3;justify-content:center;width:100%;margin:0;padding:5px 0}.header .version-badge{margin-left:auto}.ampoules-actions{align-items:stretch;flex-direction:column}}
+@media print{#ampoules-panel .ampoules-actions,.ampoules-import,.ampoules-preview{display:none}}

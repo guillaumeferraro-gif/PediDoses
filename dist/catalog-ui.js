@@ -3,7 +3,7 @@ import { auditRecord, reviewState } from './catalog-audit.js';
 
 const byId = id => document.getElementById(id);
 const format = n => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 6 }).format(n);
-const unitLabel = unit => unit === 'mcg' ? 'µg' : unit;
+const unitLabel = unit => unit === 'mcg' ? 'mcg' : unit;
 const normalize = text => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const make = (tag, text = '', className = '') => {
   const el = document.createElement(tag);

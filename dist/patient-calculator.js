@@ -143,3 +143,8 @@ export function calculateAllRecords(records, context) {
     catch (failure) { return [record.id, Object.freeze({ recordId: record.id, status: 'blocked', clinicalUse: false, message: failure.message || 'Calcul indisponible.', dose: null, volumeMl: null, rateMlH: null })]; }
   }));
 }
+
+// Display filtering never changes the model's independent age restrictions.
+export function isRecordVisibleForPatient(record, context) {
+  return !Number.isFinite(record.hideAboveAgeMonths) || context?.ageMonths == null || context.ageMonths <= record.hideAboveAgeMonths;
+}

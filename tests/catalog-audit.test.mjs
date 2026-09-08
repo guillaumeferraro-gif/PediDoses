@@ -7,10 +7,10 @@ const record = id => catalogRecords.find(r => r.id === id);
 const audit = id => auditRecord(record(id));
 const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9, `${actual} != ${expected}`);
 
-test('préserve les 63 lignes, leurs rubriques et les champs sources distincts', () => {
-  assert.equal(catalogRecords.length, 63);
-  assert.equal(new Set(catalogRecords.map(r => r.id)).size, 63);
-  assert.deepEqual(categories.map(c => catalogRecords.filter(r => r.category === c.id).length), [6, 5, 6, 9, 7, 6, 14, 7, 3]);
+test('préserve les 62 lignes conservées après suppression de la lidocaïne et les champs sources distincts', () => {
+  assert.equal(catalogRecords.length, 62);
+  assert.equal(new Set(catalogRecords.map(r => r.id)).size, 62);
+  assert.deepEqual(categories.map(c => catalogRecords.filter(r => r.category === c.id).length), [6, 5, 5, 9, 7, 6, 14, 7, 3]);
   for (const r of catalogRecords) {
     assert.equal(r.sourceCells.length, 6);
     assert.equal(r.validation, 'pending');

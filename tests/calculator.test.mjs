@@ -54,7 +54,7 @@ test('exige une confirmation explicite pour chaque cas fictif', () => {
 });
 
 test('rejette les protocoles cliniques et les unités médicamenteuses', () => {
-  assert.equal(clinicalCatalog.protocols.length, 63);
+  assert.equal(clinicalCatalog.protocols.length, 62);
   assert.equal(clinicalCatalog.status, 'imported-unvalidated');
   assert.equal(clinicalCatalog.jurisdiction, 'France');
   for (const protocol of clinicalCatalog.protocols) {

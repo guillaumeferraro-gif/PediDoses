@@ -23,7 +23,11 @@
         <span class="brand-symbol" aria-hidden="true">P<span>u</span></span>
         <span>Pedi<strong>Doses</strong></span>
       </a>
-      <span class="version-badge">France <span>v0.5</span></span>
+      <div class="institution-logos" aria-label="CHU de Toulouse et SAMU 31">
+        <img class="chu-logo" src="./assets/chu-toulouse.webp" alt="CHU de Toulouse" width="150" height="76">
+        <img class="samu-logo" src="./assets/samu-31.jpg" alt="SAMU 31" width="66" height="66">
+      </div>
+      <span class="version-badge">France <span>v0.6</span></span>
     </div>
   </header>
   <main id="main" class="workspace">
@@ -36,13 +40,15 @@
       <p><strong>Support de validation avec vos collègues.</strong> Chaque fiche expose toutes les posologies, préparations et questions restantes. Les simulations ne constituent pas une validation clinique.</p>
     </div>
     <nav class="tabs" role="tablist" aria-label="Espace de travail">
-      <button type="button" id="quick-tab" role="tab" aria-selected="true" aria-controls="quick-panel" class="tab active">Calculs rapides <span class="count">64</span></button>
-      <button type="button" id="catalog-tab" role="tab" aria-selected="false" aria-controls="catalog-panel" tabindex="-1" class="tab">Tableau source <span class="count catalog-count">63</span></button>
+      <button type="button" id="quick-tab" role="tab" aria-selected="true" aria-controls="quick-panel" class="tab active">Calculs rapides <span class="count">63</span></button>
+      <button type="button" id="ampoules-tab" role="tab" aria-selected="false" aria-controls="ampoules-panel" tabindex="-1" class="tab">Ampoules</button>
+      <button type="button" id="catalog-tab" role="tab" aria-selected="false" aria-controls="catalog-panel" tabindex="-1" class="tab">Tableau source <span class="count catalog-count">62</span></button>
       <button type="button" id="protocols-tab" role="tab" aria-selected="false" aria-controls="protocols-panel" tabindex="-1" class="tab">Relecture <span class="count" id="issue-count"></span></button>
       <button type="button" id="calculator-tab" role="tab" aria-selected="false" aria-controls="calculator-panel" tabindex="-1" class="tab">Simulation logicielle</button>
     </nav>
 
     <section id="quick-panel" role="tabpanel" aria-labelledby="quick-tab">
+      <p id="quick-ampoules-status" class="quick-limit"></p>
       <form id="quick-patient-form" class="quick-patient" autocomplete="off" novalidate aria-label="Âge et poids pour le calcul">
         <div class="quick-patient-grid">
           <div class="field">
@@ -73,6 +79,26 @@
       <div id="quick-groups"></div>
       <p id="quick-empty" class="catalog-empty" hidden>Aucun médicament trouvé. Modifiez la recherche ou le groupe.</p>
       <details class="quick-estimation"><summary>Estimation du poids</summary><p>Avant 1 an : table mensuelle locale (0 à 11 mois). À partir de 1 an : (âge en années + 4) × 2. Le poids saisi reste prioritaire.</p><p>Changer « mois » en « ans », ou inversement, ne modifie jamais la valeur saisie : seul son sens change pour les calculs.</p><p>Estimation approximative de secours : privilégier le poids connu. Aucune adaptation au poids idéal, à l’obésité ou aux particularités du patient n’est automatisée. Les valeurs restent uniquement en mémoire dans cette page.</p></details>
+    </section>
+
+    <section id="ampoules-panel" role="tabpanel" aria-labelledby="ampoules-tab" hidden>
+      <h2>Ampoules et présentations</h2>
+      <p>Une ligne par fiche, y compris pour les voies différentes d’un même médicament.</p>
+      <div class="ampoules-actions">
+        <a id="ampoules-sheet-link" class="button button-soft" href="./assets/PediDoses-Ampoules.xlsx" download>Télécharger le tableau des ampoules</a>
+        <button type="button" class="button button-soft" id="ampoules-export">Exporter les ampoules en CSV</button>
+        <button type="button" class="button button-plain" id="ampoules-reset">Rétablir les ampoules de cette version</button>
+      </div>
+      <p>Ouvrez le tableau dans Excel ou importez-le dans Google Sheets. Modifiez l’onglet <strong>Ampoules</strong>, puis exportez cet onglet au format CSV et importez-le ici. La concentration est recalculée à partir de la quantité et du volume, sans arrondi intermédiaire. Les posologies restent celles des fiches.</p>
+      <p>Les changements importés sont conservés <strong>sur cet appareil</strong>. Pour utiliser le même tableau ailleurs, importez le même CSV sur chaque appareil.</p>
+      <div class="field ampoules-import"><label for="ampoules-file">Importer le CSV de l’onglet Ampoules</label><input id="ampoules-file" type="file" accept=".csv,text/csv"></div>
+      <p id="ampoules-error" role="alert" class="quick-error" hidden></p>
+      <section id="ampoules-preview" class="ampoules-preview" hidden>
+        <h3>Changements du tableau</h3><ul id="ampoules-changes"></ul>
+        <div class="ampoules-actions"><button type="button" class="button button-soft" id="ampoules-apply">Appliquer sur cet appareil</button><button type="button" class="button button-plain" id="ampoules-cancel">Annuler</button></div>
+      </section>
+      <p id="ampoules-status" role="status"></p>
+      <div class="ampoules-scroll" role="region" aria-label="Tableau des ampoules, défilement horizontal" tabindex="0"><table id="ampoules-table"></table></div>
     </section>
 
     <section id="catalog-panel" role="tabpanel" aria-labelledby="catalog-tab" hidden>
@@ -150,13 +176,13 @@
 
     <section id="protocols-panel" role="tabpanel" aria-labelledby="protocols-tab" hidden>
       <div class="reference-grid">
-        <section class="panel reference-main"><div class="panel-heading"><span class="step">R</span><h2>Provenance du référentiel</h2><span class="tiny-badge neutral">NON VALIDÉ</span></div><h3><span class="catalog-count">63</span> lignes importées</h3><p>Médicaments, gestes électriques, perfusions, hyperkaliémie et produits sanguins. Aucune ligne n’est présentée comme cliniquement approuvée.</p><dl class="reference-list"><div><dt>Pays / juridiction</dt><dd>France</dd></div><div><dt>Source</dt><dd>Tableau transmis dans la conversation</dd></div><div><dt>Version de transcription</dt><dd>FR-IMPORT-1</dd></div><div><dt>Poids de référence</dt><dd>10 kg présumés, à confirmer</dd></div><div><dt>Service et protocole daté</dt><dd>À fournir</dd></div><div><dt>Relecture clinique et pharmaceutique</dt><dd>Non effectuée</dd></div></dl><p class="reference-bottom">Les calculs portent seulement sur la cohérence de l’exemple source. Aucun plafond, intervalle ou usage clinique n’est ajouté par déduction.</p></section>
+        <section class="panel reference-main"><div class="panel-heading"><span class="step">R</span><h2>Provenance du référentiel</h2><span class="tiny-badge neutral">NON VALIDÉ</span></div><h3><span class="catalog-count">62</span> lignes importées</h3><p>Médicaments, gestes électriques, perfusions, hyperkaliémie et produits sanguins. Aucune ligne n’est présentée comme cliniquement approuvée.</p><dl class="reference-list"><div><dt>Pays / juridiction</dt><dd>France</dd></div><div><dt>Source</dt><dd>Tableau transmis dans la conversation</dd></div><div><dt>Version de transcription</dt><dd>FR-IMPORT-1</dd></div><div><dt>Poids de référence</dt><dd>10 kg présumés, à confirmer</dd></div><div><dt>Service et protocole daté</dt><dd>À fournir</dd></div><div><dt>Relecture clinique et pharmaceutique</dt><dd>Non effectuée</dd></div></dl><p class="reference-bottom">Les calculs portent seulement sur la cohérence de l’exemple source. Aucun plafond, intervalle ou usage clinique n’est ajouté par déduction.</p></section>
         <aside class="panel reference-aside"><h2>Écarts numériques de l’exemple</h2><p class="review-explainer">Sous l’hypothèse de 10 kg et avec les concentrations écrites. Les valeurs sources ne sont pas remplacées.</p><div id="discrepancy-list"></div><details class="sources-details"><summary>Documents consultés pour la relecture</summary><p>Vérifications ciblées de présentations et d’unités. Ces documents ne constituent pas une validation complète du tableau ni un protocole pédiatrique du service.</p><div id="reference-links"></div></details></aside>
       </div>
       <section class="panel outstanding-review"><div class="panel-heading"><h2>Autres points à préciser</h2><span id="outstanding-count" class="count"></span></div><div id="outstanding-list"></div></section>
     </section>
     <noscript><p class="notice">Activez JavaScript pour utiliser ce prototype.</p></noscript>
-    <footer class="footer"><span>PediDoses <span class="footer-divider">/</span> France · v0.5 · Fiches de validation complètes</span><span>Validation clinique à finaliser · Aucune prescription générée</span></footer>
+    <footer class="footer"><span>PediDoses <span class="footer-divider">/</span> France · v0.6 · Fiches de validation complètes</span><span>Validation clinique à finaliser · Aucune prescription générée</span></footer>
   </main>
 </body>
 </html>

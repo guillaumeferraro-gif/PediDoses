@@ -1,11 +1,12 @@
-import { smurRecords, smurCategories, smurSources } from './smur-data.js';
-import { resolvePatientContext, calculateAllRecords } from './patient-calculator.js';
+import { smurCategories, smurSources } from './smur-data.js';
+import { getConfiguredRecords } from './ampoules-ui.js';
+import { resolvePatientContext, calculateAllRecords, isRecordVisibleForPatient } from './patient-calculator.js';
 import { buildMedicationSheet, volumeText, concentrationText } from './smur-sheets.js';
 
 const byId = id => document.getElementById(id);
 const format = (number, digits = 6) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: digits }).format(number);
 const preparationVolume = volumeText;
-const unitLabel = unit => unit === 'mcg' ? 'µg' : unit;
+const unitLabel = unit => unit;
 const display = number => number > 0 && number < 0.000001 ? '< 0,000001' : format(number);
 const normalize = text => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const make = (tag, text = '', className = '') => {
@@ -21,9 +22,11 @@ const ageUnitInput = byId('quick-age-unit');
 const searchInput = byId('quick-search');
 const categoryInput = byId('quick-category');
 let context = null;
+let smurRecords = getConfiguredRecords();
 let results = calculateAllRecords(smurRecords, null);
 let cards = new Map();
-const sheets = new Map(smurRecords.map(record => [record.id, buildMedicationSheet(record)]));
+let renderedPatientVisibility = '';
+let sheets = new Map(smurRecords.map(record => [record.id, buildMedicationSheet(record)]));
 
 function sourceLink(source) {
   const anchor = make('a', source.title);
@@ -69,7 +72,8 @@ function addPreparation(details, record) {
     p.append(make('strong', `${row.condition} : `), document.createTextNode(row.text));
     preparation.append(p);
   });
-  details.append(preparation, section('Modalités d’administration', sheet.administration));
+  if (sheet.preparations.length) details.append(preparation);
+  details.append(section('Modalités d’administration', sheet.administration));
   if (sheet.particulars.length) {
     const block = section('Précisions');
     const list = make('ul');
@@ -132,7 +136,7 @@ function updateCard(record) {
   if (result.volumeMl !== null && result.unit !== 'mL') values.append(make('span', `Volume final à administrer : ${preparationVolume(result.volumeMl)} mL`, 'dose-volume'));
   if (result.withdrawalMl !== null) values.append(make('span', `Produit à prélever : ${preparationVolume(result.withdrawalMl)} mL`, 'dose-volume'));
   const messages = [];
-  if (result.volumeMl === null && record.model.type === 'dose' && !['J', 'mL'].includes(result.unit)) messages.push('Volume indisponible : concentration finale non documentée.');
+  if (result.volumeMl === null && record.model.type === 'dose' && record.category !== 'antibiotiques' && !['J', 'mL'].includes(result.unit)) messages.push('Volume indisponible : concentration finale non documentée.');
   const sheet = sheets.get(record.id);
   if (sheet.questions.length) messages.push(`${sheet.questions.length} question${sheet.questions.length > 1 ? 's' : ''} à résoudre ci-dessous.`);
   if (sheet.pendingCeiling !== null && result.dose > sheet.pendingCeiling) messages.push('La simulation dépasse le plafond du tableau encore à valider : voir la posologie ci-dessous.');
@@ -153,7 +157,9 @@ function updateCard(record) {
 
 function renderGroups() {
   const query = normalize(searchInput.value.trim());
-  const filtered = smurRecords.filter(record =>
+  const visible = smurRecords.filter(record => isRecordVisibleForPatient(record, context));
+  renderedPatientVisibility = visible.map(record => record.id).join(',');
+  const filtered = visible.filter(record =>
     (categoryInput.value === 'all' || categoryInput.value === record.category) &&
     normalize([record.name, smurCategories.find(category => category.id === record.category).label, ...record.sourceCells].join(' ')).includes(query));
   cards = new Map();
@@ -197,7 +203,9 @@ function updatePatient() {
   byId('quick-formula').textContent = context?.formula ? `Estimation : ${context.formula}. Privilégier un poids connu ou une estimation par la taille.` : context ? 'Ce poids est utilisé pour toutes les lignes calculables.' : 'Âge seul → estimation ; poids saisi → priorité.';
   const calculated = [...results.values()].filter(result => result.status === 'calculated').length;
   byId('quick-calculation-status').textContent = failure ? 'Calculs effacés : corrigez la saisie.' : context ? `${calculated} lignes calculées pour ${format(context.weightKg)} kg. Les lignes à clarifier sont signalées.` : 'Les calculs apparaîtront dès la saisie.';
-  smurRecords.forEach(updateCard);
+  const visibility = smurRecords.filter(record => isRecordVisibleForPatient(record, context)).map(record => record.id).join(',');
+  if (visibility !== renderedPatientVisibility) renderGroups();
+  else smurRecords.forEach(updateCard);
 }
 
 for (const category of smurCategories) {
@@ -222,5 +230,11 @@ searchInput.addEventListener('input', renderGroups);
 categoryInput.addEventListener('change', renderGroups);
 byId('quick-print').addEventListener('click', () => window.print());
 window.addEventListener('pageshow', event => { if (event.persisted) resetPatient(); });
+window.addEventListener('ampoules-updated', () => {
+  smurRecords = getConfiguredRecords();
+  sheets = new Map(smurRecords.map(record => [record.id, buildMedicationSheet(record)]));
+  results = calculateAllRecords(smurRecords, context);
+  renderGroups(); updatePatient();
+});
 renderGroups();
 resetPatient();
