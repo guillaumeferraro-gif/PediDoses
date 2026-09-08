@@ -1,6 +1,6 @@
 # PediDoses — France
 
-Version 0.6 : fiches de validation collective du protocole SMUR et ampoules modifiables par tableau CSV. Après suppression de la lidocaïne, 62 lignes sources sont conservées ; l’Isofundine porte le total à 63 fiches. L’adrénaline IM figure dans « Anaphylaxie ».
+Version 0.7 : fiches de validation collective du protocole SMUR et ampoules modifiables par tableau CSV. Après suppression de la lidocaïne, 62 lignes sources sont conservées ; l’Isofundine porte le total à 63 fiches. L’adrénaline IM figure dans « Anaphylaxie ».
 
 **Support de relecture avant production. Les simulations et les références consultées ne constituent pas une validation clinique.**
 
@@ -20,9 +20,21 @@ Version 0.6 : fiches de validation collective du protocole SMUR et ampoules modi
 - Valeurs originales conservées, avec distinction des écarts numériques et des données ambiguës.
 - Unités g, mg, mcg, ng, mmol, mL et J distinguées ; perfusions par minute, heure ou 6 heures.
 - Références françaises ciblées pour la relecture.
-- Simulation logicielle initiale conservée dans un onglet séparé, avec substance et unités fictives.
+- Simulation logicielle compacte avec les 63 lignes : tableau à en-tête fixe ou liste adaptée au téléphone. Les deux onglets de calcul partagent le même âge et le même poids.
 
 Les neuf rubriques d’origine sont ACR, antibiotiques, cardio, sédation/curares, neuro, antidotes/G10/Exacyl, perfusions IV continues, hyperkaliémie et transfusion. « Anaphylaxie » et « Remplissage » sont ajoutés après ACR. Les 63 fiches incluent des gestes électriques et des produits sanguins.
+
+## Simulation compacte v0.7
+
+L’onglet « Simulation logicielle » remplace la démonstration fictive par les 63 lignes du référentiel. Il affiche la posologie applicable, l’ampoule active, la dose, la dilution, le volume et le débit. La voie et les modalités connues sont placées sous le nom du médicament. Les listes de questions restent dans les fiches de validation.
+
+Le tableau garde son en-tête visible pendant le défilement. La liste est sélectionnée automatiquement sur petit écran ; les boutons Tableau / Liste permettent de choisir. Le patient est partagé en mémoire avec « Calculs rapides », y compris pour la remise à zéro et les saisies invalides. Les configurations d’ampoules modifient également cette vue.
+
+Sur demande explicite, la simulation utilise les doses et plafonds du tableau encore en attente de validation, marqués †. La triphosadénine reprend 1 mg/kg, maximum 12 mg ; le gluconate reprend 0,4 mL/kg de produit PROAMP 10 %, maximum 20 mL. Pour celui-ci, la dose en mg est exprimée en calcium élément et le volume calculé reste un prélèvement : la dilution et le volume administré ne sont pas inventés. Le magnésium garde sa dose actuelle, sans volume tant que la teneur de l’ampoule manque. Les états de validation des fiches ne changent pas.
+
+Toutes les lignes sont visibles dans la simulation. La restriction de calcul de l’étomidate à un âge strictement supérieur à 2 ans reste conservée ; le filtre contradictoire antérieurement demandé reste une question dans la fiche de validation.
+
+Les quantités de masse sont converties en mg à l’affichage, sans modifier les valeurs brutes. Les mmol, UI, mL et joules ne sont pas convertis artificiellement. Pour les quatre IVSE poids/3, la dose indiquée est la quantité par seringue ; les autres perfusions affichent mg/h ou la quantité sur la durée prévue. Un volume de seringue est identifié comme tel. Les volumes prélevés sont distingués des volumes administrés ; un débit sur une durée connue n’est calculé que si le volume final est déterminé.
 
 ## Ampoules modifiables sans coder
 
@@ -73,7 +85,7 @@ Le gluconate de calcium n’a plus de dose automatiquement retenue : la fiche co
 
 Pour le phénobarbital et le lévétiracétam, le volume prélevé n’est pas présenté comme un volume final à administrer tant que la préparation finale manque. Pour tranexamique et clonazépam IVSE, le résultat sépare volume prélevé, complément de diluant et concentration finale.
 
-Les plafonds du tableau non confirmés sont affichés avec leur seuil pondéral et la mention « non appliqué au calcul ». Le plafond de clonazépam IVSE à 4 mg/6 h, déjà utilisé par la version précédente, reste signalé comme utilisé pour la simulation mais à valider. La morphine IVSE applique le tableau dès 3 mois ; le schéma au-delà de 5 ans reste une question explicite par rapport à Pédiadol. Les documents de la BDPM, Pédiadol et ERC sont des références ciblées, pas une validation du tableau complet.
+Dans « Calculs rapides », les plafonds du tableau non confirmés sont affichés avec leur seuil pondéral et la mention « non appliqué au calcul ». Le plafond de clonazépam IVSE à 4 mg/6 h, déjà utilisé par la version précédente, reste signalé comme utilisé pour la simulation mais à valider. La morphine IVSE applique le tableau dès 3 mois ; le schéma au-delà de 5 ans reste une question explicite par rapport à Pédiadol. Les documents de la BDPM, Pédiadol et ERC sont des références ciblées, pas une validation du tableau complet.
 
 Voir [REVUE-DU-TABLEAU.md](./REVUE-DU-TABLEAU.md), [TABLEAU-IMPORTE.md](./TABLEAU-IMPORTE.md) et [CLINICAL-SCOPE.md](./CLINICAL-SCOPE.md).
 
@@ -93,7 +105,7 @@ Ouvrir http://localhost:8080. Les modules JavaScript nécessitent un serveur HTT
 
 Copier le contenu du dossier à la racine d’un dépôt GitHub, y compris .github/workflows, puis utiliser la branche main. Les tests se lancent sur les pushes et les pull requests.
 
-La publication Pages reste manuelle : dans Actions, ouvrir « Publier la démonstration sur GitHub Pages », puis cliquer sur **Run workflow** en sélectionnant **main**. **Re-run all jobs** relance l’ancien commit et peut donc conserver une ancienne version. Le badge de cette version est **v0.6**. L’intégration du code ne publie pas le site.
+La publication Pages reste manuelle : dans Actions, ouvrir « Publier la démonstration sur GitHub Pages », puis cliquer sur **Run workflow** en sélectionnant **main**. **Re-run all jobs** relance l’ancien commit et peut donc conserver une ancienne version. Le badge de cette version est **v0.7**. L’intégration du code ne publie pas le site.
 
 Ne pas importer de .git existant, de secrets ni de données patient. L’archive exclut l’identité de l’aperçu hébergé. La visibilité de Pages dépend du dépôt et de l’offre GitHub ; consulter les [sources de publication](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site). Le workflow suit la [documentation officielle Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages), consultée le 6 septembre 2026.
 
@@ -110,7 +122,10 @@ Ne pas importer de .git existant, de secrets ni de données patient. L’archive
 | dist/catalog-audit.js | Audit à 10 kg présumés, sans prescription |
 | dist/catalog-ui.js et dist/catalog.css | Consultation et relecture |
 | dist/index.html et dist/styles.css | Structure et thème communs |
-| dist/app.js et dist/calculator.js | Simulation fictive conservée |
+| dist/app.js | Navigation des onglets |
+| dist/simulation-data.js, dist/simulation-ui.js, dist/simulation.css | Simulation compacte de toutes les drogues |
+| dist/patient-state.js | Patient partagé en mémoire entre les deux vues |
+| dist/calculator.js | Contrôles de saisie et ancien cas de test logiciel |
 | dist/protocols.js | Catalogue importé non validé et démonstration séparée |
 | tests/ | Tests des unités, dilutions, périodes, transitions de poids, écarts et blocages |
 
@@ -118,4 +133,4 @@ Ne pas importer de .git existant, de secrets ni de données patient. L’archive
 
 Aucun nom ni identifiant n’est demandé. Les saisies du calculateur restent uniquement en mémoire dans la page, sans stockage local ni transmission au serveur. Le retour depuis le cache de navigation efface les champs et les résultats. Le chargement du site reste une requête normale auprès de l’hébergeur.
 
-46 tests automatisés couvrent notamment les seuils de dilution, paliers d’âge, préparations fixes et précision des calculs. L’aperçu local n’a pas pu être ouvert dans le navigateur distant : le rendu visuel et l’impression restent à contrôler. Les tests logiciels ne constituent pas une validation clinique ; aucun test en situation de soins n’a été réalisé.
+53 tests automatisés couvrent notamment les seuils de dilution, paliers d’âge, préparations fixes et précision des calculs. L’aperçu local n’a pas pu être ouvert dans le navigateur distant : le rendu visuel et l’impression restent à contrôler. Les tests logiciels ne constituent pas une validation clinique ; aucun test en situation de soins n’a été réalisé.

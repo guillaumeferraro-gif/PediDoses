@@ -11,9 +11,11 @@
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./catalog.css">
   <link rel="stylesheet" href="./smur.css">
+  <link rel="stylesheet" href="./simulation.css">
   <script type="module" src="./app.js"></script>
   <script type="module" src="./catalog-ui.js"></script>
   <script type="module" src="./smur-ui.js"></script>
+  <script type="module" src="./simulation-ui.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Aller au référentiel</a>
@@ -27,7 +29,7 @@
         <img class="chu-logo" src="./assets/chu-toulouse.webp" alt="CHU de Toulouse" width="150" height="76">
         <img class="samu-logo" src="./assets/samu-31.jpg" alt="SAMU 31" width="66" height="66">
       </div>
-      <span class="version-badge">France <span>v0.6</span></span>
+      <span class="version-badge">France <span>v0.7</span></span>
     </div>
   </header>
   <main id="main" class="workspace">
@@ -125,53 +127,23 @@
     </section>
 
     <section id="calculator-panel" role="tabpanel" aria-labelledby="calculator-tab" hidden>
-      <p class="demo-intro"><strong>Simulation logicielle indépendante du tableau.</strong> La substance et les unités de cet onglet sont fictives. Ne pas utiliser pour soigner un patient.</p>
-      <form id="calculator-form" novalidate autocomplete="off">
-        <div class="calculator-grid">
-          <section class="panel patient-panel" aria-labelledby="patient-heading">
-            <div class="panel-heading"><span class="step">01</span><h2 id="patient-heading">Cas fictif</h2></div>
-            <p class="section-hint">Saisissez les données de votre simulation.</p>
-            <div class="field">
-              <label for="weight">Poids <span class="required">requis</span></label>
-              <div class="input-with-unit"><input id="weight" name="weight" type="text" inputmode="decimal" placeholder="Ex. 12,5" maxlength="12" required aria-describedby="weight-help"><span>kg</span></div>
-              <p id="weight-help" class="field-help">Saisie en kilogrammes. Virgule ou point acceptés.</p>
-            </div>
-            <div class="field">
-              <label for="age">Âge <span class="required">requis</span></label>
-              <div class="age-inputs"><input id="age" name="age" type="text" inputmode="decimal" placeholder="Ex. 3" maxlength="12" required><label for="age-unit" class="sr-only">Unité de l’âge</label><select id="age-unit" name="age-unit"><option value="years">ans</option><option value="months">mois</option></select></div>
-            </div>
-            <button type="button" id="fill-example" class="button button-soft example-button">Charger un exemple fictif <span aria-hidden="true">↗</span></button>
-            <div class="privacy-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3"/><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M12 14v3"/></svg><p>Aucune identité demandée. Les valeurs restent en mémoire pendant cette session.</p></div>
-          </section>
-
-          <section class="panel protocol-panel" aria-labelledby="protocol-heading">
-            <div class="panel-heading"><span class="step">02</span><h2 id="protocol-heading">Protocole de simulation</h2><span class="tiny-badge">FICTIF</span></div>
-            <div class="substance"><div class="substance-mark" aria-hidden="true">A</div><div><h3>Substance fictive A</h3><p>Scénario de démonstration · Voie fictive</p></div></div>
-            <dl class="protocol-values">
-              <div><dt>Coefficient de calcul</dt><dd><span id="coefficient-value"></span> <small>u. démo/kg</small></dd></div>
-              <div><dt>Plafond de l’exemple</dt><dd><span id="maximum-value"></span> <small>u. démo</small></dd></div>
-              <div><dt>Concentration fictive</dt><dd><span id="concentration-value"></span> <small>u. démo/mL</small></dd></div>
-            </dl>
-            <p class="unit-note">« u. démo » est une unité fictive, sans équivalent médicamenteux.</p>
-            <div class="source-row"><span class="source-label">SOURCE</span><p>Jeu de test logiciel <span>· DEMO-1.0</span><br><span>Aucune recommandation clinique.</span></p></div>
-            <label class="confirmation" for="confirm-demo"><input type="checkbox" id="confirm-demo" required><span>Je confirme utiliser uniquement un cas fictif.</span></label>
-            <div id="form-error" class="form-error" role="alert" hidden></div>
-            <div class="form-actions"><button type="submit" class="button button-primary">Calculer la simulation <span aria-hidden="true">→</span></button><button type="button" id="reset" class="button button-plain">Réinitialiser</button></div>
-          </section>
-
-          <section class="panel result-panel" aria-labelledby="result-heading" aria-live="polite" aria-atomic="true">
-            <div class="panel-heading"><span class="step">03</span><h2 id="result-heading">Résultat simulé</h2><span id="result-status" class="result-status">En attente de saisie</span></div>
-            <div id="empty-result" class="empty-result"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="8" y="4" width="24" height="32" rx="3"/><path d="M13 10h14v6H13zM13 22h3m8 0h3m-14 7h3m8 0h3"/></svg><div><h3>Le calcul apparaîtra ici</h3><p>Renseignez le cas fictif, puis lancez la simulation.</p></div></div>
-            <div id="result-content" hidden>
-              <p class="result-context" id="result-context"></p>
-              <div id="cap-notice" class="cap-notice" hidden>Plafond de simulation appliqué. La dose théorique dépasse le maximum de l’exemple.</div>
-              <div class="result-numbers"><div class="result-number"><p>Dose simulée</p><strong><span id="dose-result"></span> <small>u. démo</small></strong></div><div class="result-number"><p>Volume théorique simulé</p><strong><span id="volume-result"></span> <small>mL fictifs</small></strong></div></div>
-              <details class="calculation-details" open><summary>Détail du calcul</summary><ol id="calculation-steps"></ol><p>Affichage limité à 6 décimales ; aucune règle d’arrondi d’administration n’est appliquée.</p></details>
-              <p class="result-footer">SIMULATION — Aucune ordonnance générée. Aucune administration à partir de ce résultat.</p>
-            </div>
-          </section>
-        </div>
+      <div class="simulation-banner"><strong>Simulation logicielle</strong><span>Validation en cours · valeurs provisoires incluses†</span></div>
+      <form id="simulation-patient-form" class="simulation-patient" autocomplete="off" novalidate>
+        <div class="field"><label for="simulation-age">Âge</label><div class="age-inputs"><input id="simulation-age" type="text" inputmode="decimal" maxlength="24" placeholder="Ex. 3" aria-describedby="simulation-error"><label for="simulation-age-unit" class="sr-only">Unité d’âge</label><select id="simulation-age-unit"><option value="years">ans</option><option value="months">mois</option></select></div></div>
+        <div class="field"><label for="simulation-weight">Poids connu · prioritaire</label><div class="input-with-unit"><input id="simulation-weight" type="text" inputmode="decimal" maxlength="12" placeholder="Facultatif" aria-describedby="simulation-error"><span>kg</span></div></div>
+        <div class="simulation-weight" role="status" aria-live="polite"><strong id="simulation-used-weight">— kg</strong><span id="simulation-weight-source">Âge ou poids</span></div>
+        <button id="simulation-reset" type="button" class="button button-soft">Nouveau patient</button>
       </form>
+      <p id="simulation-error" class="quick-error" role="alert" hidden></p>
+      <div class="simulation-toolbar">
+        <label class="sr-only" for="simulation-search">Rechercher un médicament</label><input id="simulation-search" type="search" maxlength="100" placeholder="Rechercher un médicament…" autocomplete="off">
+        <label class="sr-only" for="simulation-category">Groupe de médicaments</label><select id="simulation-category"><option value="all">Tous les groupes</option></select>
+        <div class="simulation-views" role="group" aria-label="Présentation"><button id="simulation-view-table" type="button" aria-pressed="true">Tableau</button><button id="simulation-view-list" type="button" aria-pressed="false">Liste</button></div>
+      </div>
+      <div id="simulation-table-area" class="simulation-table-area"><div class="simulation-scroller" role="region" aria-label="Toutes les drogues, en-tête de colonnes fixe" tabindex="0"><table id="simulation-table" class="simulation-table" aria-label="Doses, ampoules, dilutions, volumes et débits"></table></div></div>
+      <div id="simulation-list" class="simulation-list" hidden></div>
+      <p id="simulation-empty" class="catalog-empty" hidden>Aucune ligne ne correspond à la recherche.</p>
+      <p class="simulation-footnote"><span>† Valeur du tableau utilisée pour la simulation, encore à valider. Une préparation manquante reste à préciser.</span><span id="simulation-count" role="status" aria-live="polite"></span></p>
     </section>
 
     <section id="protocols-panel" role="tabpanel" aria-labelledby="protocols-tab" hidden>
@@ -182,7 +154,7 @@
       <section class="panel outstanding-review"><div class="panel-heading"><h2>Autres points à préciser</h2><span id="outstanding-count" class="count"></span></div><div id="outstanding-list"></div></section>
     </section>
     <noscript><p class="notice">Activez JavaScript pour utiliser ce prototype.</p></noscript>
-    <footer class="footer"><span>PediDoses <span class="footer-divider">/</span> France · v0.6 · Fiches de validation complètes</span><span>Validation clinique à finaliser · Aucune prescription générée</span></footer>
+    <footer class="footer"><span>PediDoses <span class="footer-divider">/</span> France · v0.7 · Fiches de validation complètes</span><span>Validation clinique à finaliser · Aucune prescription générée</span></footer>
   </main>
 </body>
 </html>

@@ -2,6 +2,7 @@ import { smurCategories, smurSources } from './smur-data.js';
 import { getConfiguredRecords } from './ampoules-ui.js';
 import { resolvePatientContext, calculateAllRecords, isRecordVisibleForPatient } from './patient-calculator.js';
 import { buildMedicationSheet, volumeText, concentrationText } from './smur-sheets.js';
+import { setPatientInput, subscribePatientInput } from './patient-state.js';
 
 const byId = id => document.getElementById(id);
 const format = (number, digits = 6) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: digits }).format(number);
@@ -182,6 +183,7 @@ function renderGroups() {
 }
 
 function updatePatient() {
+  setPatientInput({ weight: weightInput.value, age: ageInput.value, ageUnit: ageUnitInput.value }, 'quick');
   const errorBox = byId('quick-error');
   errorBox.hidden = true;
   errorBox.textContent = '';
@@ -235,6 +237,11 @@ window.addEventListener('ampoules-updated', () => {
   sheets = new Map(smurRecords.map(record => [record.id, buildMedicationSheet(record)]));
   results = calculateAllRecords(smurRecords, context);
   renderGroups(); updatePatient();
+});
+subscribePatientInput((value, source) => {
+  if (source === 'quick') return;
+  weightInput.value = value.weight; ageInput.value = value.age; ageUnitInput.value = value.ageUnit;
+  updatePatient();
 });
 renderGroups();
 resetPatient();

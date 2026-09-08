@@ -1,0 +1,54 @@
+.simulation-active .page-heading,.simulation-active .workspace>.notice{display:none}
+.simulation-active .workspace{max-width:1480px;padding-top:12px}
+.simulation-active .header-inner{padding-top:8px;padding-bottom:8px;max-width:1480px}
+.simulation-active .institution-logos .chu-logo{height:76px;width:150px}
+.simulation-active .institution-logos .samu-logo{height:46px;width:46px}
+.simulation-active .tabs{margin:0 0 12px;gap:24px}
+.simulation-banner{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:0 0 10px;font-size:.875rem;color:var(--muted)}
+.simulation-banner strong{color:var(--ink)}
+.simulation-patient{display:flex;flex-wrap:wrap;align-items:end;gap:12px;background:var(--paper);padding:12px 14px;border:1px solid var(--line);border-radius:8px}
+.simulation-patient .field{margin:0;flex:0 1 180px}
+.simulation-patient .field label{margin:0 0 4px;font-size:.875rem}
+.simulation-patient input,.simulation-patient select{font-size:1rem;padding:9px 10px;width:100%;min-width:0;min-height:44px;border:1px solid #a4b4be;border-radius:5px;background:var(--paper);color:var(--ink)}
+.simulation-patient .age-inputs{grid-template-columns:minmax(0,1fr) 76px}
+.simulation-patient .input-with-unit{display:flex;align-items:center;gap:8px}
+.simulation-weight{display:flex;align-items:baseline;gap:8px;margin:auto 0 5px;padding:0 12px;flex:1;white-space:nowrap;font-variant-numeric:tabular-nums}
+.simulation-weight strong{font-size:1.5rem;color:var(--accent)}
+.simulation-weight span{font-size:.875rem;color:var(--muted)}
+.simulation-patient>.button{margin-bottom:1px}
+.simulation-toolbar{display:flex;align-items:center;gap:10px;padding:12px 0}
+.simulation-toolbar input,.simulation-toolbar select{padding:9px 10px;border:1px solid #a4b4be;border-radius:5px;background:var(--paper);color:var(--ink);min-height:44px;font-size:1rem;min-width:0}
+.simulation-toolbar input{flex:1}.simulation-toolbar select{max-width:215px}
+.simulation-views{display:flex;gap:0;border:1px solid #a4b4be;border-radius:5px;overflow:hidden;flex-shrink:0}
+.simulation-views button{border:0;border-radius:0;background:var(--paper);color:var(--ink);min-height:44px;padding:8px 13px;font-size:.875rem}
+.simulation-views button[aria-pressed=true]{background:var(--primary);color:#fff}
+.simulation-scroller{overflow:auto;max-height:calc(100dvh - 320px);min-height:260px;border:1px solid var(--line);border-radius:8px;background:var(--paper);scroll-padding-top:44px}
+.simulation-table{width:100%;min-width:1060px;border-collapse:separate;border-spacing:0;table-layout:fixed;font-variant-numeric:tabular-nums}
+.simulation-table thead th{position:sticky;top:0;z-index:3;background:var(--primary);color:#fff;text-align:left;padding:10px 12px;font-size:.875rem;font-weight:600;border-bottom:1px solid #496778}
+.simulation-table thead th:first-child{left:0;z-index:4}
+.simulation-table .sim-row>.sim-drug{position:sticky;left:0;z-index:2;background:var(--paper);border-right:1px solid var(--line)}
+.simulation-table thead th:nth-child(1){width:17%}.simulation-table thead th:nth-child(2){width:14%}.simulation-table thead th:nth-child(3){width:12%}.simulation-table thead th:nth-child(4){width:10%}.simulation-table thead th:nth-child(5){width:25%}.simulation-table thead th:nth-child(6){width:12%}.simulation-table thead th:nth-child(7){width:10%}
+.simulation-table .sim-group-row th{background:#e6eef3;color:var(--primary);font-size:.875rem;text-align:left;font-weight:650;padding:6px 12px;border-top:1px solid #c3d3dd;border-bottom:1px solid #c3d3dd}
+.simulation-table .sim-row>th,.simulation-table .sim-row>td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left;font-size:.875rem;line-height:1.4;overflow-wrap:anywhere}
+.simulation-table .sim-row:nth-child(odd)>*{background:#f8fafc}
+.sim-drug strong{font-size:1rem;font-weight:650;color:var(--ink);display:block}
+.sim-route{display:block;color:var(--muted);font-size:.875rem;font-weight:400;margin-top:3px}
+.sim-secondary{display:block;color:var(--muted);font-size:.875rem;font-weight:400;line-height:1.4;margin-top:3px}
+.sim-dose>strong,.sim-volume>strong,.sim-rate>strong{display:block;font-weight:700;font-size:1.125rem;line-height:1.35}
+.sim-volume>strong,.sim-rate>strong{color:var(--accent)}
+.sim-dilution>strong{font-weight:400}
+.sim-blocked .sim-volume .sim-secondary{color:#7b4c16}
+.simulation-footnote{font-size:.875rem;color:var(--muted);margin-top:9px;display:flex;justify-content:space-between;gap:16px}
+.sim-list-group{margin-bottom:18px}
+.sim-list-group>h3{font-size:.9375rem;padding:8px 12px;color:var(--primary);background:#e6eef3;border-bottom:1px solid #c3d3dd}
+.sim-list-row{padding:14px;background:var(--paper);border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.sim-list-top{display:flex;justify-content:space-between;gap:16px;align-items:start}
+.sim-list-top>.sim-posology{font-size:.875rem;max-width:45%;text-align:right}
+.sim-list-ampoule{font-size:.875rem;margin-top:8px}
+.sim-field-label{font-size:.875rem;color:var(--muted)}
+.sim-list-values{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:14px;margin:10px 0}
+.sim-list-values .sim-field-label{display:block;margin-bottom:3px}
+.sim-list-dilution{font-size:.9375rem;border-top:1px solid var(--line);padding-top:9px}
+@media(min-width:1000px){.simulation-list{max-width:1050px}.sim-list-values{max-width:760px}}
+@media(max-width:760px){.simulation-active .workspace{padding:12px}.simulation-active .tabs{gap:20px;overflow:auto;white-space:nowrap}.simulation-active .header-inner{padding-left:12px;padding-right:12px}.simulation-banner{align-items:start}.simulation-banner span{max-width:60%;text-align:right}.simulation-patient{gap:10px;padding:10px}.simulation-patient .field{flex:1 1 calc(50% - 10px);min-width:0}.simulation-weight{padding:0;margin:0;flex:1}.simulation-weight strong{font-size:1.3rem}.simulation-weight span{font-size:.875rem}.simulation-toolbar{flex-wrap:wrap}.simulation-toolbar input{flex-basis:100%}.simulation-toolbar select{flex:1;max-width:none}.simulation-views button{padding:8px 12px}.simulation-scroller{max-height:65dvh}.simulation-footnote{align-items:start}.sim-list-top{gap:10px}.sim-list-top>.sim-posology{max-width:47%}.sim-list-values{gap:10px}.sim-list-row{padding:12px}}
+@media print{body.simulation-active #calculator-panel{display:block!important}body.simulation-active #quick-panel{display:none!important}.simulation-active .simulation-table-area{display:block!important}.simulation-active .simulation-list,.simulation-active .simulation-toolbar,.simulation-active .simulation-patient button{display:none!important}.simulation-active .simulation-scroller{overflow:visible;max-height:none;border:0}.simulation-active .simulation-table{min-width:0;font-size:10pt}.simulation-active .simulation-table thead{display:table-header-group}.simulation-active .simulation-table thead th{position:static}.simulation-active .sim-row{break-inside:avoid}}

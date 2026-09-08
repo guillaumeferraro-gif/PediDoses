@@ -1,6 +1,6 @@
 {
   "name": "pedia-urgences",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "description": "PediDoses : calculs SMUR pédiatriques, fiches de préparation et questionnements de validation clinique.",
@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check dist/ampoules.js && node --check dist/ampoules-ui.js && node --check dist/app.js && node --check dist/calculator.js && node --check dist/protocols.js && node --check dist/catalog-data.js && node --check dist/catalog-audit.js && node --check dist/catalog-ui.js && node --check dist/patient-calculator.js && node --check dist/smur-data.js && node --check dist/smur-preparation.js && node --check dist/smur-sheets.js && node --check dist/smur-ui.js",
+    "check": "node --check dist/patient-state.js && node --check dist/simulation-data.js && node --check dist/simulation-ui.js && node --check dist/ampoules.js && node --check dist/ampoules-ui.js && node --check dist/app.js && node --check dist/calculator.js && node --check dist/protocols.js && node --check dist/catalog-data.js && node --check dist/catalog-audit.js && node --check dist/catalog-ui.js && node --check dist/patient-calculator.js && node --check dist/smur-data.js && node --check dist/smur-preparation.js && node --check dist/smur-sheets.js && node --check dist/smur-ui.js",
     "start": "python3 -m http.server 8080 --directory dist"
   }
 }

@@ -26,7 +26,7 @@ Répondre aux questionnements affichés dans chaque fiche, puis faire relire l�
 
 ## Suite du développement
 
-La version 0.6 recalcule les lignes déterminées selon le poids saisi ou estimé. Le poids connu valide est toujours prioritaire. Avant un an, l’estimation reprend la table mensuelle ; à partir d’un an elle applique (âge + 4) × 2. Une saisie invalide efface les résultats.
+La version 0.7 recalcule les lignes déterminées selon le poids saisi ou estimé. Le poids connu valide est toujours prioritaire. Avant un an, l’estimation reprend la table mensuelle ; à partir d’un an elle applique (âge + 4) × 2. Une saisie invalide efface les résultats.
 
 Les nouvelles décisions sont détaillées dans README.md. L’adrénaline IV est pure dès 50 kg. Les plafonds validés sont appliqués. Le magnésium calcule la masse (50 mg/kg, maximum 2 g), mais aucun volume tant que la quantité totale de l’ampoule de 10 mL reste ambiguë. La triphosadénine est laissée en suspens, sans calcul automatique. Le palier de kétamine d’intubation à 18 mois est confirmé ; le plafond de 80 mg de kétamine analgésique reste en suspens. Le midazolam IV n’a aucun plafond documenté. Midazolam IV, morphine DC et étomidate sont indiqués IVL sans durée ni vitesse ajoutées. Le filtre demandé masque l’étomidate après 2 ans ; son sens reste à confirmer car la restriction de calcul historique exclut au contraire les âges avant ou à 2 ans.
 
@@ -41,3 +41,11 @@ Les seuils de dilution et les concentrations des fiches sont issus des mêmes do
 Un moteur destiné aux soins nécessite des règles documentées : population, indications, unités et fraction active, voies et concentrations, plafonds et répétitions, conditions particulières, préparation, arrondis et cas de référence vérifiés indépendamment avec les professionnels concernés.
 
 Un RCP consulté ou un contrôle arithmétique réussi ne vaut pas approbation d’un protocole pédiatrique. Les exigences d’authentification, de traçabilité, d’hébergement et de qualification du logiciel dépendront de l’usage retenu. Le prototype ne stocke pas de données patient et ne génère pas d’ordonnance.
+
+## Simulation compacte
+
+La simulation v0.7 utilise les doses documentées et les plafonds encore à valider, sur demande de l’utilisateur ; ces valeurs sont repérées par †. Ce choix n’attribue aucun statut de validation clinique aux médicaments. Les fiches « Calculs rapides » conservent leurs questions et blocages distincts.
+
+La triphosadénine reprend la valeur source de 1 mg/kg et le plafond source de 12 mg. Le gluconate reprend la règle source de 0,4 mL/kg, maximum 20 mL, avec une dose en calcium élément et uniquement un volume de produit à prélever. Sa dilution finale reste indéterminée. L’ambiguïté de concentration du magnésium n’est pas résolue automatiquement. Aucun volume d’administration ni débit n’est déduit d’un simple volume prélevé.
+
+La simulation affiche toutes les lignes ; les restrictions de calcul liées à l’âge restent appliquées. Les unités non massiques restent explicites. Le tableau à en-tête fixe et la liste mobile ne changent pas les formules : ils utilisent le même poids partagé en mémoire, les mêmes ampoules configurées et les mêmes règles d’arrondi final.
