@@ -1,4 +1,5 @@
-import { calculateRecordForPatient } from './patient-calculator.js';
+import { calculateRecordForPatient, isRecordVisibleForPatient } from './patient-calculator.js';
+import { parseDecimal } from './calculator.js';
 import { preparationForWeight, preparationVariants } from './smur-preparation.js';
 import { buildMedicationSheet, volumeText, concentrationText } from './smur-sheets.js';
 import { convertUnit } from './catalog-audit.js';
@@ -34,6 +35,7 @@ export function prepareSimulationRecords(records) {
 }
 
 function shortAmpoule(record) {
+  if (record.model.limitToOneBag) return 'Poche de volume variable';
   const a = record.ampoule;
   if (!a) return record.sourceCells[0] || 'À préciser';
   if (a.status === 'sans objet') return '—';
@@ -59,7 +61,8 @@ function shortPosology(record, result, context) {
   if (!context || result.status !== 'calculated') {
     if (m.tiers) text = m.tiers.map((tier, i) => `${amount(tier.coefficient, m.unit)}/kg${m.type === 'infusion' ? '/h' : ''} ${i === 0 ? '<' : '≥'} ${m.tiers[0].maxAgeMonthsExclusive} mois`).join(' ; ');
     else if (m.type === 'conditional-dose') text = record.protocol.posology;
-    else if (m.minimumAgeMonthsExclusive) text = `${amount(m.coefficient, m.unit)}/kg · âge > 2 ans`;
+    else if (m.minimumAgeMonths !== undefined) text = `${amount(m.coefficient, m.unit)}/kg · âge ≥ ${m.minimumAgeMonths} mois`;
+    else if (m.minimumAgeMonthsExclusive !== undefined) text = `${amount(m.coefficient, m.unit)}/kg · âge > ${m.minimumAgeMonthsExclusive} mois`;
     else if (m.fixedDoseFromAgeMonths) text = record.protocol.posology;
     else text = `${amount(m.coefficient, m.unit)}/kg${m.type === 'infusion' ? (m.periodMinutes === 60 ? '/h' : '/min') : m.durationHours ? `/${m.durationHours} h` : ''}`;
   } else if (m.type === 'conditional-dose') text = amount(result.dose, m.unit);
@@ -68,12 +71,13 @@ function shortPosology(record, result, context) {
   if (record.id === 'amoxicilline-clavulanique') text = '(80 ÷ 3) mg/kg d’amoxicilline';
   if (record.id === 'morphine-titration') text += ' · toutes les 5 min';
   if (Number.isFinite(m.maximumDose)) text += ` · max. ${amount(m.maximumDose, m.unit)}`;
+  if (m.limitToOneBag) text += ' · au maximum 1 poche';
   return text + marker;
 }
 
 function shortPreparation(record, result, context) {
   const m = record.model;
-  if (m.type === 'instruction' || m.unit === 'J') return { text: '—', detail: '' };
+  if (m.type === 'instruction' || m.unit === 'J' || m.limitToOneBag) return { text: '', detail: '' };
   if (record.id === 'calcium-gluconate') return { text: 'Dilution finale à préciser', detail: 'Volume prélevé de produit à 10 %†' };
   if (record.category === 'antibiotiques') return { text: 'Selon dilution IDE', detail: result.withdrawalMl !== null ? `${ml(result.withdrawalMl)} de produit à prélever` : '' };
   if (record.id === 'magnesium') return { text: 'Dilution finale à préciser', detail: result.withdrawalMl !== null ? `${ml(result.withdrawalMl)} de produit à prélever` : 'Teneur de l’ampoule à préciser' };
@@ -96,14 +100,22 @@ function administration(record) {
   return record.protocol.administration.replace(/ ; débit arrondi.*$/, '');
 }
 
-export function buildSimulationRow(record, context) {
+export function transfusionVolume(prescribedVolumeMl, bagVolume) {
+  if (!Number.isFinite(prescribedVolumeMl) || prescribedVolumeMl <= 0) throw new Error('Volume prescrit non valide.');
+  if (bagVolume === undefined || bagVolume === null || String(bagVolume).trim() === '') return { prescribedVolumeMl, bagVolumeMl: null, administeredVolumeMl: null, oneBagApplied: false };
+  const bagVolumeMl = parseDecimal(bagVolume, 'Volume de la poche');
+  if (bagVolumeMl <= 0) throw new Error('Volume de la poche : saisir un volume strictement positif.');
+  return { prescribedVolumeMl, bagVolumeMl, administeredVolumeMl: Math.min(prescribedVolumeMl, bagVolumeMl), oneBagApplied: prescribedVolumeMl > bagVolumeMl };
+}
+
+export function buildSimulationRow(record, context, { bagVolumeMl } = {}) {
   let result;
   try { result = calculateRecordForPatient(record, context); }
   catch (error) { result = { status: 'blocked', message: error.message, dose: null, withdrawalMl: null }; }
   const m = record.model;
   const row = { id: record.id, category: record.category, name: record.name, administration: administration(record),
-    provisional: record.simulationProvisional, posology: shortPosology(record, result, context), ampoule: shortAmpoule(record),
-    dose: '—', doseDetail: '', volume: '—', volumeDetail: '', rate: '—', rateDetail: '',
+    provisional: record.simulationProvisional, visible: isRecordVisibleForPatient(record, context), hasBag: !!m.limitToOneBag, doseLabel: m.unit === 'J' ? 'Énergie' : 'Dose', volumeLabel: 'Volume', posology: shortPosology(record, result, context), ampoule: shortAmpoule(record),
+    dose: '—', doseDetail: '', doseIsVolume: m.unit === 'mL' && m.massPerMl === undefined && record.id !== 'ssh', volume: '—', volumeDetail: '', rate: '—', rateDetail: '',
     dilution: '', dilutionDetail: '', status: result.status, message: '', result };
   const prep = shortPreparation(record, result, context);
   row.dilution = prep.text; row.dilutionDetail = prep.detail;
@@ -134,7 +146,34 @@ export function buildSimulationRow(record, context) {
   } else if (Number.isFinite(result.withdrawalMl)) {
     row.volumeDetail = `${ml(result.withdrawalMl)} à prélever · volume administré à préciser`;
   } else if (m.unit !== 'J') row.volumeDetail = 'Volume à préciser';
+  if (m.limitToOneBag) {
+    row.doseLabel = 'Prescrit'; row.volumeLabel = 'À transfuser';
+    row.volume = '—'; row.volumeDetail = ''; row.doseDetail = 'au maximum 1 poche';
+    try {
+      row.transfusion = transfusionVolume(result.dose, bagVolumeMl);
+      if (row.transfusion.administeredVolumeMl !== null) {
+        row.volume = ml(row.transfusion.administeredVolumeMl);
+        row.volumeDetail = row.transfusion.oneBagApplied ? '1 poche entière' : 'dans la limite d’une poche';
+      }
+    } catch (error) { row.message = error.message; row.bagInputError = true; }
+  }
   return row;
 }
 
 export const buildSimulationRows = (records, context) => prepareSimulationRecords(records).map(record => buildSimulationRow(record, context));
+
+export function simulationListContent(row) {
+  const meaningful = text => !!text?.trim() && !['—', 'Sans objet'].includes(text.trim());
+  const metrics = [];
+  const sameVolume = row.doseIsVolume && meaningful(row.volume) && row.result.dose === (row.transfusion?.administeredVolumeMl ?? row.result.volumeMl) && row.volumeDetail !== 'seringue';
+  if (meaningful(row.dose) && !sameVolume) metrics.push({ type: 'dose', label: row.doseLabel, value: row.dose, detail: row.doseDetail });
+  if (meaningful(row.volume)) metrics.push({ type: 'volume', label: row.volumeLabel, value: row.volume, detail: row.volumeDetail || (sameVolume ? row.doseDetail : '') });
+  if (meaningful(row.rate)) metrics.push({ type: 'rate', label: 'Débit', value: row.rate, detail: row.rateDetail });
+  return {
+    ampoule: meaningful(row.ampoule) ? row.ampoule : '',
+    dilution: meaningful(row.dilution) ? row.dilution : '',
+    dilutionDetail: Number.isFinite(row.result.withdrawalMl) && !meaningful(row.volume) ? row.volumeDetail : row.dilutionDetail,
+    message: row.message,
+    metrics,
+  };
+}

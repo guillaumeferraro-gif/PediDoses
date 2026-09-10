@@ -49,7 +49,7 @@ const overrides = {
   magnesium: { model: { coefficient: 50, maximumDose: 2000, stock: null, mix: null }, protocol: { posology: '50 mg/kg/dose de sulfate de magnésium, maximum 2 g', dilution: 'Préparation à préciser après confirmation de la concentration de l’ampoule.', administration: 'IVL sur 20 min', questions: ['Confirmer si « 0,15 g » désigne la quantité par mL ou par ampoule de 10 mL. Une solution à 15 % contient 0,15 g/mL, soit 1,5 g/10 mL ; 0,15 g/10 mL correspondrait à 15 mg/mL. Aucun volume calculé en attendant.'] }, sources: ['magnesium'] },
   triphosadenine: { model: { type: 'unresolved', blockReason: 'Triphosadénine laissée en suspens : posologie et modalités à documenter.' }, protocol: { posology: 'En suspens', dilution: 'En suspens', administration: 'En suspens', questions: ['Documenter la posologie, la préparation, l’administration, les répétitions et le plafond propres à la triphosadénine. Aucun calcul automatique en attendant.'] } },
 
-  etomidate: { name: 'Étomidate', hideAboveAgeMonths: 24, protocol: { particulars: ['Filtre demandé : fiche masquée si âge > 2 ans ; visible si âge non renseigné. Le sens de ce filtre reste à confirmer.'], dilution: 'Sans dilution', administration: 'IVL', questions: ['Confirmer le sens du filtre « masquer si âge > 2 ans » : il contredit la règle existante qui réserve le calcul à un âge strictement supérieur à 2 ans. Le calcul avant ou à 2 ans reste bloqué.', 'Confirmer le plafond de 20 mg.'] } },
+  etomidate: { name: 'Étomidate', hideBelowAgeMonths: 24, model: { minimumAgeMonths: 24 }, protocol: { particulars: ['Masqué avant 24 mois ; visible et calculable à partir de 24 mois inclus. Si l’âge manque, la fiche reste visible et le calcul attend l’âge.'], dilution: 'Sans dilution', administration: 'IVL', questions: ['Confirmer le plafond de 20 mg.'] } },
   'ketamine-analgesie': { model: { mix: null, weightMix: { thresholdKg: 15, below: { takeMl: 1, addMl: 9 }, atOrAbove: null } }, protocol: { administration: 'IVL sur 2 à 3 min', questions: ['Plafond proposé de 80 mg conservé en suspens ; non appliqué au calcul en attendant la validation collective.'] } },
   'ketamine-intubation': { model: { tiers: [{ maxAgeMonthsExclusive: 18, coefficient: 4 }, { coefficient: 2 }] }, protocol: { posology: '4 mg/kg avant 18 mois ; 2 mg/kg à partir de 18 mois', particulars: ['Palier d’âge confirmé à 18 mois.'], administration: 'IVL sur 2 à 3 min', questions: [] } },
   'midazolam-iv': { model: { maximumDose: null, stock: { amount: 50, unit: 'mg', volumeMl: 10 }, weightMix: { thresholdKg: 10, below: { takeMl: 1, addMl: 9 }, atOrAbove: null } }, protocol: { administration: 'IVL', questions: [] } },
@@ -97,14 +97,15 @@ const overrides = {
   'resikali-ir': { model: { maximumDose: 40, volumePerDose: 150 / 40 }, protocol: { particulars: ['Maximum 40 g. Le déplacement de volume de la poudre est ignoré selon la convention locale.'], administration: 'Intrarectale' } },
   'kayexalate-ir': { model: { maximumDose: 15, volumePerDose: 100 / 15 }, protocol: { particulars: ['Maximum 15 g. Le déplacement de volume de la poudre est ignoré selon la convention locale.'], administration: 'Intrarectale' } },
 
-  cgr: { protocol: { dilution: 'Sans objet', questions: ['Confirmer le plafond, la vitesse et les modalités transfusionnelles locales.'] } },
-  pfc: { protocol: { dilution: 'Sans objet', questions: ['Confirmer le plafond, la vitesse et les modalités transfusionnelles locales.'] } },
-  cpa: { protocol: { dilution: 'Sans objet', questions: ['Confirmer le plafond, la vitesse et les modalités transfusionnelles locales.'] } },
+  cgr: { model: { maximumDose: null, limitToOneBag: true }, protocol: { dilution: 'Sans objet', particulars: ['Poche de volume variable : transfuser le volume prescrit, au maximum le contenu d’une poche. Aucun maximum fixe en mL.'], questions: ['Préciser la vitesse et les modalités transfusionnelles locales.'] } },
+  pfc: { model: { maximumDose: null, limitToOneBag: true }, protocol: { dilution: 'Sans objet', particulars: ['Poche de volume variable : transfuser le volume prescrit, au maximum le contenu d’une poche. Aucun maximum fixe en mL.'], questions: ['Préciser la vitesse et les modalités transfusionnelles locales.'] } },
+  cpa: { model: { maximumDose: null, limitToOneBag: true }, protocol: { dilution: 'Sans objet', particulars: ['Poche de volume variable : transfuser le volume prescrit, au maximum le contenu d’une poche. Aucun maximum fixe en mL.'], questions: ['Préciser la vitesse et les modalités transfusionnelles locales.'] } },
 };
 
 function mergeRecord(record) {
   const override = overrides[record.id] || {};
   const model = { ...record.model, ...(override.model || {}) };
+  if (model.minimumAgeMonths !== undefined) delete model.minimumAgeMonthsExclusive;
   if (record.id.startsWith('morphine-')) {
     model.weightMix = { thresholdKg: 10, below: record.id === 'morphine-ivc' ? { takeMl: 5, addMl: 45 } : { takeMl: 1, addMl: 9 }, atOrAbove: null };
     delete model.dynamicConcentration;

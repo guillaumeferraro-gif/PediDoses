@@ -81,9 +81,9 @@ export function calculateRecordForPatient(record, context) {
   result.weightKg = context.weightKg; result.weightSource = context.weightSource;
   result.preparation = preparationForWeight(m, context.weightKg);
   result.stockConcentration = result.preparation.stockConcentration;
-  if (m.minimumAgeMonthsExclusive !== undefined) {
+  if (m.minimumAgeMonths !== undefined || m.minimumAgeMonthsExclusive !== undefined) {
     if (context.ageMonths === null) return Object.freeze({ ...result, status: 'blocked', message: 'Âge nécessaire pour cette posologie.' });
-    if (context.ageMonths <= m.minimumAgeMonthsExclusive) return Object.freeze({ ...result, status: 'blocked', message: 'Non calculé : âge hors du palier indiqué.' });
+    if ((m.minimumAgeMonths !== undefined && context.ageMonths < m.minimumAgeMonths) || (m.minimumAgeMonthsExclusive !== undefined && context.ageMonths <= m.minimumAgeMonthsExclusive)) return Object.freeze({ ...result, status: 'blocked', message: 'Non calculé : âge hors du palier indiqué.' });
   }
   if (m.type === 'fixed-rate') {
     result.exactRateMlH = context.weightKg / positive(m.rateDivisor);
@@ -146,5 +146,7 @@ export function calculateAllRecords(records, context) {
 
 // Display filtering never changes the model's independent age restrictions.
 export function isRecordVisibleForPatient(record, context) {
-  return !Number.isFinite(record.hideAboveAgeMonths) || context?.ageMonths == null || context.ageMonths <= record.hideAboveAgeMonths;
+  if (context?.ageMonths == null) return true;
+  return (!Number.isFinite(record.hideBelowAgeMonths) || context.ageMonths >= record.hideBelowAgeMonths) &&
+    (!Number.isFinite(record.hideAboveAgeMonths) || context.ageMonths <= record.hideAboveAgeMonths);
 }

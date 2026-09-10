@@ -1,6 +1,6 @@
 # PediDoses — France
 
-Version 0.7 : fiches de validation collective du protocole SMUR et ampoules modifiables par tableau CSV. Après suppression de la lidocaïne, 62 lignes sources sont conservées ; l’Isofundine porte le total à 63 fiches. L’adrénaline IM figure dans « Anaphylaxie ».
+Version 0.8 : simulation en liste compacte, fiches de validation collective du protocole SMUR et ampoules modifiables par tableau CSV. Après suppression de la lidocaïne, 62 lignes sources sont conservées ; l’Isofundine porte le total à 63 fiches. L’adrénaline IM figure dans « Anaphylaxie ».
 
 **Support de relecture avant production. Les simulations et les références consultées ne constituent pas une validation clinique.**
 
@@ -20,19 +20,21 @@ Version 0.7 : fiches de validation collective du protocole SMUR et ampoules modi
 - Valeurs originales conservées, avec distinction des écarts numériques et des données ambiguës.
 - Unités g, mg, mcg, ng, mmol, mL et J distinguées ; perfusions par minute, heure ou 6 heures.
 - Références françaises ciblées pour la relecture.
-- Simulation logicielle compacte avec les 63 lignes : tableau à en-tête fixe ou liste adaptée au téléphone. Les deux onglets de calcul partagent le même âge et le même poids.
+- Simulation logicielle en liste avec les 63 lignes du référentiel : dose, volume et débit regroupés dans une colonne à droite, y compris sur téléphone. Les deux onglets de calcul partagent le même âge et le même poids.
 
 Les neuf rubriques d’origine sont ACR, antibiotiques, cardio, sédation/curares, neuro, antidotes/G10/Exacyl, perfusions IV continues, hyperkaliémie et transfusion. « Anaphylaxie » et « Remplissage » sont ajoutés après ACR. Les 63 fiches incluent des gestes électriques et des produits sanguins.
 
-## Simulation compacte v0.7
+## Simulation compacte v0.8
 
 L’onglet « Simulation logicielle » remplace la démonstration fictive par les 63 lignes du référentiel. Il affiche la posologie applicable, l’ampoule active, la dose, la dilution, le volume et le débit. La voie et les modalités connues sont placées sous le nom du médicament. Les listes de questions restent dans les fiches de validation.
 
-Le tableau garde son en-tête visible pendant le défilement. La liste est sélectionnée automatiquement sur petit écran ; les boutons Tableau / Liste permettent de choisir. Le patient est partagé en mémoire avec « Calculs rapides », y compris pour la remise à zéro et les saisies invalides. Les configurations d’ampoules modifient également cette vue.
+La liste est l’unique présentation. Les résultats chiffrés occupent une seule colonne à droite ; le nom, la posologie, l’ampoule et la préparation utilisent l’espace restant à gauche. Les champs sans objet et les volumes absents ne créent aucun intitulé vide. Un volume identique à la dose prescrite n’est pas répété. Le patient est partagé en mémoire avec « Calculs rapides », y compris pour la remise à zéro et les saisies invalides. Les configurations d’ampoules modifient également cette vue.
 
 Sur demande explicite, la simulation utilise les doses et plafonds du tableau encore en attente de validation, marqués †. La triphosadénine reprend 1 mg/kg, maximum 12 mg ; le gluconate reprend 0,4 mL/kg de produit PROAMP 10 %, maximum 20 mL. Pour celui-ci, la dose en mg est exprimée en calcium élément et le volume calculé reste un prélèvement : la dilution et le volume administré ne sont pas inventés. Le magnésium garde sa dose actuelle, sans volume tant que la teneur de l’ampoule manque. Les états de validation des fiches ne changent pas.
 
-Toutes les lignes sont visibles dans la simulation. La restriction de calcul de l’étomidate à un âge strictement supérieur à 2 ans reste conservée ; le filtre contradictoire antérieurement demandé reste une question dans la fiche de validation.
+L’étomidate est masqué avant 24 mois, visible et calculable dès 24 mois inclus, dans les deux onglets. Sans âge renseigné, la ligne reste visible et le calcul attend l’âge. Cette règle remplace le filtre antérieur, corrigé par l’utilisateur.
+
+Pour CGR, CPA et PFC, aucun maximum fixe en mL n’est appliqué ni demandé à valider. Les poches sont de volume variable : le volume à transfuser est le minimum entre le volume prescrit et le volume d’une poche. Un champ facultatif « Poche (mL) » par produit permet ce calcul dans la simulation. Sans volume de poche, seul le volume prescrit apparaît, accompagné de la limite d’une poche. Ces saisies restent en mémoire et sont effacées par « Nouveau patient » depuis l’un ou l’autre onglet. Aucun arrondi intermédiaire ne précède la comparaison des volumes.
 
 Les quantités de masse sont converties en mg à l’affichage, sans modifier les valeurs brutes. Les mmol, UI, mL et joules ne sont pas convertis artificiellement. Pour les quatre IVSE poids/3, la dose indiquée est la quantité par seringue ; les autres perfusions affichent mg/h ou la quantité sur la durée prévue. Un volume de seringue est identifié comme tel. Les volumes prélevés sont distingués des volumes administrés ; un débit sur une durée connue n’est calculé que si le volume final est déterminé.
 
@@ -72,14 +74,14 @@ Isofundine : 10 mL/kg, maximum confirmé de 500 mL par bolus, flacon de 1 L. Mod
 - Amiodarone : maximum 300 mg, IVD puis rinçage 5 mL de NaCl 0,9 % ; atropine : maximum 2 mg, IVD ; hydrocortisone : maximum 100 mg, IVD.
 - Magnésium : 50 mg/kg de sulfate, maximum 2 g, IVL sur 20 min. L’ambiguïté 0,15 g par mL/par ampoule de 10 mL empêche le calcul d’un volume ; la quantité du contenant reste vide dans le tableau.
 - Triphosadénine : laissée en suspens, sans calcul automatique.
-- Étomidate : IVL sans durée. Filtre demandé masquant la fiche après 2 ans, âge absent visible ; le calcul avant ou à 2 ans reste bloqué. Le sens du filtre, opposé à la restriction historique de calcul, est à confirmer.
+- Étomidate : IVL sans durée. Règle d’âge corrigée en v0.8 : masqué avant 24 mois, visible dès 24 mois inclus ou si l’âge manque ; calcul possible à partir de 24 mois connus.
 - Kétamine analgésique : plafond proposé 80 mg maintenu en suspens ; kétamine d’intubation : palier confirmé à 18 mois.
 - Midazolam IV : aucun plafond documenté, 50 mg/10 mL, IVL sans durée ni vitesse ; morphine DC : 10 mg/10 mL, IVL sans durée ni vitesse.
 - Microgrammes affichés « mcg » dans l’interface.
 
 ## Limites
 
-Les décisions locales intégrées incluent l’atropine à 0,25 mg/mL, l’adrénaline IM plafonnée à 0,5 mg, le SSH 7,5 % prêt à l’emploi, la caféine exprimée en citrate, l’insuline/G5 et les conventions des résines. Le seuil de kétamine d’intubation à 18 mois est confirmé. Les paliers de suxaméthonium et de phénobarbital restent à confirmer. L’étomidate exige un âge connu strictement supérieur à 2 ans. Les antibiotiques restent calculés en masse sans volume standardisé, leur dilution étant laissée à l’IDE.
+Les décisions locales intégrées incluent l’atropine à 0,25 mg/mL, l’adrénaline IM plafonnée à 0,5 mg, le SSH 7,5 % prêt à l’emploi, la caféine exprimée en citrate, l’insuline/G5 et les conventions des résines. Le seuil de kétamine d’intubation à 18 mois est confirmé. Les paliers de suxaméthonium et de phénobarbital restent à confirmer. Le calcul d’étomidate exige un âge connu supérieur ou égal à 24 mois. Les antibiotiques restent calculés en masse sans volume standardisé, leur dilution étant laissée à l’IDE.
 
 Le gluconate de calcium n’a plus de dose automatiquement retenue : la fiche compare 0,4 mL/kg du tableau et 0,5 mL/kg de l’ERC 2025, les deux plafonnés à 20 mL de produit à 10 %, et demande de trancher la dose, la fraction de calcium et la dilution. Le calcul patient est suspendu pour cette ligne et pour la triphosadénine. Le RCP PROAMP documente la composition et la dilution, sans valider le schéma local.
 
@@ -105,7 +107,7 @@ Ouvrir http://localhost:8080. Les modules JavaScript nécessitent un serveur HTT
 
 Copier le contenu du dossier à la racine d’un dépôt GitHub, y compris .github/workflows, puis utiliser la branche main. Les tests se lancent sur les pushes et les pull requests.
 
-La publication Pages reste manuelle : dans Actions, ouvrir « Publier la démonstration sur GitHub Pages », puis cliquer sur **Run workflow** en sélectionnant **main**. **Re-run all jobs** relance l’ancien commit et peut donc conserver une ancienne version. Le badge de cette version est **v0.7**. L’intégration du code ne publie pas le site.
+La publication Pages reste manuelle : dans Actions, ouvrir « Publier la démonstration sur GitHub Pages », puis cliquer sur **Run workflow** en sélectionnant **main**. **Re-run all jobs** relance l’ancien commit et peut donc conserver une ancienne version. Le badge de cette version est **v0.8**. L’intégration du code ne publie pas le site.
 
 Ne pas importer de .git existant, de secrets ni de données patient. L’archive exclut l’identité de l’aperçu hébergé. La visibilité de Pages dépend du dépôt et de l’offre GitHub ; consulter les [sources de publication](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site). Le workflow suit la [documentation officielle Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages), consultée le 6 septembre 2026.
 
@@ -133,4 +135,4 @@ Ne pas importer de .git existant, de secrets ni de données patient. L’archive
 
 Aucun nom ni identifiant n’est demandé. Les saisies du calculateur restent uniquement en mémoire dans la page, sans stockage local ni transmission au serveur. Le retour depuis le cache de navigation efface les champs et les résultats. Le chargement du site reste une requête normale auprès de l’hébergeur.
 
-53 tests automatisés couvrent notamment les seuils de dilution, paliers d’âge, préparations fixes et précision des calculs. L’aperçu local n’a pas pu être ouvert dans le navigateur distant : le rendu visuel et l’impression restent à contrôler. Les tests logiciels ne constituent pas une validation clinique ; aucun test en situation de soins n’a été réalisé.
+55 tests automatisés couvrent notamment les seuils de dilution, paliers d’âge, préparations fixes, champs utiles de la liste, limite d’une poche et précision des calculs. Le rendu visuel et l’impression de la v0.8 n’ont pas été contrôlés dans un navigateur. Les tests logiciels ne constituent pas une validation clinique ; aucun test en situation de soins n’a été réalisé.

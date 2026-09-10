@@ -228,15 +228,23 @@ test('retire la lidocaïne et classe adrénaline IM dans Anaphylaxie', () => {
   assert.equal(isofundine.kind, 'reference');
 });
 
-test('étomidate : filtre demandé après 2 ans, âge absent visible, restriction de calcul préservée', () => {
+test('étomidate : masqué avant 24 mois, seuil inclus et âge absent visible', () => {
   const record = row('etomidate');
   assert.equal(isRecordVisibleForPatient(record, null), true);
   assert.equal(isRecordVisibleForPatient(record, patient('12', '')), true);
-  assert.equal(isRecordVisibleForPatient(record, patient('12', '24', 'months')), true);
-  assert.equal(isRecordVisibleForPatient(record, patient('12', '24.01', 'months')), false);
-  assert.equal(isRecordVisibleForPatient(record, patient('12', '3', 'years')), false);
-  assert.equal(calculate('etomidate', patient('12', '2', 'years')).status, 'blocked');
+  for (const age of ['0', '12', '23.99']) {
+    assert.equal(isRecordVisibleForPatient(record, patient('12', age, 'months')), false);
+    assert.equal(calculate('etomidate', patient('12', age, 'months')).status, 'blocked');
+  }
+  for (const age of ['24', '24.01', '36']) {
+    assert.equal(isRecordVisibleForPatient(record, patient('12', age, 'months')), true);
+    assert.equal(calculate('etomidate', patient('12', age, 'months')).status, 'calculated');
+  }
+  assert.equal(calculate('etomidate', patient('12', '2', 'years')).status, 'calculated');
   assert.equal(calculate('etomidate', patient('12', '')).status, 'blocked');
-  assert.equal(buildMedicationSheet(record).administration, 'IVL');
-  assert.match(buildMedicationSheet(record).questions.join(' '), /sens du filtre/);
+  const sheet = buildMedicationSheet(record);
+  assert.equal(sheet.administration, 'IVL');
+  assert.doesNotMatch(sheet.questions.join(' '), /sens du filtre/);
+  assert.equal(sheet.doseRows[0].condition, 'Âge < 2 ans');
+  assert.equal(sheet.doseRows[1].condition, 'Âge ≥ 2 ans');
 });

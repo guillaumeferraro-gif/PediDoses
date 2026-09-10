@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { smurRecords } from '../dist/smur-data.js';
 import { defaultAmpoules, applyAmpoules } from '../dist/ampoules.js';
 import { resolvePatientContext, calculateRecordForPatient } from '../dist/patient-calculator.js';
-import { prepareSimulationRecords, buildSimulationRow } from '../dist/simulation-data.js';
+import { prepareSimulationRecords, buildSimulationRow, simulationListContent, transfusionVolume } from '../dist/simulation-data.js';
+import { buildMedicationSheet } from '../dist/smur-sheets.js';
 import { getPatientInput, setPatientInput, subscribePatientInput } from '../dist/patient-state.js';
 const configured = applyAmpoules(smurRecords, defaultAmpoules(smurRecords));
 const records = prepareSimulationRecords(configured);
@@ -22,7 +23,10 @@ test('simulation : les 63 lignes sont présentes, y compris les doses provisoire
   assert.equal(row('triphosadenine').dose, '10 mg');
   assert.equal(row('triphosadenine').provisional, true);
   assert.equal(calculateRecordForPatient(smurRecords.find(r => r.id === 'triphosadenine'), patient()).status, 'blocked');
-  assert.equal(row('etomidate', patient(20, 24)).status, 'blocked');
+  assert.equal(row('etomidate', patient(20, 23.99)).visible, false);
+  assert.equal(row('etomidate', patient(20, 24)).visible, true);
+  assert.equal(row('etomidate', patient(20, 24)).status, 'calculated');
+  assert.equal(row('etomidate', resolvePatientContext({weight:'20',age:''})).visible, true);
   assert.equal(row('etomidate', patient(20, 25)).status, 'calculated');
 });
 
@@ -102,4 +106,47 @@ test('patient partagé : changement d’onglet, d’unité, saisie invalide et r
   assert.equal(events.length, 4);
   assert.equal(events[1].source, 'simulation');
   unsubscribe();
+});
+
+test('liste : champs sans objet masqués et résultats sans volume superflu', () => {
+  const shock = simulationListContent(row('defibrillation'));
+  assert.equal(shock.ampoule, '');
+  assert.equal(shock.dilution, '');
+  assert.deepEqual(shock.metrics.map(m => m.type), ['dose']);
+  assert.equal(shock.metrics[0].label, 'Énergie');
+  const instruction = simulationListContent(row('arret-potassium'));
+  assert.equal(instruction.ampoule, '');
+  assert.equal(instruction.dilution, '');
+  assert.deepEqual(instruction.metrics, []);
+  assert.deepEqual(simulationListContent(row('morphine-dc')).metrics.map(m => m.type), ['dose', 'volume']);
+  assert.deepEqual(simulationListContent(row('isofundine')).metrics.map(m => m.type), ['volume']);
+  assert.deepEqual(simulationListContent(row('gentamicine')).metrics.map(m => m.type), ['dose']);
+  assert.match(simulationListContent(row('calcium-gluconate')).dilutionDetail, /4,00 mL à prélever/);
+});
+
+test('transfusion : volume prescrit limité au contenu réel d’une seule poche', () => {
+  for (const id of ['cgr', 'cpa', 'pfc']) {
+    const record = records.find(r => r.id === id);
+    const expected = record.model.coefficient * 20;
+    assert.equal(record.model.maximumDose, null);
+    const sheet = buildMedicationSheet(record);
+    assert.doesNotMatch(sheet.questions.join(' '), /plafond|maximum/);
+    assert.match(sheet.ceiling, /Aucun maximum fixe/);
+    const missing = buildSimulationRow(record, patient(20));
+    assert.equal(missing.transfusion.administeredVolumeMl, null);
+    assert.equal(missing.volume, '—');
+    assert.match(missing.doseDetail, /maximum 1 poche/);
+    for (const bagVolume of [expected - 0.01, expected, expected + 0.01, 1000]) {
+      const r = buildSimulationRow(record, patient(20), { bagVolumeMl: String(bagVolume) });
+      assert.equal(r.transfusion.administeredVolumeMl, Math.min(expected, bagVolume));
+      assert.equal(r.transfusion.oneBagApplied, expected > bagVolume);
+      assert.equal(r.result.dose, expected);
+    }
+    const invalid = buildSimulationRow(record, patient(20), { bagVolumeMl: 'abc' });
+    assert.equal(invalid.volume, '—');
+    assert.equal(invalid.bagInputError, true);
+    assert.match(invalid.message, /Volume de la poche/);
+  }
+  assert.equal(transfusionVolume(123.4567, '120,1234').administeredVolumeMl, 120.1234);
+  for (const value of ['0', '-1', 'abc', '1e3', Infinity]) assert.throws(() => transfusionVolume(200, value));
 });

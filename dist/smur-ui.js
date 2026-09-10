@@ -226,6 +226,7 @@ byId('quick-clear-weight').addEventListener('click', () => {
 function resetPatient() {
   form.reset();
   updatePatient();
+  window.dispatchEvent(new Event('patient-reset'));
 }
 byId('quick-reset').addEventListener('click', () => { resetPatient(); ageInput.focus(); });
 searchInput.addEventListener('input', renderGroups);

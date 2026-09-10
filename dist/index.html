@@ -29,7 +29,7 @@
         <img class="chu-logo" src="./assets/chu-toulouse.webp" alt="CHU de Toulouse" width="150" height="76">
         <img class="samu-logo" src="./assets/samu-31.jpg" alt="SAMU 31" width="66" height="66">
       </div>
-      <span class="version-badge">France <span>v0.7</span></span>
+      <span class="version-badge">France <span>v0.8</span></span>
     </div>
   </header>
   <main id="main" class="workspace">
@@ -138,10 +138,8 @@
       <div class="simulation-toolbar">
         <label class="sr-only" for="simulation-search">Rechercher un médicament</label><input id="simulation-search" type="search" maxlength="100" placeholder="Rechercher un médicament…" autocomplete="off">
         <label class="sr-only" for="simulation-category">Groupe de médicaments</label><select id="simulation-category"><option value="all">Tous les groupes</option></select>
-        <div class="simulation-views" role="group" aria-label="Présentation"><button id="simulation-view-table" type="button" aria-pressed="true">Tableau</button><button id="simulation-view-list" type="button" aria-pressed="false">Liste</button></div>
       </div>
-      <div id="simulation-table-area" class="simulation-table-area"><div class="simulation-scroller" role="region" aria-label="Toutes les drogues, en-tête de colonnes fixe" tabindex="0"><table id="simulation-table" class="simulation-table" aria-label="Doses, ampoules, dilutions, volumes et débits"></table></div></div>
-      <div id="simulation-list" class="simulation-list" hidden></div>
+      <div id="simulation-list" class="simulation-list"></div>
       <p id="simulation-empty" class="catalog-empty" hidden>Aucune ligne ne correspond à la recherche.</p>
       <p class="simulation-footnote"><span>† Valeur du tableau utilisée pour la simulation, encore à valider. Une préparation manquante reste à préciser.</span><span id="simulation-count" role="status" aria-live="polite"></span></p>
     </section>
@@ -154,7 +152,7 @@
       <section class="panel outstanding-review"><div class="panel-heading"><h2>Autres points à préciser</h2><span id="outstanding-count" class="count"></span></div><div id="outstanding-list"></div></section>
     </section>
     <noscript><p class="notice">Activez JavaScript pour utiliser ce prototype.</p></noscript>
-    <footer class="footer"><span>PediDoses <span class="footer-divider">/</span> France · v0.7 · Fiches de validation complètes</span><span>Validation clinique à finaliser · Aucune prescription générée</span></footer>
+    <footer class="footer"><span>PediDoses <span class="footer-divider">/</span> France · v0.8 · Fiches de validation complètes</span><span>Validation clinique à finaliser · Aucune prescription générée</span></footer>
   </main>
 </body>
 </html>

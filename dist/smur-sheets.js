@@ -75,6 +75,10 @@ function dosageBranches(model) {
     { condition: `Âge < ${ageText(model.fixedDoseFromAgeMonths)}`, coefficient: model.coefficient },
     { condition: `Âge ≥ ${ageText(model.fixedDoseFromAgeMonths)}`, fixed: model.fixedDose },
   ];
+  if (model.minimumAgeMonths !== undefined) return [
+    { condition: `Âge < ${ageText(model.minimumAgeMonths)}`, unavailable: true },
+    { condition: `Âge ≥ ${ageText(model.minimumAgeMonths)}`, coefficient: model.coefficient },
+  ];
   if (model.minimumAgeMonthsExclusive !== undefined) return [
     { condition: `Âge ≤ ${ageText(model.minimumAgeMonthsExclusive)}`, unavailable: true },
     { condition: `Âge > ${ageText(model.minimumAgeMonthsExclusive)}`, coefficient: model.coefficient },
@@ -146,6 +150,7 @@ function preparationRows(record, variants) {
 
 function ceilingText(record) {
   const m = record.model;
+  if (m.limitToOneBag) return 'Aucun maximum fixe en mL. Transfuser le volume prescrit, au maximum le contenu d’une poche de volume variable.';
   if (['instruction', 'unresolved', 'fixed-rate'].includes(m.type)) return '';
   if (record.id === 'midazolam-iv') return 'Aucun plafond documenté à ce stade.';
   if (['suxamethonium', 'gentamicine', 'cardioversion'].includes(record.id)) return 'Aucun plafond, conformément à la décision locale.';
