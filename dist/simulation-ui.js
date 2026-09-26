@@ -3,6 +3,8 @@ import { smurCategories } from './smur-data.js';
 import { resolvePatientContext } from './patient-calculator.js';
 import { prepareSimulationRecords, buildSimulationRow, simulationListContent } from './simulation-data.js';
 import { getPatientInput, setPatientInput, subscribePatientInput } from './patient-state.js';
+import { doseControls } from './dose-controls.js';
+import { clearDoseSettings, subscribeDoseSettings } from './dose-adjustments.js';
 
 const byId = id => document.getElementById(id);
 const make = (tag, text = '', className = '') => { const el = document.createElement(tag); el.textContent = text; el.className = className; return el; };
@@ -33,6 +35,8 @@ function listRow(row) {
   name.append(make('strong', row.name + (row.provisional ? '†' : '')));
   if (row.administration) name.append(make('span', row.administration, 'sim-route'));
   left.append(name, make('p', row.posology, 'sim-posology'));
+  const control=doseControls(records.find(record=>record.id===row.id),context,'simulation');
+  if(control) left.append(control);
   if (content.ampoule) left.append(make('p', content.ampoule, 'sim-list-ampoule'));
   if (content.dilution || content.dilutionDetail) {
     const prep = make('p', content.dilution, 'sim-list-dilution');
@@ -111,12 +115,13 @@ for (const input of Object.values(inputs)) {
   input.addEventListener('change', updatePatient);
 }
 byId('simulation-patient-form').addEventListener('submit', event => event.preventDefault());
-byId('simulation-reset').addEventListener('click', () => { bagVolumes.clear(); receivePatient({ weight: '', age: '', ageUnit: 'years' }); inputs.age.focus(); });
+byId('simulation-reset').addEventListener('click', () => { bagVolumes.clear(); clearDoseSettings(); receivePatient({ weight: '', age: '', ageUnit: 'years' }); window.dispatchEvent(new Event('patient-reset')); inputs.age.focus(); });
 byId('simulation-search').addEventListener('input', render);
 byId('simulation-category').addEventListener('change', render);
 for (const group of smurCategories) { const option = make('option', group.label); option.value = group.id; byId('simulation-category').append(option); }
 
 window.addEventListener('ampoules-updated', () => { records = prepareSimulationRecords(getConfiguredRecords()); render(); });
 window.addEventListener('patient-reset', () => { bagVolumes.clear(); render(); });
-window.addEventListener('pageshow', event => { if (event.persisted) { bagVolumes.clear(); receivePatient({ weight: '', age: '', ageUnit: 'years' }); } });
+window.addEventListener('pageshow', event => { if (event.persisted) { bagVolumes.clear(); clearDoseSettings(); receivePatient({ weight: '', age: '', ageUnit: 'years' }); } });
+subscribeDoseSettings(render);
 receivePatient(getPatientInput());

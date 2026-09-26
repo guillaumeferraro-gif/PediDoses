@@ -34,12 +34,12 @@ test('le poids connu reste prioritaire et une saisie invalide ne retombe pas sur
   assert.equal(resolvePatientContext(), null);
 });
 
-test('calcule toutes les lignes décidées et conserve 63 fiches', () => {
+test('calcule toutes les lignes décidées et conserve 66 fiches', () => {
   const results = calculateAllRecords(smurRecords, patient('12', '3'));
-  assert.equal(results.size, 63);
-  assert.deepEqual([...results.values()].filter(result => result.status === 'blocked').map(result => result.recordId), ['triphosadenine', 'calcium-gluconate']);
+  assert.equal(results.size, 66);
+  assert.deepEqual([...results.values()].filter(result => result.status === 'blocked').map(result => result.recordId), []);
   assert.equal(results.get('arret-potassium').status, 'instruction');
-  assert.equal([...results.values()].filter(result => result.status === 'calculated').length, 60);
+  assert.equal([...results.values()].filter(result => result.status === 'calculated').length, 65);
 });
 
 test('applique les concentrations et plafonds confirmés sans plafond au suxaméthonium', () => {
@@ -70,11 +70,11 @@ test('calcule les quatre catécholamines par poids/3 et arrondit seulement le d�
   assert.match(row('noradrenaline').protocol.dilution, /1 mg/);
 });
 
-test('calcule morphine selon âge et concentration selon le seuil de 10 kg', () => {
+test('calcule la morphine sans palier d’âge et avec concentration selon le seuil de 10 kg', () => {
   const neonate = calculate('morphine-ivc', patient('5', '2', 'months'));
-  close(neonate.hourlyAmount, 50);
+  close(neonate.hourlyAmount,100);
   close(neonate.concentration, 100);
-  close(neonate.rateMlH, 0.5);
+  close(neonate.rateMlH,1);
   const infant = calculate('morphine-ivc', patient('10', '3', 'months'));
   close(infant.hourlyAmount, 200);
   close(infant.concentration, 1000);
@@ -84,37 +84,38 @@ test('calcule morphine selon âge et concentration selon le seuil de 10 kg', () 
 });
 
 test('sépare volume prélevé, diluant et concentration finale sans arrondi en chaîne', () => {
-  const tranexamique = calculate('tranexamique-ivc', patient('12.34', '5'));
-  close(tranexamique.dose, 987.2);
-  close(tranexamique.withdrawalMl, 9.872);
-  close(tranexamique.addMl, 6.128);
-  close(tranexamique.concentration, 61.7);
-  close(tranexamique.stockConcentration, 100);
-  assert.equal(volumeText(tranexamique.withdrawalMl), '9,87');
-  assert.equal(volumeText(tranexamique.addMl), '6,13');
-  assert.equal(tranexamique.volumeMl, null);
-  close(tranexamique.mixtureVolumeMl, 16);
-  close(tranexamique.rateMlH, 2);
+  const tranexamique = calculate('tranexamique-ivc', patient('12.34', '10'));
+  close(tranexamique.hourlyAmount,125);
+  close(tranexamique.preparation.takeMl,10);
+  close(tranexamique.preparation.addMl,6);
+  close(tranexamique.concentration,62.5);
+  close(tranexamique.stockConcentration,100);
+  assert.equal(tranexamique.volumeMl,null);
+  close(tranexamique.mixtureVolumeMl,16);
+  close(tranexamique.exactRateMlH,2);
+  close(tranexamique.rateMlH,2);
   const clonazepam = calculate('clonazepam-ivc', patient('50'));
-  close(clonazepam.dose, 4);
-  close(clonazepam.withdrawalMl, 4);
-  close(clonazepam.addMl, 2);
-  close(clonazepam.concentration, 4 / 6);
+  close(clonazepam.dose,1);
+  close(clonazepam.withdrawalMl,1);
+  close(clonazepam.addMl,5);
+  close(clonazepam.concentration,1/6);
   close(clonazepam.rateMlH, 1);
 });
 
 test('intègre le protocole hyperkaliémie local et les conventions de volume', () => {
   const calcium = calculate('calcium-gluconate', patient('50'));
-  assert.equal(calcium.status, 'blocked');
-  assert.equal(calcium.dose, null);
+  assert.equal(calcium.status,'calculated');
+  assert.equal(calcium.dose,20);
+  assert.equal(calcium.withdrawalMl,20);
   assert.equal(calcium.volumeMl, null);
-  assert.equal(calculate('calcium-gluconate', null).status, 'blocked');
+  assert.equal(calculate('calcium-gluconate',null).status,'empty');
   const alternatives = buildMedicationSheet(row('calcium-gluconate')).doseRows;
-  assert.match(alternatives[0].dose, /0,4 mL\/kg/);
-  assert.match(alternatives[1].dose, /0,5 mL\/kg/);
+  assert.equal(alternatives.length,1);
+  assert.match(alternatives[0].dose,/0,5 mL\/kg/);
   const insulin = calculate('insuline-glucose', patient('10'));
-  close(insulin.volumeMl, 40);
-  close(insulin.mass, 1.2);
+  close(insulin.volumeMl,50);
+  close(insulin.dose,1);
+  close(insulin.mass,5000);
   close(calculate('salbutamol-nebulise', patient('16')).dose, 2.5);
   close(calculate('salbutamol-nebulise', patient('16.1')).dose, 5);
   close(calculate('resikali-ir', patient('10')).volumeMl, 37.5);
@@ -122,10 +123,10 @@ test('intègre le protocole hyperkaliémie local et les conventions de volume', 
   close(calculate('kayexalate-ir', patient('20')).volumeMl, 100);
 });
 
-test('les 63 fiches sont complètes et les antibiotiques sans dilution respectent la décision locale', () => {
+test('les 66 fiches sont complètes et les antibiotiques sans dilution respectent la décision locale', () => {
   for (const record of smurRecords) {
     const sheet = buildMedicationSheet(record);
-    assert.ok(sheet.presentation && sheet.administration && (sheet.preparations.length || record.protocol.dilution === '') && sheet.doseRows.length, record.id);
+    assert.ok(sheet.presentation && (sheet.administration || record.category==='transfusion') && (sheet.preparations.length || record.protocol.dilution === '') && sheet.doseRows.length, record.id);
     assert.ok(Array.isArray(sheet.questions), record.id);
     for (const dose of sheet.doseRows) assert.ok(dose.condition && dose.dose && dose.volume && dose.concentration, record.id);
     assert.doesNotMatch(JSON.stringify(sheet), /NaN|undefined|Infinity/, record.id);
@@ -140,14 +141,14 @@ test('les 63 fiches sont complètes et les antibiotiques sans dilution respecten
   assert.equal(calculate('amoxicilline', patient('30')).dose, 2000);
 });
 
-test('affiche les deux doses de kétamine et les quatre combinaisons âge/poids de morphine IVSE', () => {
+test('affiche les deux doses de kétamine et les deux concentrations de morphine IVSE sans palier d’âge', () => {
   const ketamine = buildMedicationSheet(row('ketamine-intubation')).doseRows;
   assert.deepEqual(ketamine.map(r => [r.condition, r.dose, r.volume]), [
     ['Âge < 18 mois', '4 mg/kg/dose', '0,4 mL/kg/dose'],
     ['Âge ≥ 18 mois', '2 mg/kg/dose', '0,2 mL/kg/dose'],
   ]);
   const morphine = buildMedicationSheet(row('morphine-ivc'));
-  assert.deepEqual(morphine.doseRows.map(r => r.volume), ['0,1 mL/kg/h', '0,01 mL/kg/h', '0,2 mL/kg/h', '0,02 mL/kg/h']);
+  assert.deepEqual(morphine.doseRows.map(r => r.volume), ['0,2 mL/kg/h', '0,02 mL/kg/h']);
   assert.equal(morphine.preparations.length, 2);
   assert.match(morphine.preparations[0].text, /5,00 mL.*45,00 mL/);
 });
@@ -169,7 +170,7 @@ test('adrénaline IV diluée sous 50 kg et pure dès 50 kg, dans les fiches et l
 test('change effectivement la dilution aux seuils de 10 et 15 kg', () => {
   for (const [id, threshold, diluted, pure] of [
     ['ketamine-analgesie', 15, 5, 50], ['midazolam-iv', 10, 0.5, 5],
-    ['atracurium-bolus', 10, 1, 10], ['morphine-dc', 10, 0.1, 1], ['morphine-titration', 10, 0.1, 1],
+    ['morphine-dc', 10, 0.1, 1], ['morphine-titration', 10, 0.1, 1],
   ]) {
     const before = calculate(id, patient(String(threshold - 0.001)));
     const at = calculate(id, patient(String(threshold)));
@@ -208,9 +209,9 @@ test('ne confond pas le volume prélevé de phénobarbital/lévétiracétam et l
 });
 
 test('conserve les coefficients fins et arrondit uniquement les volumes affichés et débits finaux', () => {
-  assert.equal(buildMedicationSheet(row('salbutamol-ivc')).doseRows[0].volume, '0,024 mL/kg/h');
-  close(calculate('salbutamol-ivc', patient('12.34')).exactRateMlH, 0.29616);
-  close(calculate('salbutamol-ivc', patient('12.34')).rateMlH, 0.3);
+  assert.equal(buildMedicationSheet(row('salbutamol-ivc')).doseRows[0].volume, '0,06 à 1,2 mL/kg/h');
+  close(calculate('salbutamol-ivc', patient('12.34')).exactRateMlH, 0.7404);
+  close(calculate('salbutamol-ivc', patient('12.34')).rateMlH, 0.7);
   close(calculate('amiodarone', patient('12.34')).volumeMl, 8.226666666666667);
   assert.equal(volumeText(calculate('amiodarone', patient('12.34')).volumeMl), '8,23');
   assert.equal(volumeText(0.001), '< 0,01');
@@ -219,10 +220,10 @@ test('conserve les coefficients fins et arrondit uniquement les volumes affiché
 
 test('retire la lidocaïne et classe adrénaline IM dans Anaphylaxie', () => {
   assert.equal(catalogRecords.length, 62);
-  assert.equal(smurRecords.length, 63);
-  assert.equal(new Set(smurRecords.map(record => record.id)).size, 63);
+  assert.equal(smurRecords.length, 66);
+  assert.equal(new Set(smurRecords.map(record => record.id)).size, 66);
   assert.deepEqual(smurCategories.filter(category => !['remplissage', 'anaphylaxie'].includes(category.id)), categories);
-  assert.deepEqual(smurRecords.slice(0, 62).map(record => record.id), catalogRecords.map(record => record.id));
+  assert.deepEqual(smurRecords.filter(record=>catalogRecords.some(original=>original.id===record.id)).map(record=>record.id), catalogRecords.map(record => record.id));
   assert.equal(row('adrenaline-im').category, 'anaphylaxie');
   assert.equal(row('lidocaine'), undefined);
   assert.equal(isofundine.kind, 'reference');

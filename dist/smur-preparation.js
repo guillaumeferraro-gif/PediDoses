@@ -3,7 +3,10 @@ import { concentration } from './catalog-audit.js';
 // These variants feed both the review sheets and the patient calculation.
 // No display rounding belongs in this module.
 export function preparationVariants(model) {
-  const variants = model.weightMix ? [
+  const variants = model.weightMixes ? model.weightMixes.map(item => ({
+    ...item,
+    condition: item.minWeightKg === undefined ? `Poids < ${item.maxWeightKgExclusive} kg` : item.maxWeightKgExclusive === undefined ? `Poids ≥ ${item.minWeightKg} kg` : `${item.minWeightKg} kg ≤ poids < ${item.maxWeightKgExclusive} kg`,
+  })) : model.weightMix ? [
     { condition: `Poids < ${model.weightMix.thresholdKg} kg`, maxWeightKgExclusive: model.weightMix.thresholdKg, mix: model.weightMix.below },
     { condition: `Poids ≥ ${model.weightMix.thresholdKg} kg`, minWeightKg: model.weightMix.thresholdKg, mix: model.weightMix.atOrAbove },
   ] : [{ condition: 'Tous les paliers', mix: model.mix }];

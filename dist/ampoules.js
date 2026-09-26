@@ -4,30 +4,42 @@ export const ampouleHeaders = ['Identifiant', 'Médicament', 'Présentation', 'V
 export const ampouleStorageKey = 'pedidoses.ampoules.v1';
 export const ampouleStatuses = ['confirmé', 'à confirmer', 'sans objet'];
 const fmt = n => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 12 }).format(n);
-const unknownContainers = new Set(['calcium-chlorure', 'propofol', 'suxamethonium', 'levetiracetam', 'cafeine', 'flumazenil', 'sugammadex', 'naloxone', 'noradrenaline']);
+const unknownContainers = new Set(['cafeine', 'noradrenaline']);
 const noContainer = new Set(['cardioversion', 'defibrillation', 'arret-potassium']);
 const overrides = {
+  propofol:{amount:200,volumeMl:20,status:'confirmé'},
+  'propofol-lisa':{amount:200,volumeMl:20,presentation:'Propofol',status:'confirmé'},
+  suxamethonium:{amount:100,volumeMl:2,presentation:'Célocurine',status:'confirmé'},
+  'clonazepam-bolus':{amount:1,volumeMl:1,presentation:'Clonazépam — ampoule seule',status:'confirmé'},
+  'clonazepam-ivc':{amount:1,volumeMl:1,presentation:'Clonazépam — ampoule seule',status:'confirmé'},
+  levetiracetam:{amount:500,volumeMl:5,status:'confirmé'},
+  flumazenil:{amount:1,volumeMl:10,unit:'mg',status:'confirmé'},
+  sugammadex:{amount:200,volumeMl:2,status:'confirmé'},
+  naloxone:{amount:0.4,volumeMl:1,unit:'mg',status:'confirmé'},
+  sufentanil:{amount:50,volumeMl:10,unit:'mcg',status:'confirmé'},
+  'triphosadenine-2':{presentation:'Triphosadénine',amount:20,volumeMl:2,unit:'mg'},
+  'nicardipine-charge':{presentation:'Nicardipine',amount:10,volumeMl:10,unit:'mg'},
   amoxicilline: { presentation: 'Poudre pour solution injectable', amount: 500, unit: 'mg', status: 'confirmé' },
   cefotaxime: { presentation: 'Poudre pour solution injectable', amount: 500, unit: 'mg', status: 'confirmé' },
   ceftriaxone: { presentation: 'Poudre pour solution injectable', amount: 1, unit: 'g', status: 'confirmé' },
-  'amoxicilline-clavulanique': { presentation: 'Poudre pour solution injectable', unit: 'mg', expression: 'amoxicilline', comment: 'Renseigner le dosage et le rapport amoxicilline/acide clavulanique.' },
+  'amoxicilline-clavulanique': { presentation:'Poudre pour solution injectable 500 mg/50 mg', amount:500, unit:'mg', expression:'amoxicilline (500 mg / 50 mg d’acide clavulanique)', status:'confirmé' },
   'midazolam-iv': { amount: 50, volumeMl: 10, status: 'confirmé' },
   'midazolam-ij': { amount: 50, volumeMl: 10, comment: 'Confirmer la forme adaptée à la voie intergingivojugale.' },
-  'midazolam-ivc': { amount: 50, volumeMl: 10 },
+  'midazolam-ivc': { amount:null, volumeMl:null, declaredConcentration:5, unit:'mg', presentation:'Midazolam 5 mg/mL — deux volumes de contenant', status:'confirmé' },
   'morphine-dc': { amount: 10, volumeMl: 10, status: 'confirmé' },
-  'morphine-titration': { amount: 10, volumeMl: 10 },
-  'morphine-ivc': { amount: 10, volumeMl: 10 },
-  'atracurium-ivc': { amount: 50, volumeMl: 5 },
+  'morphine-titration': {amount:10, volumeMl:10, status:'confirmé'},
+  'morphine-ivc': {amount:10, volumeMl:10, status:'confirmé'},
+  'atracurium-ivc': { amount:50, volumeMl:5, status:'à confirmer', comment:'Confirmer le conditionnement disponible ; la cible de préparation est 1 mg/mL.' },
   isofundine: { presentation: 'Flacon de solution pour perfusion', volumeMl: 1000, status: 'confirmé', expression: 'solution équilibrée prête à l’emploi' },
-  magnesium: { volumeMl: 10, unit: 'g', expression: 'sulfate de magnésium', comment: 'À trancher : 0,15 g par mL (= 1,5 g/10 mL à 15 %) ou 0,15 g par ampoule de 10 mL. Quantité volontairement vide.', source: 'https://base-donnees-publique.medicaments.gouv.fr/medicament/61106121/extrait' },
-  'calcium-gluconate': { volumeMl: 10, amount: 91, unit: 'mg', expression: 'calcium élément (PROAMP 10 %)', comment: 'La dose et la dilution restent à trancher indépendamment de l’ampoule.', source: 'https://base-donnees-publique.medicaments.gouv.fr/medicament/68332774/extrait' },
-  cafeine: { expression: 'citrate de caféine' },
-  'calcium-chlorure': { expression: 'chlorure de calcium — expression de dose à confirmer' },
-  'insuline-glucose': { presentation: 'Insuline rapide — spécialité à renseigner', unit: 'UI', expression: 'insuline', comment: 'Préciser la spécialité et sa compatibilité avec G5 %. Le second produit est une poche de 500 mL de G5 % ; mélange local : 15 UI dans 500 mL.' },
+  magnesium: { amount:1.5,volumeMl:10,unit:'g',presentation:'Sulfate de magnésium 15 %',expression:'sulfate de magnésium',status:'confirmé',source:'https://base-donnees-publique.medicaments.gouv.fr/medicament/61106121/extrait' },
+  'calcium-gluconate': { volumeMl:10, amount:null, declaredConcentration:0.1, unit:'g', presentation:'Gluconate de calcium 10 %', expression:'concentration nominale à 10 % ; prescription en mL de solution', status:'confirmé' },
+  cafeine: {expression:'citrate de caféine',status:'confirmé'},
+  'calcium-chlorure': { amount:1000,volumeMl:10,unit:'mg',expression:'chlorure de calcium',status:'confirmé' },
+  'insuline-glucose': { presentation:'Insuline rapide — concentration à renseigner',unit:'UI',expression:'insuline',comment:'G10 % : 5 mL/kg (max. 250 mL). Insuline : 0,1 UI/kg (max. 10 UI). Concentration d’insuline nécessaire pour son volume de prélèvement.' },
   'resikali-ir': { presentation: 'Poudre, cuillère-mesure', amount: 20, unit: 'g' },
   'kayexalate-ir': { presentation: 'Poudre, cuillère-mesure', amount: 15, unit: 'g' },
-  ssh: { presentation: 'Préparation pharmacie à 7,5 %', declaredConcentration: 0.075, unit: 'g', expression: 'chlorure de sodium', comment: 'Préparation fournie par la pharmacie ; aucune dilution à réaliser.' },
-  glucose10: { presentation: 'Solution de glucose à 10 %', declaredConcentration: 0.1, unit: 'g', expression: 'glucose' },
+  ssh: { presentation:'Préparation pharmacie à 7,5 %',declaredConcentration:0.075,unit:'g',expression:'chlorure de sodium',status:'confirmé' },
+  glucose10: { presentation:'Solution de glucose à 10 %',declaredConcentration:0.1,unit:'g',expression:'glucose',status:'confirmé' },
   cgr: { presentation: 'Poche de CGR phénotypé' }, pfc: { presentation: 'Poche de PFC' }, cpa: { presentation: 'Poche de CPA' },
 };
 
@@ -122,6 +134,7 @@ export function applyAmpoules(records, items) {
         below: adaptedMix(model.weightMix.below, model.stock, nextStock, record.id),
         atOrAbove: adaptedMix(model.weightMix.atOrAbove, model.stock, nextStock, record.id),
       };
+      if (model.weightMixes) model.weightMixes = model.weightMixes.map(variant => ({...variant, mix:adaptedMix(variant.mix,model.stock,nextStock,record.id)}));
       model.stock = nextStock;
     }
     if (model.type === 'fixed-duration-mixture' && model.stock) {
@@ -129,15 +142,9 @@ export function applyAmpoules(records, items) {
       if (model.maximumDose / concentration > model.finalVolumeMl + 1e-10) throw new Error(`${record.id} : cette ampoule est trop diluée pour préparer la quantité maximale dans ${model.finalVolumeMl} mL finaux.`);
     }
     const protocol = { ...record.protocol, particulars: [...record.protocol.particulars] };
-    // The disputed magnesium stock cannot be selected just by importing an unconfirmed row.
-    if (record.id === 'magnesium' && item.status === 'confirmé' && c !== null) {
-      model.stock = { amount: c, unit: item.unit, volumeMl: 1 };
-      model.volumeKind = 'withdrawal';
-      protocol.dilution = 'Volume de produit à prélever ; dilution finale à préciser.';
-      protocol.questions = ['Confirmer la dilution finale pour l’administration sur 20 min.'];
-    }
+    if (model.type === 'insulin-glucose' && c !== null) model.stock = {amount:c, unit:item.unit, volumeMl:1};
     if (record.id.startsWith('morphine-')) protocol.particulars = protocol.particulars.filter(text => !text.startsWith('Concentration :'));
-    if (record.id === 'noradrenaline') protocol.particulars = ['Préparation finale : 1 mg dans 50 mL. La dose nominale est un repère approximatif.'];
+    if (record.id === 'noradrenaline') protocol.particulars = ['Concentration finale : 20 mcg/mL.'];
     return { ...record, model, protocol, ampoule: { ...item, description: ampouleDescription(item) } };
   });
 }

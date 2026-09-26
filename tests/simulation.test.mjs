@@ -11,8 +11,8 @@ const records = prepareSimulationRecords(configured);
 const patient = (weight = 10, age = 12) => resolvePatientContext({ weight: String(weight), age: String(age), ageUnit: 'months' });
 const row = (id, context = patient(), source = records) => buildSimulationRow(source.find(r => r.id === id), context);
 
-test('simulation : les 63 lignes sont présentes, y compris les doses provisoires, sans changer les fiches', () => {
-  assert.equal(records.length, 63);
+test('simulation : les 66 lignes sont présentes, y compris les doses provisoires, sans changer les fiches', () => {
+  assert.equal(records.length, 66);
   for (const context of [null, patient(3, 0), patient(), patient(50, 120)]) {
     for (const record of records) {
       const r = buildSimulationRow(record, context);
@@ -21,8 +21,8 @@ test('simulation : les 63 lignes sont présentes, y compris les doses provisoire
     }
   }
   assert.equal(row('triphosadenine').dose, '10 mg');
-  assert.equal(row('triphosadenine').provisional, true);
-  assert.equal(calculateRecordForPatient(smurRecords.find(r => r.id === 'triphosadenine'), patient()).status, 'blocked');
+  assert.equal(row('triphosadenine').provisional, false);
+  assert.equal(calculateRecordForPatient(smurRecords.find(r => r.id === 'triphosadenine'), patient()).status, 'calculated');
   assert.equal(row('etomidate', patient(20, 23.99)).visible, false);
   assert.equal(row('etomidate', patient(20, 24)).visible, true);
   assert.equal(row('etomidate', patient(20, 24)).status, 'calculated');
@@ -36,14 +36,15 @@ test('simulation : doses massiques en mg, unités non massiques conservées et b
   assert.equal(row('alprostadil').dose, '0,03 mg/h');
   assert.equal(row('bicarbonate-acr').dose, '10 mmol');
   assert.equal(row('defibrillation').dose, '40 J');
-  assert.equal(row('insuline-glucose').dose, '1,2 UI');
-  assert.match(row('insuline-glucose').doseDetail, /2\s?000 mg de glucose/);
-  assert.equal(row('calcium-gluconate').dose, '36,4 mg');
-  assert.match(row('calcium-gluconate').doseDetail, /calcium élément/);
+  assert.equal(row('insuline-glucose').dose, '1 UI');
+  assert.equal(row('insuline-glucose').volume,'50,00 mL');
+  assert.equal(row('insuline-glucose').rateLabel,'Débit G10 %');
+  assert.equal(row('calcium-gluconate').dose, '5 mL');
+  assert.match(row('calcium-gluconate').doseDetail, /solution à 10 %/);
 });
 
 test('simulation : plafonds du tableau appliqués avant conversion, avec statut provisoire', () => {
-  assert.equal(row('triphosadenine', patient(30)).dose, '12 mg');
+  assert.equal(row('triphosadenine', patient(30)).dose, '10 mg');
   assert.equal(row('ketamine-analgesie', patient(180)).dose, '80 mg');
   assert.equal(row('midazolam-iv', patient(100)).dose, '10 mg');
   assert.equal(row('calcium-gluconate', patient(60)).result.withdrawalMl, 20);
@@ -60,10 +61,10 @@ test('simulation : les volumes prélevés ne deviennent pas des volumes injecté
     assert.match(r.dilution, /IDE|préciser/, id);
   }
   assert.match(row('gentamicine').volumeDetail, /2,50 mL à prélever/);
-  assert.match(row('calcium-gluconate').volumeDetail, /4,00 mL à prélever/);
+  assert.match(row('calcium-gluconate').volumeDetail, /5,00 mL à prélever/);
   assert.equal(row('amoxicilline').dose, '1\u202f000 mg');
   assert.equal(row('amoxicilline').volume, '—');
-  assert.equal(row('insuline-glucose').rate, '120,0 mL/h');
+  assert.equal(row('insuline-glucose').rate, '100,0 mL/h');
 });
 
 test('simulation : les quatre débits poids/3 restent indépendants de la dose nominale', () => {
@@ -71,8 +72,8 @@ test('simulation : les quatre débits poids/3 restent indépendants de la dose n
     const r = row(id, patient(12.34));
     assert.equal(r.rate, '4,1 mL/h');
     assert.equal(r.result.exactRateMlH, 12.34 / 3);
-    assert.equal(r.volume, '50,00 mL');
-    assert.equal(r.volumeDetail, 'seringue');
+    assert.equal(r.volume,id==='noradrenaline' ? '—':'50,00 mL');
+    assert.equal(r.volumeDetail,id==='noradrenaline' ? '':'préparation');
     assert.equal(r.dose, ['dopamine', 'dobutamine'].includes(id) ? '50 mg' : '1 mg');
     assert.equal(r.doseDetail, 'par seringue');
   }
@@ -85,8 +86,9 @@ test('simulation : adaptation de l’ampoule et aucun arrondi en chaîne', () =>
   assert.equal(row('adrenaline-iv', patient(10), changed).volume, '1,00 mL');
   assert.match(row('adrenaline-iv', patient(10), changed).dilution, /0,50 mL \+ 9,50 mL/);
   const r = row('amoxicilline-clavulanique', patient(12.34));
-  assert.ok(Math.abs(r.result.dose - 80 * 12.34 / 3) < 1e-10);
-  assert.match(r.posology, /80 ÷ 3/);
+  assert.equal(r.result.dose,330);
+  assert.ok(Math.abs(r.result.uncappedDose-80*12.34/3)<1e-10);
+  assert.match(r.posology, /80 mg\/kg\/j ÷ 3/);
   assert.equal(row('morphine-dc', patient(9.99)).volume, '9,99 mL');
   assert.equal(row('morphine-dc', patient(10)).volume, '1,00 mL');
 });
@@ -121,7 +123,7 @@ test('liste : champs sans objet masqués et résultats sans volume superflu', ()
   assert.deepEqual(simulationListContent(row('morphine-dc')).metrics.map(m => m.type), ['dose', 'volume']);
   assert.deepEqual(simulationListContent(row('isofundine')).metrics.map(m => m.type), ['volume']);
   assert.deepEqual(simulationListContent(row('gentamicine')).metrics.map(m => m.type), ['dose']);
-  assert.match(simulationListContent(row('calcium-gluconate')).dilutionDetail, /4,00 mL à prélever/);
+  assert.match(simulationListContent(row('calcium-gluconate')).dilutionDetail, /5,00 mL à prélever/);
 });
 
 test('transfusion : volume prescrit limité au contenu réel d’une seule poche', () => {

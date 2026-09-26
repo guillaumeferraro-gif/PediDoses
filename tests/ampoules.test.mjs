@@ -23,10 +23,10 @@ test('plafonds confirmés appliqués avant conversion ; gentamicine et cardiover
   assert.equal(sheet('gentamicine').administration, 'IVL sur 30 min');
 });
 
-test('amoxicilline-clavulanate : un tiers de la dose journalière, sans arrondi en chaîne', () => {
-  close(calc('amoxicilline-clavulanique', 12.34).dose, 80 * 12.34 / 3);
+test('amoxicilline-clavulanate : dose journalière divisée par trois, puis arrondi supérieur à 10 mg', () => {
+  assert.equal(calc('amoxicilline-clavulanique',12.34).dose,330);
   assert.notEqual(calc('amoxicilline-clavulanique', 12.34).dose, 26.67 * 12.34);
-  close(calc('amoxicilline-clavulanique', 74.999).dose, 80 * 74.999 / 3);
+  assert.equal(calc('amoxicilline-clavulanique',74.999).dose,2000);
   assert.equal(calc('amoxicilline-clavulanique', 75).dose, 2000);
   assert.equal(calc('amoxicilline-clavulanique', 100).dose, 2000);
   for (const id of ['amoxicilline', 'amoxicilline-clavulanique', 'cefotaxime', 'ceftriaxone']) {
@@ -37,13 +37,14 @@ test('amoxicilline-clavulanate : un tiers de la dose journalière, sans arrondi 
   }
 });
 
-test('magnésium sans volume et triphosadénine entièrement laissée en suspens', () => {
+test('magnésium à 15 % avec prélèvement, et triphosadénine plafonnée à 10 mg', () => {
   assert.equal(calc('magnesium', 10).dose, 500);
   assert.equal(calc('magnesium', 10).volumeMl, null);
-  assert.match(sheet('magnesium').questions.join(' '), /par mL ou par ampoule/);
-  assert.equal(calc('triphosadenine', 10).status, 'blocked');
-  assert.equal(calc('triphosadenine', 10).dose, null);
-  assert.equal(sheet('triphosadenine').doseRows[0].volume, 'Aucun calcul automatique');
+  close(calc('magnesium',10).withdrawalMl,10/3);
+  assert.doesNotMatch(sheet('magnesium').questions.join(' '), /par mL ou par ampoule/);
+  assert.equal(calc('triphosadenine',10).status,'calculated');
+  assert.equal(calc('triphosadenine',10).dose,10);
+  assert.equal(sheet('triphosadenine').doseRows[0].volume,'0,1 mL/kg/dose');
 });
 
 test('le CSV conserve les lignes distinctes, accents, guillemets et retours à la ligne', () => {
@@ -88,17 +89,17 @@ test('un tableau invalide est refusé entièrement, sans toucher au référentie
   for (const id of ['tranexamique-ivc', 'clonazepam-ivc']) {
     const copy = structuredClone(original);
     copy.find(row => row.id === id).amount = 0.1;
-    assert.throws(() => importAmpoulesCsv(exportAmpoulesCsv(copy), smurRecords), /quantité maximale/);
+    assert.throws(() => importAmpoulesCsv(exportAmpoulesCsv(copy), smurRecords), /quantité maximale|préparation prévue/);
   }
   assert.deepEqual(defaultAmpoules(smurRecords), original);
 });
 
-test('décimales françaises acceptées ; magnésium sans volume tant que non confirmé', () => {
+test('décimales françaises acceptées ; ampoule de magnésium confirmée à 1,5 g', () => {
   const items = defaultAmpoules(smurRecords);
   items.find(r => r.id === 'magnesium').amount = 1.5;
   const parsed = importAmpoulesCsv(exportAmpoulesCsv(items).replace('"1.5"', '"1,5"'), smurRecords);
   assert.equal(parsed.find(r => r.id === 'magnesium').amount, 1.5);
-  assert.equal(calc('magnesium', 10, applyAmpoules(smurRecords, parsed)).withdrawalMl, null);
+  close(calc('magnesium',10,applyAmpoules(smurRecords,parsed)).withdrawalMl,500/150);
   parsed.find(r => r.id === 'magnesium').status = 'confirmé';
   close(calc('magnesium', 10, applyAmpoules(smurRecords, parsed)).withdrawalMl, 500 / 150);
 });

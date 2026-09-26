@@ -1,7 +1,7 @@
 import { catalogMeta } from './catalog-data.js';
 
 const mass = Object.freeze({ g: 1000, mg: 1, mcg: .001, ng: .000001 });
-const standalone = new Set(['mmol', 'mL', 'J']);
+const standalone = new Set(['mmol', 'mL', 'J', 'UI']);
 
 export function convertUnit(value, from, to) {
   if (!Number.isFinite(value)) throw new Error('Valeur non finie.');
