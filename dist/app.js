@@ -1,6 +1,10 @@
 const byId = id => document.getElementById(id);
 const tabs = [byId('quick-tab'), byId('ampoules-tab'), byId('catalog-tab'), byId('protocols-tab'), byId('calculator-tab')];
 function activateTab(tab) {
+  if (byId('ampoules-tab').getAttribute('aria-selected') === 'true' && tab.id !== 'ampoules-tab') {
+    const event = new Event('admin-leave', {cancelable:true});
+    if (!window.dispatchEvent(event)) return;
+  }
   document.body.classList.toggle('simulation-active', tab.id === 'calculator-tab');
   for (const item of tabs) {
     const active = item === tab;

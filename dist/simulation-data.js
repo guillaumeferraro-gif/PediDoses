@@ -4,6 +4,7 @@ import { parseDecimal } from './calculator.js';
 import { preparationForWeight, preparationVariants } from './smur-preparation.js';
 import { buildMedicationSheet, volumeText, concentrationText } from './smur-sheets.js';
 import { convertUnit } from './catalog-audit.js';
+import { administrationMinutes, administrationText } from './administration.js';
 
 const massUnits = new Set(['g', 'mg', 'mcg', 'ng']);
 const number = n => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 6 }).format(n);
@@ -11,6 +12,7 @@ const amount = (n, unit, suffix = '') => `${n > 0 && n < 0.000001 ? '< 0,000001'
 const mass = (n, unit, suffix = '') => massUnits.has(unit) ? amount(convertUnit(n, unit, 'mg'), 'mg', suffix) : amount(n, unit, suffix);
 const ml = n => `${volumeText(n)} mL`;
 const rate = n => `${new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n)} mL/h`;
+const glucose=m=>`G${number((m.glucoseConcentrationMgMl??100)/10)} %`;
 
 // This simulation uses the existing provisional doses and Sheet ceilings.
 // Review cards retain their independent pending/blocked state.
@@ -35,8 +37,7 @@ function shortAmpoule(record) {
   else if (a.declaredConcentration !== null) text = amount(a.declaredConcentration, `${a.unit}/mL`);
   else if (a.volumeMl !== null) text = `${number(a.volumeMl)} mL${record.id === 'magnesium' ? ' · teneur à préciser' : ''}`;
   else text = a.presentation || 'À préciser';
-  if (record.id === 'calcium-gluconate') text = '10 % · 10 mL';
-  if (record.id === 'insuline-glucose') text = 'Insuline rapide · G10 %';
+  if (record.id === 'insuline-glucose') text = `Insuline rapide · ${glucose(record.model)}`;
   if (record.id === 'cafeine') text += ' · citrate';
   return text;
 }
@@ -45,29 +46,30 @@ function shortPosology(record, result, context) {
   const m = record.model;
   if (m.type === 'instruction') return record.protocol.posology;
   if (m.type === 'fixed-rate') return 'Débit = poids ÷ 3';
-  if (record.id === 'calcium-gluconate') return '0,5 mL/kg · max. 20 mL';
-  if (m.type === 'insulin-glucose') return '0,1 UI/kg (max. 10 UI) + G10 % 5 mL/kg (max. 250 mL) sur 30 min';
+  if (record.id === 'calcium-gluconate') return `${number(m.coefficient)} mL/kg${m.maximumDose?` · max. ${number(m.maximumDose)} mL`:''}`;
+  if (m.type === 'insulin-glucose') return `${number(m.coefficient)} UI/kg (max. ${number(m.maximumDose)} UI) + ${glucose(m)} ${number(m.glucoseMlPerKg)} mL/kg (max. ${number(m.maximumGlucoseMl)} mL) sur ${number(m.durationHours*60)} min`;
   if (m.fixedHourlyFromAgeMonths !== undefined) {
-    if (context?.ageMonths == null) return record.protocol.posology;
+    if (context?.ageMonths == null) return `${amount(m.coefficient,m.unit)}/kg${m.periodMinutes===60?'/h':'/min'} avant ${m.fixedHourlyFromAgeMonths/12} ans ; ${amount(m.fixedHourlyAmount,m.unit)}/h pendant ${m.fixedDurationHours} h dès ${m.fixedHourlyFromAgeMonths/12} ans`;
     if (context.ageMonths >= m.fixedHourlyFromAgeMonths) return `${amount(m.selectedHourlyAmount ?? m.fixedHourlyAmount,m.unit)}/h pendant ${m.fixedDurationHours} h`;
   }
   const marker = record.simulationProvisional ? '†' : '';
   let text;
   if (!context || result.status !== 'calculated') {
     if (m.tiers) text = m.tiers.map((tier, i) => `${amount(tier.coefficient, m.unit)}/kg${m.type === 'infusion' ? '/h' : ''} ${i === 0 ? '<' : '≥'} ${m.tiers[0].maxAgeMonthsExclusive} mois`).join(' ; ');
-    else if (m.type === 'conditional-dose') text = record.protocol.posology;
+    else if (m.type === 'conditional-dose') text = m.cases.map((item,i)=>`${amount(item.dose,m.unit)} ${item.maxWeightKg!==undefined?`si poids ≤ ${item.maxWeightKg} kg`:`si poids > ${m.cases[i-1].maxWeightKg} kg`}`).join(' ; ');
     else if (m.minimumAgeMonths !== undefined) text = `${amount(m.coefficient, m.unit)}/kg · âge ≥ ${m.minimumAgeMonths} mois`;
     else if (m.minimumAgeMonthsExclusive !== undefined) text = `${amount(m.coefficient, m.unit)}/kg · âge > ${m.minimumAgeMonthsExclusive} mois`;
-    else if (m.fixedDoseFromAgeMonths) text = record.protocol.posology;
+    else if (m.fixedDoseFromAgeMonths!==undefined) text = `${number(m.coefficient)} ${m.unit}/kg avant ${m.fixedDoseFromAgeMonths/12} ans ; ${number(m.fixedDose)} ${m.unit} dès ${m.fixedDoseFromAgeMonths/12} ans`;
     else text = `${amount(m.coefficient, m.unit)}/kg${m.type === 'infusion' ? (m.periodMinutes === 60 ? '/h' : '/min') : m.durationHours ? `/${m.durationHours} h` : ''}`;
   } else if (m.type === 'conditional-dose') text = amount(result.dose, m.unit);
   else if ((m.fixedDoseFromWeightKg !== undefined && context.weightKg >= m.fixedDoseFromWeightKg) || (m.fixedDoseFromAgeMonths !== undefined && context.ageMonths >= m.fixedDoseFromAgeMonths)) text = `${amount(m.fixedDose, m.unit)} · dose fixe`;
   else text = `${amount(result.coefficient, m.unit)}/kg${m.type === 'infusion' ? (m.periodMinutes === 60 ? '/h' : '/min') : m.durationHours ? `/${m.durationHours} h` : ''}`;
-  if (record.id === 'amoxicilline-clavulanique') text = '80 mg/kg/j ÷ 3 → arrondi à la dizaine de mg supérieure (amoxicilline)';
+  if (m.dailyCoefficient) text = `${number(m.dailyCoefficient)} ${m.unit}/kg/j ÷ ${number(m.divisionsPerDay)} → multiple supérieur de ${number(m.roundDoseUpTo??1)} ${m.unit} (amoxicilline)`;
   if (record.id === 'morphine-titration') text += ' · toutes les 5 min';
   if (m.minimumCoefficient && m.maximumCoefficient) text += ` · plage ${number(m.minimumCoefficient)}–${number(m.maximumCoefficient)} ${m.unit}/kg${m.type==='infusion' ? m.periodMinutes===60 ? '/h':'/min' : ''}`;
   else if (m.maximumCoefficient) text += ` · max. ${number(m.maximumCoefficient)} ${m.unit}/kg${m.periodMinutes===60 ? '/h':'/min'}`;
   if (Number.isFinite(m.maximumDose)) text += ` · max. ${amount(m.maximumDose, m.unit)}`;
+  if (m.warningCoefficient) text += ` · avertissement > ${number(m.warningCoefficient)} ${m.unit}/kg${m.periodMinutes===60?'/h':'/min'}`;
   if (m.limitToOneBag) text += ' · au maximum 1 poche';
   return text + marker;
 }
@@ -75,18 +77,20 @@ function shortPosology(record, result, context) {
 function shortPreparation(record, result, context) {
   const m = record.model;
   if (m.type === 'instruction' || m.unit === 'J' || m.limitToOneBag) return { text: '', detail: '' };
-  if (record.id === 'calcium-gluconate') return { text: 'Dilution finale à préciser', detail: 'Volume prélevé de produit à 10 %' };
-  if (m.preparationMinimumAgeMonths !== undefined && (context?.ageMonths == null || context.ageMonths < m.preparationMinimumAgeMonths)) return {text:'NaCl 0,9 % — concentration finale à préciser avant 10 ans', detail:'Débit en mL/h en attente de la préparation'};
-  if (m.type === 'insulin-glucose') return {text:'Insuline rapide + G10 %',detail:result.insulinWithdrawalMl != null ? `${ml(result.insulinWithdrawalMl)} d’insuline à prélever` : 'Concentration d’insuline à préciser pour son prélèvement'};
+  if (m.dilutionFactor) return {text:`Prélèvement × ${number(m.dilutionFactor)} en volume final · ${m.diluent||'diluant à préciser'}`,detail:Number.isFinite(result.withdrawalMl)?`${ml(result.withdrawalMl)} de produit à prélever`:''};
+  if (m.finalConcentration) return {text:`Concentration finale : ${concentrationText(m.finalConcentration,m.unit)}`,detail:m.diluent||'Diluant à préciser'};
+  if (record.id === 'calcium-gluconate'&&!m.mix) return { text: 'Dilution finale à préciser', detail: 'Volume prélevé de produit' };
+  if (m.preparationMinimumAgeMonths !== undefined && (context?.ageMonths == null || context.ageMonths < m.preparationMinimumAgeMonths)) return {text:`${m.diluent} — concentration finale ${m.youngerFinalConcentration?concentrationText(m.youngerFinalConcentration,m.unit):'à préciser'}`, detail:m.youngerFinalConcentration?'':'Débit en mL/h en attente de la préparation'};
+  if (m.type === 'insulin-glucose') return {text:`Insuline rapide + ${glucose(m)}`,detail:result.insulinWithdrawalMl != null ? `${ml(result.insulinWithdrawalMl)} d’insuline à prélever` : 'Concentration d’insuline à préciser pour son prélèvement'};
   if (record.category === 'antibiotiques') return { text: 'Selon dilution IDE', detail: result.withdrawalMl !== null ? `${ml(result.withdrawalMl)} de produit à prélever` : '' };
-  if (record.id === 'magnesium') return { text: 'Dilution finale à préciser', detail: result.withdrawalMl !== null ? `${ml(result.withdrawalMl)} de produit à prélever` : 'Teneur de l’ampoule à préciser' };
-  if (m.volumeKind === 'withdrawal') return { text: 'Dilution finale à préciser', detail: result.withdrawalMl !== null ? `${ml(result.withdrawalMl)} de produit à prélever` : '' };
+  if (m.volumeKind === 'withdrawal'&&!m.mix&&!m.weightMix&&!m.weightMixes) return { text: 'Dilution finale à préciser', detail: result.withdrawalMl !== null ? `${ml(result.withdrawalMl)} de produit à prélever` : '' };
+  if(m.unit==='mL'&&m.mix)return {text:`${ml(m.mix.takeMl)} de produit + ${ml(m.mix.addMl)} ${m.diluent||'de diluant'}`,detail:`Volume final = prélèvement × ${number((m.mix.takeMl+m.mix.addMl)/m.mix.takeMl)}`};
   if (m.type === 'fixed-duration-mixture') {
     if (result.status !== 'calculated') return { text: `Compléter à ${ml(m.finalVolumeMl)}`, detail: 'Quantité initiale selon le poids et le plafond' };
     return { text: `${ml(result.withdrawalMl)} + ${ml(result.addMl)} ${m.diluent}`, detail: `→ ${ml(m.finalVolumeMl)} · ${concentrationText(result.concentration, m.unit)}` };
   }
   if (!m.stock) return { text: record.protocol.dilution, detail: '' };
-  if (m.weightMixes && !context) return {text:record.protocol.dilution,detail:''};
+  if (m.weightMixes && !context) return {text:preparationVariants(m).map(p=>`${p.condition} : ${ml(p.takeMl)} + ${ml(p.addMl)} ${m.diluent}`).join(' ; '),detail:''};
   if (m.weightMix && !context) return { text: `Dilution selon le poids · seuil ${m.weightMix.thresholdKg} kg`, detail: '' };
   const prep = result.preparation || (context ? preparationForWeight(m, context.weightKg) : preparationVariants(m)[0]);
   return prep.mix
@@ -95,7 +99,7 @@ function shortPreparation(record, result, context) {
 }
 
 function administration(record) {
-  return record.protocol.administration.replace(/ ; débit arrondi.*$/, '');
+  return administrationText(record);
 }
 
 export function transfusionVolume(prescribedVolumeMl, bagVolume) {
@@ -124,25 +128,27 @@ export function buildSimulationRow(record, context, { bagVolumeMl } = {}) {
   if (m.type === 'fixed-rate') {
     row.dose = mass(result.stockConcentration * result.preparation.takeMl, m.unit);
     row.doseDetail = 'par seringue';
-  } else if (m.type === 'infusion') row.dose = record.id === 'sufentanil' ? amount(result.hourlyAmount,'mcg','/h') : mass(result.hourlyAmount, m.unit, '/h');
+  } else if (m.type === 'infusion') row.dose = record.id === 'sufentanil' ? amount(convertUnit(result.hourlyAmount,m.unit,'mcg'),'mcg','/h') : mass(result.hourlyAmount, m.unit, '/h');
   else if (m.type === 'fixed-duration-mixture') { row.dose = mass(result.dose, m.unit); row.doseDetail = `sur ${m.durationHours} h`; }
-  else if (m.type === 'insulin-glucose') { row.dose=amount(result.dose,'UI'); row.doseDetail='insuline rapide'; row.volumeLabel='G10 %'; row.rateLabel='Débit G10 %'; }
+  else if (m.type === 'insulin-glucose') { row.dose=amount(result.dose,'UI'); row.doseDetail='insuline rapide'; row.volumeLabel=glucose(m); row.rateLabel=`Débit ${glucose(m)}`; }
   else if (result.mass !== null && result.mass !== undefined) {
     row.dose = mass(result.mass, result.massUnit);
-  } else if (record.id === 'ssh') { row.dose = mass(result.volumeMl * 75, 'mg'); row.doseDetail = 'NaCl'; }
+  }
   else row.dose = mass(result.dose, result.unit);
-  if (record.id === 'calcium-gluconate') {row.doseLabel='À prélever';row.doseDetail='solution à 10 %';}
+  if (record.id === 'calcium-gluconate') {row.doseLabel='À prélever';row.doseDetail='produit avant dilution';}
   if (result.maximumApplied) row.doseDetail += `${row.doseDetail ? ' · ' : ''}plafond${record.simulationProvisional ? '†' : ''}`;
 
   if (Number.isFinite(result.rateMlH)) {
     row.rate = rate(result.rateMlH);
     const duration = result.prescribedDurationHours ?? m.durationHours;
-    row.rateDetail = m.type==='insulin-glucose' ? 'sur 30 min' : duration ? `pendant ${duration} h` : 'PSE';
-    if (m.type==='insulin-glucose') {row.volume=ml(result.volumeMl);row.volumeDetail=result.glucoseMaximumApplied ? 'plafond 250 mL' : '';}
+    const minutes=administrationMinutes(record);
+    row.rateDetail = minutes ? `sur ${number(minutes)} min` : duration ? `pendant ${duration} h` : 'PSE';
+    if(Number.isFinite(result.volumeMl))row.volume=ml(result.volumeMl);
+    if (m.type==='insulin-glucose') row.volumeDetail=result.glucoseMaximumApplied ? `plafond ${number(m.maximumGlucoseMl)} mL` : '';
     if (result.mixtureVolumeMl !== null && !['atracurium-ivc','noradrenaline'].includes(record.id)) { row.volume = ml(result.mixtureVolumeMl); row.volumeDetail = 'préparation'; }
   } else if (Number.isFinite(result.volumeMl)) {
     row.volume = ml(result.volumeMl);
-    const minutes = /^IV(?:L)?(?: sur|\/)\s*(\d+)\s*min$/.exec(record.protocol.administration)?.[1];
+    const minutes = administrationMinutes(record);
     if (minutes) { row.rate = rate(result.volumeMl * 60 / Number(minutes)); row.rateDetail = `sur ${minutes} min`; }
   } else if (Number.isFinite(result.withdrawalMl)) {
     row.volumeDetail = `${ml(result.withdrawalMl)} à prélever · volume administré à préciser`;

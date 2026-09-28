@@ -12,7 +12,7 @@ export function preparationVariants(model) {
   ] : [{ condition: 'Tous les paliers', mix: model.mix }];
   return variants.map(variant => ({
     ...variant,
-    concentration: model.stock ? concentration({ ...model, mix: variant.mix }, model.unit) : null,
+    concentration: model.finalConcentration ?? (model.stock ? concentration({ ...model, mix: variant.mix }, model.unit) : null),
     stockConcentration: model.stock ? concentration({ ...model, mix: null }, model.unit) : null,
     takeMl: variant.mix?.takeMl ?? null,
     addMl: variant.mix?.addMl ?? null,

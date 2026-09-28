@@ -1,4 +1,4 @@
-// Active SMUR rules, revised from the user's decisions of 26 September 2026.
+// Active SMUR rules, revised from the user's decisions of 26–28 September 2026.
 // Historical source cells and their audit remain separately in catalog-data.js.
 const freeze = value => {
   if (value && typeof value === 'object' && !Object.isFrozen(value)) {
@@ -7,6 +7,10 @@ const freeze = value => {
   return value;
 };
 export const smurSources = freeze({
+  "salbutamol": {
+    "title": "BDPM · Salbutamol 5 mg/5 mL, RCP — charge IV pédiatrique",
+    "url": "https://base-donnees-publique.medicaments.gouv.fr/medicament/63266758/extrait"
+  },
   "isofundine": {
     "title": "BDPM · Isofundine, RCP",
     "url": "https://base-donnees-publique.medicaments.gouv.fr/medicament/66312310/extrait#tab-rcp"
@@ -128,7 +132,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "1 mL de produit + 9 mL de diluant",
       "administration": "IVD flash, puis rincer avec 5 mL de NaCl 0,9 %",
-      "questions": []
+      "questions": [],
+      "route": "IVD",
+      "durationMinutes": null,
+      "administrationNote": "flash, puis rincer avec 5 mL de NaCl 0,9 %"
     },
     "sources": []
   },
@@ -176,7 +183,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "Sans dilution",
       "administration": "IM",
-      "questions": []
+      "questions": [],
+      "route": "IM",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -221,7 +231,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "Sans dilution",
       "administration": "IVL",
-      "questions": []
+      "questions": [],
+      "route": "IVL",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -269,7 +282,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "Sans dilution",
       "administration": "IVD",
-      "questions": []
+      "questions": [],
+      "route": "IVD",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -311,7 +327,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "Sans objet",
       "administration": "Mettre le défibrillateur en mode « Synchrone »",
-      "questions": []
+      "questions": [],
+      "route": "",
+      "durationMinutes": null,
+      "administrationNote": "Mettre le défibrillateur en mode « Synchrone »"
     },
     "sources": []
   },
@@ -353,7 +372,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "Sans objet",
       "administration": "Défibrillation",
-      "questions": []
+      "questions": [],
+      "route": "",
+      "durationMinutes": null,
+      "administrationNote": "Défibrillation"
     },
     "sources": []
   },
@@ -383,7 +405,8 @@ export const smurRecords = freeze([
       "decimals": null,
       "referenceDose": 50,
       "volumeKind": "withdrawal",
-      "maximumDose": null
+      "maximumDose": null,
+      "administrationConcentration": null
     },
     "issues": [
       {
@@ -400,7 +423,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "Dilution laissée à l’IDE",
       "administration": "IVL sur 30 min",
-      "questions": []
+      "questions": [],
+      "route": "IVL",
+      "durationMinutes": 30.0,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -442,7 +468,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "",
       "administration": "IV",
-      "questions": []
+      "questions": [],
+      "route": "IV",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -494,7 +523,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "",
       "administration": "IV",
-      "questions": []
+      "questions": [],
+      "route": "IV",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -536,7 +568,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "",
       "administration": "IV",
-      "questions": []
+      "questions": [],
+      "route": "IV",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -578,7 +613,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "",
       "administration": "IV",
-      "questions": []
+      "questions": [],
+      "route": "IV",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -622,7 +660,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "3 mL de produit + 17 mL de diluant",
       "administration": "IVD, puis rincer avec 5 mL de NaCl 0,9 %",
-      "questions": []
+      "questions": [],
+      "route": "IVD",
+      "durationMinutes": null,
+      "administrationNote": "puis rincer avec 5 mL de NaCl 0,9 %"
     },
     "sources": []
   },
@@ -668,7 +709,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "Sans dilution",
       "administration": "IVD",
-      "questions": []
+      "questions": [],
+      "route": "IVD",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -712,7 +756,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "2 mL de produit + 8 mL de diluant",
       "administration": "IVD",
-      "questions": []
+      "questions": [],
+      "route": "IVD",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -742,7 +789,8 @@ export const smurRecords = freeze([
       "decimals": 1,
       "referenceDose": 500,
       "maximumDose": 2000,
-      "volumeKind": "withdrawal"
+      "volumeKind": "withdrawal",
+      "administrationConcentration": null
     },
     "issues": [
       {
@@ -761,7 +809,10 @@ export const smurRecords = freeze([
       "administration": "IVL sur 20 min",
       "questions": [
         "Préciser la dilution finale pour l’administration sur 20 min."
-      ]
+      ],
+      "route": "IVL",
+      "durationMinutes": 20.0,
+      "administrationNote": ""
     },
     "sources": [
       "magnesium"
@@ -811,7 +862,10 @@ export const smurRecords = freeze([
       "administration": "IV — modalités à préciser",
       "questions": [
         "Préciser les modalités d’administration."
-      ]
+      ],
+      "route": "IV",
+      "durationMinutes": null,
+      "administrationNote": "modalités à préciser"
     },
     "sources": []
   },
@@ -853,7 +907,10 @@ export const smurRecords = freeze([
       "administration": "IV — modalités à préciser",
       "questions": [
         "Préciser les modalités d’administration."
-      ]
+      ],
+      "route": "IV",
+      "durationMinutes": null,
+      "administrationNote": "modalités à préciser"
     },
     "sources": []
   },
@@ -904,7 +961,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "Sans dilution",
       "administration": "IVL",
-      "questions": []
+      "questions": [],
+      "route": "IVL",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -941,7 +1001,8 @@ export const smurRecords = freeze([
         },
         "atOrAbove": null
       },
-      "diluent": "NaCl 0,9 %"
+      "diluent": "NaCl 0,9 %",
+      "pendingCeiling": 80
     },
     "issues": [
       {
@@ -960,7 +1021,10 @@ export const smurRecords = freeze([
       "administration": "IVL sur 2 à 3 min",
       "questions": [
         "Plafond proposé de 80 mg conservé en suspens ; non appliqué au calcul en attendant la validation collective."
-      ]
+      ],
+      "route": "IVL",
+      "durationMinutes": null,
+      "administrationNote": "sur 2 à 3 min"
     },
     "sources": []
   },
@@ -1020,7 +1084,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "2 mL de produit + 8 mL de diluant",
       "administration": "IVL sur 2 à 3 min",
-      "questions": []
+      "questions": [],
+      "route": "IVL",
+      "durationMinutes": null,
+      "administrationNote": "sur 2 à 3 min"
     },
     "sources": []
   },
@@ -1069,7 +1136,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "non",
       "administration": "IVL",
-      "questions": []
+      "questions": [],
+      "route": "IVL",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1126,7 +1196,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "Si poids < 10 kg : 1 mL de morphine 1 mg/mL + 9 mL de NaCl 0,9 % ; sinon sans dilution",
       "administration": "IVL",
-      "questions": []
+      "questions": [],
+      "route": "IVL",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1182,7 +1255,10 @@ export const smurRecords = freeze([
       "administration": "IV",
       "questions": [
         "Définir les critères locaux d’arrêt et de surveillance de la titration."
-      ]
+      ],
+      "route": "IV",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1223,7 +1299,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "Sans dilution",
       "administration": "IV",
-      "questions": []
+      "questions": [],
+      "route": "IV",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1266,7 +1345,10 @@ export const smurRecords = freeze([
       "administration": "IV — modalités à préciser",
       "questions": [
         "Préciser les modalités d’administration."
-      ]
+      ],
+      "route": "IV",
+      "durationMinutes": null,
+      "administrationNote": "modalités à préciser"
     },
     "sources": []
   },
@@ -1321,7 +1403,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "1 mL de produit + 4 mL de diluant",
       "administration": "IVL",
-      "questions": []
+      "questions": [],
+      "route": "IVL",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1353,7 +1438,8 @@ export const smurRecords = freeze([
       "referenceVolume": 0.6,
       "decimals": 1,
       "referenceDose": 6,
-      "diluent": "NaCl 0,9 %"
+      "diluent": "NaCl 0,9 %",
+      "pendingCeiling": 30
     },
     "issues": [],
     "kind": "imported",
@@ -1366,7 +1452,10 @@ export const smurRecords = freeze([
       "administration": "IV",
       "questions": [
         "Confirmer le plafond de 30 mg."
-      ]
+      ],
+      "route": "IV",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1412,7 +1501,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "1 mL de produit + 4 mL de diluant",
       "administration": "IVL sur 10 min",
-      "questions": []
+      "questions": [],
+      "route": "IVL",
+      "durationMinutes": 10.0,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1440,7 +1532,8 @@ export const smurRecords = freeze([
       "mix": null,
       "referenceVolume": 0.6,
       "decimals": 2,
-      "referenceDose": 3
+      "referenceDose": 3,
+      "pendingCeiling": 10
     },
     "issues": [
       {
@@ -1461,7 +1554,10 @@ export const smurRecords = freeze([
       "administration": "Intergingivojugale",
       "questions": [
         "Confirmer le plafond de 10 mg."
-      ]
+      ],
+      "route": "Intergingivojugale",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1501,7 +1597,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "Sans dilution",
       "administration": "Intrarectale",
-      "questions": []
+      "questions": [],
+      "route": "Intrarectale",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1540,7 +1639,8 @@ export const smurRecords = freeze([
           "coefficient": 15
         }
       ],
-      "maximumDose": 600
+      "maximumDose": 600,
+      "administrationConcentration": null
     },
     "issues": [
       {
@@ -1561,7 +1661,10 @@ export const smurRecords = freeze([
       "administration": "IVL sur 20 min",
       "questions": [
         "Confirmer le palier à 1 mois et la reconstitution/dilution finale."
-      ]
+      ],
+      "route": "IVL",
+      "durationMinutes": 20.0,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1591,7 +1694,8 @@ export const smurRecords = freeze([
       "decimals": 1,
       "referenceDose": 400,
       "volumeKind": "withdrawal",
-      "maximumDose": 3000
+      "maximumDose": 3000,
+      "administrationConcentration": null
     },
     "issues": [
       {
@@ -1610,7 +1714,10 @@ export const smurRecords = freeze([
       "administration": "IVL sur 5 min",
       "questions": [
         "Préciser la dilution finale."
-      ]
+      ],
+      "route": "IVL",
+      "durationMinutes": 5.0,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1660,7 +1767,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "5 mL de produit + 5 mL de diluant",
       "administration": "IVL sur 20 min",
-      "questions": []
+      "questions": [],
+      "route": "IVL",
+      "durationMinutes": 20.0,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1681,7 +1791,9 @@ export const smurRecords = freeze([
       "coefficient": 3,
       "unit": "mL",
       "stock": null,
-      "mix": null
+      "mix": null,
+      "massPerMl": 75,
+      "massUnit": "mg"
     },
     "issues": [
       {
@@ -1698,7 +1810,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "Aucune manipulation : préparation à 7,5 % fournie par la pharmacie",
       "administration": "IVL sur 20 min",
-      "questions": []
+      "questions": [],
+      "route": "IVL",
+      "durationMinutes": 20.0,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1730,7 +1845,8 @@ export const smurRecords = freeze([
       "maximumDose": 1000,
       "fixedDoseFromAgeMonths": 120,
       "fixedDose": 1000,
-      "volumeKind": "withdrawal"
+      "volumeKind": "withdrawal",
+      "administrationConcentration": null
     },
     "issues": [],
     "kind": "imported",
@@ -1745,7 +1861,10 @@ export const smurRecords = freeze([
       "administration": "IV",
       "questions": [
         "Préciser la dilution et la durée de la dose de charge."
-      ]
+      ],
+      "route": "IV",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1791,7 +1910,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "Sans dilution",
       "administration": "IVL sur 20 min",
-      "questions": []
+      "questions": [],
+      "route": "IVL",
+      "durationMinutes": 20.0,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1831,7 +1953,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "Sans dilution",
       "administration": "IVD",
-      "questions": []
+      "questions": [],
+      "route": "IVD",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1876,7 +2001,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "1 mL de produit + 9 mL de diluant",
       "administration": "IVD",
-      "questions": []
+      "questions": [],
+      "route": "IVD",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1916,7 +2044,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "Sans dilution",
       "administration": "IVD",
-      "questions": []
+      "questions": [],
+      "route": "IVD",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1960,7 +2091,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "1 mL de produit + 19 mL de diluant",
       "administration": "IVD",
-      "questions": []
+      "questions": [],
+      "route": "IVD",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -1996,7 +2130,9 @@ export const smurRecords = freeze([
       "fixedHourlyFromAgeMonths": 120,
       "fixedHourlyAmount": 125,
       "fixedDurationHours": 8,
-      "preparationMinimumAgeMonths": 120
+      "preparationMinimumAgeMonths": 120,
+      "doseStep": null,
+      "adjustmentStatus": "fixed"
     },
     "issues": [
       {
@@ -2015,10 +2151,13 @@ export const smurRecords = freeze([
       "administration": "IVSE",
       "questions": [
         "Préciser la concentration finale d’Exacyl en entretien avant 10 ans pour calculer le débit en mL/h."
-      ]
+      ],
+      "route": "IVSE",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": [],
-    "adjustable": true
+    "adjustable": false
   },
   {
     "id": "adrenaline-ivc",
@@ -2033,7 +2172,7 @@ export const smurRecords = freeze([
       ""
     ],
     "model": {
-      "type": "fixed-rate",
+      "type": "infusion",
       "coefficient": 0.1,
       "unit": "mcg",
       "periodMinutes": 1,
@@ -2047,21 +2186,24 @@ export const smurRecords = freeze([
         "addMl": 49
       },
       "referenceRate": 3.3,
-      "rateDivisor": 3,
-      "diluent": "NaCl 0,9 %"
+      "diluent": "NaCl 0,9 %",
+      "doseStep": 0.05,
+      "warningCoefficient": 1,
+      "adjustmentStatus": "enabled"
     },
     "issues": [],
     "kind": "imported",
     "validation": "pending",
     "maximumDose": null,
     "protocol": {
-      "posology": "Protocole SMUR approché : débit = poids/3",
-      "particulars": [
-        "La dose nominale est un repère approximatif ; ne pas recalculer depuis celle-ci."
-      ],
+      "posology": "Départ 0.1 mcg/kg/min ; seuil d’avertissement 1 (dépassement après confirmation)",
+      "particulars": [],
       "dilution": "Prélever 1 mL d’adrénaline 1 mg/mL puis compléter à un volume final de 50 mL",
       "administration": "IVSE ; débit arrondi à 0,1 mL/h",
-      "questions": []
+      "questions": [],
+      "route": "IVSE",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": [],
     "adjustable": true
@@ -2080,7 +2222,7 @@ export const smurRecords = freeze([
     ],
     "model": {
       "type": "infusion",
-      "coefficient": 50,
+      "coefficient": 25,
       "unit": "ng",
       "periodMinutes": 1,
       "stock": {
@@ -2093,20 +2235,26 @@ export const smurRecords = freeze([
         "addMl": 49
       },
       "referenceRate": 3,
-      "diluent": "NaCl 0,9 %"
+      "diluent": "NaCl 0,9 %",
+      "doseStep": 5,
+      "warningCoefficient": 100,
+      "adjustmentStatus": "enabled"
     },
     "issues": [],
     "kind": "imported",
     "validation": "pending",
     "maximumDose": null,
     "protocol": {
-      "posology": "1,0 mL",
+      "posology": "Départ 25 ng/kg/min ; seuil d’avertissement 100 (dépassement après confirmation)",
       "particulars": [],
       "dilution": "1 mL de produit + 49 mL de diluant",
       "administration": "IVSE",
       "questions": [
         "Confirmer le plafond, la préparation et la plage de débit."
-      ]
+      ],
+      "route": "IVSE",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": [],
     "adjustable": true
@@ -2140,7 +2288,9 @@ export const smurRecords = freeze([
       "referenceRate": 5,
       "diluent": "NaCl 0,9 %",
       "maximumDose": null,
-      "noCeiling": true
+      "noCeiling": true,
+      "doseStep": null,
+      "adjustmentStatus": "fixed"
     },
     "issues": [],
     "kind": "imported",
@@ -2151,10 +2301,13 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "Concentration finale : 1 mg/mL (1 mL de produit à 10 mg/mL + 9 mL de NaCl 0,9 %)",
       "administration": "IVSE",
-      "questions": []
+      "questions": [],
+      "route": "IVSE",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": [],
-    "adjustable": true
+    "adjustable": false
   },
   {
     "id": "clonazepam-ivc",
@@ -2185,7 +2338,9 @@ export const smurRecords = freeze([
       "finalVolumeMl": 6,
       "diluent": "NaCl 0,9 %",
       "preparedCoefficient": 0.1,
-      "preparedMaximumDose": 1
+      "preparedMaximumDose": 1,
+      "doseStep": null,
+      "adjustmentStatus": "fixed"
     },
     "issues": [
       {
@@ -2202,10 +2357,13 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "Prélever la dose initiale puis compléter à 6 mL avec NaCl 0,9 % ; conserver cette concentration lors du réglage de dose",
       "administration": "IVSE sur 6 h",
-      "questions": []
+      "questions": [],
+      "route": "IVSE",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": [],
-    "adjustable": true
+    "adjustable": false
   },
   {
     "id": "dobutamine",
@@ -2220,7 +2378,7 @@ export const smurRecords = freeze([
       ""
     ],
     "model": {
-      "type": "fixed-rate",
+      "type": "infusion",
       "coefficient": 5,
       "unit": "mcg",
       "periodMinutes": 1,
@@ -2234,21 +2392,24 @@ export const smurRecords = freeze([
         "addMl": 46
       },
       "referenceRate": 3.3,
-      "rateDivisor": 3,
-      "diluent": "NaCl 0,9 %"
+      "diluent": "NaCl 0,9 %",
+      "doseStep": 1,
+      "warningCoefficient": 20,
+      "adjustmentStatus": "enabled"
     },
     "issues": [],
     "kind": "imported",
     "validation": "pending",
     "maximumDose": null,
     "protocol": {
-      "posology": "Protocole SMUR approché : débit = poids/3",
-      "particulars": [
-        "La dose nominale est un repère approximatif."
-      ],
+      "posology": "Départ 5 mcg/kg/min ; seuil d’avertissement 20 (dépassement après confirmation)",
+      "particulars": [],
       "dilution": "Prélever 4 mL de dobutamine 250 mg/20 mL (50 mg), puis compléter à un volume final de 50 mL",
       "administration": "IVSE ; débit arrondi à 0,1 mL/h",
-      "questions": []
+      "questions": [],
+      "route": "IVSE",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": [],
     "adjustable": true
@@ -2266,7 +2427,7 @@ export const smurRecords = freeze([
       ""
     ],
     "model": {
-      "type": "fixed-rate",
+      "type": "infusion",
       "coefficient": 5,
       "unit": "mcg",
       "periodMinutes": 1,
@@ -2280,21 +2441,24 @@ export const smurRecords = freeze([
         "addMl": 40
       },
       "referenceRate": 3.3,
-      "rateDivisor": 3,
-      "diluent": "NaCl 0,9 %"
+      "diluent": "NaCl 0,9 %",
+      "doseStep": 1,
+      "warningCoefficient": 20,
+      "adjustmentStatus": "enabled"
     },
     "issues": [],
     "kind": "imported",
     "validation": "pending",
     "maximumDose": null,
     "protocol": {
-      "posology": "Protocole SMUR approché : débit = poids/3",
-      "particulars": [
-        "La dose nominale est un repère approximatif."
-      ],
+      "posology": "Départ 5 mcg/kg/min ; seuil d’avertissement 20 (dépassement après confirmation)",
+      "particulars": [],
       "dilution": "Prélever 10 mL de dopamine 50 mg/10 mL, puis compléter à un volume final de 50 mL",
       "administration": "IVSE ; débit arrondi à 0,1 mL/h",
-      "questions": []
+      "questions": [],
+      "route": "IVSE",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": [],
     "adjustable": true
@@ -2313,7 +2477,7 @@ export const smurRecords = freeze([
     ],
     "model": {
       "type": "infusion",
-      "coefficient": 0.05,
+      "coefficient": 0.02,
       "unit": "mcg",
       "periodMinutes": 1,
       "stock": {
@@ -2327,18 +2491,23 @@ export const smurRecords = freeze([
       },
       "referenceRate": 3,
       "diluent": "NaCl 0,9 %",
-      "maximumCoefficient": 2
+      "doseStep": 0.02,
+      "warningCoefficient": 1,
+      "adjustmentStatus": "enabled"
     },
     "issues": [],
     "kind": "imported",
     "validation": "pending",
     "maximumDose": null,
     "protocol": {
-      "posology": "0,05 mcg/kg/min au départ, maximum 2 mcg/kg/min",
+      "posology": "Départ 0.02 mcg/kg/min ; seuil d’avertissement 1 (dépassement après confirmation)",
       "particulars": [],
       "dilution": "2 mL de produit + 38 mL de diluant",
       "administration": "IVSE",
-      "questions": []
+      "questions": [],
+      "route": "IVSE",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": [],
     "adjustable": true
@@ -2372,18 +2541,23 @@ export const smurRecords = freeze([
       "referenceRate": 1.2,
       "diluent": "NaCl 0,9 %",
       "maximumDose": null,
-      "noCeiling": true
+      "doseStep": 1,
+      "warningCoefficient": 6,
+      "adjustmentStatus": "enabled"
     },
     "issues": [],
     "kind": "imported",
     "validation": "pending",
     "maximumDose": null,
     "protocol": {
-      "posology": "2 mcg/kg/min au départ",
+      "posology": "Départ 2 mcg/kg/min ; seuil d’avertissement 6 (dépassement après confirmation)",
       "particulars": [],
       "dilution": "4 mL de produit + 16 mL de diluant",
       "administration": "IVSE",
-      "questions": []
+      "questions": [],
+      "route": "IVSE",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": [],
     "adjustable": true
@@ -2420,7 +2594,9 @@ export const smurRecords = freeze([
         },
         "atOrAbove": null
       },
-      "diluent": "NaCl 0,9 %"
+      "diluent": "NaCl 0,9 %",
+      "doseStep": null,
+      "adjustmentStatus": "suspended"
     },
     "issues": [],
     "kind": "imported",
@@ -2433,10 +2609,13 @@ export const smurRecords = freeze([
       ],
       "dilution": "Si poids < 10 kg : 5 mL de morphine 1 mg/mL + 45 mL de NaCl 0,9 % ; si poids ≥ 10 kg : morphine 1 mg/mL non diluée",
       "administration": "PSE",
-      "questions": []
+      "questions": [],
+      "route": "PSE",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": [],
-    "adjustable": true
+    "adjustable": false
   },
   {
     "id": "noradrenaline",
@@ -2451,8 +2630,7 @@ export const smurRecords = freeze([
       ""
     ],
     "model": {
-      "type": "fixed-rate",
-      "rateDivisor": 3,
+      "type": "infusion",
       "unit": "mcg",
       "stock": {
         "amount": 2,
@@ -2463,7 +2641,12 @@ export const smurRecords = freeze([
         "takeMl": 0.5,
         "addMl": 49.5
       },
-      "diluent": "NaCl 0,9 %"
+      "diluent": "NaCl 0,9 %",
+      "periodMinutes": 1,
+      "coefficient": 0.1,
+      "doseStep": 0.05,
+      "warningCoefficient": 1,
+      "adjustmentStatus": "enabled"
     },
     "issues": [
       {
@@ -2476,13 +2659,16 @@ export const smurRecords = freeze([
     "validation": "pending",
     "maximumDose": null,
     "protocol": {
-      "posology": "Protocole SMUR approché : débit = poids/3",
+      "posology": "Départ 0.1 mcg/kg/min ; seuil d’avertissement 1 (dépassement après confirmation)",
       "particulars": [
         "Concentration finale : 20 mcg/mL."
       ],
       "dilution": "Prélever 0,5 mL de noradrénaline 2 mg/mL (1 mg), puis compléter à un volume final de 50 mL",
       "administration": "IVSE ; débit arrondi à 0,1 mL/h",
-      "questions": []
+      "questions": [],
+      "route": "IVSE",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": [],
     "adjustable": true
@@ -2515,10 +2701,11 @@ export const smurRecords = freeze([
       },
       "referenceRate": 1.2,
       "minimumCoefficient": 0.5,
-      "maximumCoefficient": 5,
       "maximumDose": null,
-      "noCeiling": true,
-      "diluent": "NaCl 0,9 %"
+      "diluent": "NaCl 0,9 %",
+      "doseStep": 0.25,
+      "warningCoefficient": 2,
+      "adjustmentStatus": "enabled"
     },
     "issues": [
       {
@@ -2531,11 +2718,14 @@ export const smurRecords = freeze([
     "validation": "pending",
     "maximumDose": null,
     "protocol": {
-      "posology": "Entretien : 0,5 à 5 mcg/kg/min",
+      "posology": "Départ 0.5 mcg/kg/min ; seuil d’avertissement 2 (dépassement après confirmation)",
       "particulars": [],
       "dilution": "10 mL (10 mg) + 40 mL de NaCl 0,9 % → 200 mcg/mL",
       "administration": "IVSE",
-      "questions": []
+      "questions": [],
+      "route": "IVSE",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": [],
     "adjustable": true
@@ -2570,7 +2760,9 @@ export const smurRecords = freeze([
       "maximumCoefficient": 20,
       "maximumDose": null,
       "noCeiling": true,
-      "diluent": "NaCl 0,9 %"
+      "diluent": "NaCl 0,9 %",
+      "doseStep": null,
+      "adjustmentStatus": "fixed"
     },
     "issues": [],
     "kind": "reference",
@@ -2583,10 +2775,82 @@ export const smurRecords = freeze([
       "administration": "IV — durée à préciser",
       "questions": [
         "Préciser la durée de la dose de charge."
-      ]
+      ],
+      "route": "IV",
+      "durationMinutes": null,
+      "administrationNote": "durée à préciser"
     },
     "sources": [],
-    "adjustable": true
+    "adjustable": false
+  },
+  {
+    "id": "salbutamol-charge",
+    "category": "ivc",
+    "name": "Salbutamol — dose de charge",
+    "sourceCells": [
+      "Salbutamol 5 mg/5 mL",
+      "5 mcg/kg",
+      "Dose de charge",
+      "Dilution selon le poids",
+      "IVL 5 min",
+      ""
+    ],
+    "model": {
+      "type": "dose",
+      "coefficient": 5,
+      "unit": "mcg",
+      "stock": {
+        "amount": 5,
+        "unit": "mg",
+        "volumeMl": 5
+      },
+      "mix": null,
+      "diluent": "NaCl 0,9 %",
+      "weightMixes": [
+        {
+          "maxWeightKgExclusive": 21,
+          "mix": {
+            "takeMl": 5,
+            "addMl": 45
+          }
+        },
+        {
+          "minWeightKg": 21,
+          "maxWeightKgExclusive": 42,
+          "mix": {
+            "takeMl": 10,
+            "addMl": 40
+          }
+        },
+        {
+          "minWeightKg": 42,
+          "mix": {
+            "takeMl": 15,
+            "addMl": 35
+          }
+        }
+      ],
+      "adjustmentStatus": "fixed",
+      "maximumDose": null
+    },
+    "issues": [],
+    "kind": "imported",
+    "validation": "pending",
+    "maximumDose": null,
+    "protocol": {
+      "posology": "5 mcg/kg — dose de charge",
+      "particulars": [
+        "Dose de charge calculée avec les dilutions pondérales du salbutamol IVSE."
+      ],
+      "dilution": "Moins de 21 kg : 5 mg + 45 mL de NaCl 0,9 % ; de 21 à moins de 42 kg : 10 mg + 40 mL ; dès 42 kg : 15 mg + 35 mL. Volume final : 50 mL.",
+      "administration": "IVL sur 5 min",
+      "questions": [],
+      "route": "IVL",
+      "durationMinutes": 5.0,
+      "administrationNote": ""
+    },
+    "sources": ["salbutamol"],
+    "adjustable": false
   },
   {
     "id": "salbutamol-ivc",
@@ -2614,7 +2878,6 @@ export const smurRecords = freeze([
       "referenceRate": 0.2,
       "diluent": "NaCl 0,9 %",
       "minimumCoefficient": 0.1,
-      "maximumCoefficient": 2,
       "weightMixes": [
         {
           "maxWeightKgExclusive": 21,
@@ -2638,18 +2901,24 @@ export const smurRecords = freeze([
             "addMl": 35
           }
         }
-      ]
+      ],
+      "doseStep": 0.1,
+      "warningCoefficient": 5,
+      "adjustmentStatus": "enabled"
     },
     "issues": [],
     "kind": "imported",
     "validation": "pending",
     "maximumDose": null,
     "protocol": {
-      "posology": "0,1 à 2 mcg/kg/min",
+      "posology": "Départ 0.1 mcg/kg/min ; seuil d’avertissement 5 (dépassement après confirmation)",
       "particulars": [],
       "dilution": "Moins de 21 kg : 5 mg + 45 mL de NaCl 0,9 % ; de 21 à moins de 42 kg : 10 mg + 40 mL ; dès 42 kg : 15 mg + 35 mL. Volume final : 50 mL.",
       "administration": "IVSE",
-      "questions": []
+      "questions": [],
+      "route": "IVSE",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": [],
     "adjustable": true
@@ -2683,18 +2952,23 @@ export const smurRecords = freeze([
       "referenceRate": 2,
       "diluent": "NaCl 0,9 %",
       "maximumDose": null,
-      "noCeiling": true
+      "doseStep": 0.1,
+      "warningCoefficient": 1,
+      "adjustmentStatus": "enabled"
     },
     "issues": [],
     "kind": "imported",
     "validation": "pending",
     "maximumDose": null,
     "protocol": {
-      "posology": "0,2 mcg/kg/h au départ",
+      "posology": "Départ 0.2 mcg/kg/h ; seuil d’avertissement 1 (dépassement après confirmation)",
       "particulars": [],
       "dilution": "2 mL de produit + 8 mL de diluant",
       "administration": "IVSE",
-      "questions": []
+      "questions": [],
+      "route": "IVSE",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": [],
     "adjustable": true
@@ -2723,7 +2997,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "Sans objet",
       "administration": "Consigne",
-      "questions": []
+      "questions": [],
+      "route": "",
+      "durationMinutes": null,
+      "administrationNote": "Consigne"
     },
     "sources": []
   },
@@ -2762,7 +3039,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "Sans dilution",
       "administration": "IVL",
-      "questions": []
+      "questions": [],
+      "route": "IVL",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -2813,7 +3093,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "Solution pour nébulisation 2,5 mg/2,5 mL",
       "administration": "Nébulisation",
-      "questions": []
+      "questions": [],
+      "route": "Nébulisation",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -2836,7 +3119,8 @@ export const smurRecords = freeze([
       "coefficient": 0.5,
       "unit": "mL",
       "maximumDose": 20,
-      "volumeKind": "withdrawal"
+      "volumeKind": "withdrawal",
+      "administrationConcentration": null
     },
     "issues": [
       {
@@ -2857,7 +3141,10 @@ export const smurRecords = freeze([
       "administration": "IVL — dilution et durée à préciser",
       "questions": [
         "Valider la dilution finale et la durée d’administration."
-      ]
+      ],
+      "route": "IVL",
+      "durationMinutes": null,
+      "administrationNote": "dilution et durée à préciser"
     },
     "sources": [
       "calcium",
@@ -2885,7 +3172,8 @@ export const smurRecords = freeze([
       "maximumDose": 10,
       "glucoseMlPerKg": 5,
       "maximumGlucoseMl": 250,
-      "durationHours": 0.5
+      "durationHours": 0.5,
+      "glucoseConcentrationMgMl": 100
     },
     "issues": [
       {
@@ -2906,7 +3194,10 @@ export const smurRecords = freeze([
       "administration": "IV sur 30 min",
       "questions": [
         "Renseigner la concentration de l’insuline rapide pour calculer son volume à prélever."
-      ]
+      ],
+      "route": "IV",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -2951,7 +3242,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "40 g + 150 mL de G5 %",
       "administration": "Intrarectale",
-      "questions": []
+      "questions": [],
+      "route": "Intrarectale",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -2996,7 +3290,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "15 g + 100 mL de G10 %",
       "administration": "Intrarectale",
-      "questions": []
+      "questions": [],
+      "route": "Intrarectale",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -3035,7 +3332,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "Sans objet",
       "administration": "",
-      "questions": []
+      "questions": [],
+      "route": "",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -3074,7 +3374,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "Sans objet",
       "administration": "",
-      "questions": []
+      "questions": [],
+      "route": "",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -3113,7 +3416,10 @@ export const smurRecords = freeze([
       ],
       "dilution": "Sans objet",
       "administration": "",
-      "questions": []
+      "questions": [],
+      "route": "",
+      "durationMinutes": null,
+      "administrationNote": ""
     },
     "sources": []
   },
@@ -3145,7 +3451,10 @@ export const smurRecords = freeze([
       "particulars": [],
       "dilution": "Solution prête à l’emploi",
       "administration": "IVD — à passer le plus rapidement possible",
-      "questions": []
+      "questions": [],
+      "route": "IVD",
+      "durationMinutes": null,
+      "administrationNote": "à passer le plus rapidement possible"
     },
     "sources": [
       "isofundine",

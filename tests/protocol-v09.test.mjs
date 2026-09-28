@@ -101,44 +101,37 @@ test('morphine : concentration au seuil de 10 kg, sans blocage ni changement à 
  }
 });
 
-test('réglages : toutes les perfusions et la charge de nicardipine attendent un pas explicite',()=>{
- assert.equal(records.filter(r=>r.adjustable).length,15);
- for(const r of records.filter(r=>r.category==='ivc')){
-  const d=doseDefinition(r,patient());assert.ok(d);assert.equal(d.step,null);assert.throws(()=>nextDoseValue(d,d.initial,1),/Pas de réglage/);
+test('les perfusions fixes et suspendues ne peuvent pas être titrées',()=>{
+ for(const id of ['atracurium-ivc','clonazepam-ivc','nicardipine-charge','tranexamique-ivc']){
+  const r=record(id);assert.equal(doseDefinition(r,patient()),null);
+  assert.equal(recordWithDose(r,patient(),{value:0.05,mode:'coefficient'}),r);
  }
- assert.ok(Object.values(doseSteps).every(step=>step===null));
- assert.equal(doseDefinition(record('tranexamique-ivc'),patient(20,120)).unit,'mg/h');
- assert.equal(doseDefinition(record('tranexamique-ivc'),patient(20,null)).initial,null);
+ const morphine=record('morphine-ivc');assert.equal(doseDefinition(morphine,patient()).suspended,true);
+ assert.equal(recordWithDose(morphine,patient(),{value:40,mode:'coefficient'}),morphine);
 });
 
 test('titration : le débit suit la posologie et la concentration reste constante',()=>{
- // Test increments are fixtures, not saved clinical defaults.
- for(const [id,value,expectedRate] of [['sufentanil',0.4,4],['morphine-ivc',40,0.4],['nicardipine',1,3],['salbutamol-ivc',0.2,1.2]]){
+ for(const [id,value,expectedRate] of [['sufentanil',0.4,4],['nicardipine',1,3],['salbutamol-ivc',0.2,1.2]]){
   const original=record(id), context=patient();
   const changed=recordWithDose(original,context,{value,mode:'coefficient'});
   const before=calculateRecordForPatient(original,context),after=calculateRecordForPatient(changed,context);
   close(after.concentration,before.concentration);close(after.exactRateMlH,expectedRate);
  }
- const clona=record('clonazepam-ivc'),context=patient(5);
- const changed=recordWithDose(clona,context,{value:0.05,mode:'coefficient'});
- const after=calculateRecordForPatient(changed,context);
- close(after.dose,0.25);close(after.preparedDose,0.5);close(after.concentration,0.5/6);close(after.exactRateMlH,0.5);
+ const context=patient(5);
  for(const id of ['adrenaline-ivc','noradrenaline','dopamine','dobutamine']){
   const original=record(id),d=doseDefinition(original,context),modified=recordWithDose(original,context,{value:d.initial*2,mode:'coefficient'});
-  close(calculateRecordForPatient(modified,context).exactRateMlH,10/3);
+  close(calculateRecordForPatient(modified,context).exactRateMlH,3);
  }
- const tranex=recordWithDose(record('tranexamique-ivc'),patient(30,120),{value:100,mode:'hourly'});
- close(calculateRecordForPatient(tranex,patient(30,120)).exactRateMlH,1.6);
 });
 
-test('bornes des commandes : minima, plafonds de posologie et valeurs invalides',()=>{
- for(const [id,max] of [['isoprenaline',2],['salbutamol-ivc',2],['nicardipine',5],['nicardipine-charge',20]]) {
-  const d=doseDefinition(record(id),patient());assert.equal(d.max,max);
-  assert.equal(nextDoseValue(d,max,1,0.1),max);
-  if(d.min>0)assert.equal(nextDoseValue(d,d.min,-1,0.1),d.min);
+test('commandes : minima et valeurs invalides, seuils dépassables distincts des plafonds',()=>{
+ for(const [id,warning] of [['isoprenaline',1],['salbutamol-ivc',5],['nicardipine',2]]) {
+  const d=doseDefinition(record(id),patient());assert.equal(d.max,null);assert.equal(d.warning,warning);
+  assert.ok(nextDoseValue(d,warning,1)>warning);
+  if(d.min>0)assert.equal(nextDoseValue(d,d.min,-1),d.min);
  }
  const d=doseDefinition(record('sufentanil'),patient());
- close(nextDoseValue(d,0.2,1,0.1),0.3);close(nextDoseValue(d,0.3,-1,0.1),0.2);
+ close(nextDoseValue(d,0.2,1),0.3);close(nextDoseValue(d,0.3,-1),0.2);
  for(const step of [0,-1,NaN,Infinity,null])assert.throws(()=>nextDoseValue(d,0.2,1,step));
  for(const value of [0,-1,NaN,Infinity])assert.throws(()=>recordWithDose(record('sufentanil'),patient(),{value,mode:'coefficient'}));
 });

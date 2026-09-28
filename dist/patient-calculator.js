@@ -1,6 +1,6 @@
 import { CalculationError, parseDecimal, ageInMonths } from './calculator.js';
-import { concentration } from './catalog-audit.js';
 import { preparationForWeight } from './smur-preparation.js';
+import { administrationMinutes } from './administration.js';
 
 export const weightBounds = Object.freeze({ min: 0.5, max: 200 });
 export const infantWeightTable = Object.freeze([3, 3.5, 4.2, 5, 6, 6, 7, 8, 8, 9, 9, 10]);
@@ -87,7 +87,7 @@ export function calculateRecordForPatient(record, context) {
   result.preparation = preparationForWeight(m, context.weightKg);
   result.stockConcentration = result.preparation.stockConcentration;
   if (m.preparationMinimumAgeMonths !== undefined && (context.ageMonths === null || context.ageMonths < m.preparationMinimumAgeMonths)) {
-    result.preparation = {...result.preparation, concentration:null, mix:null, takeMl:null, addMl:null, finalVolumeMl:null};
+    result.preparation = {...result.preparation, concentration:m.youngerFinalConcentration??null, mix:null, takeMl:null, addMl:null, finalVolumeMl:null};
   }
   if (m.minimumAgeMonths !== undefined || m.minimumAgeMonthsExclusive !== undefined) {
     if (context.ageMonths === null) return Object.freeze({ ...result, status: 'blocked', message: 'Âge nécessaire pour cette posologie.' });
@@ -105,17 +105,19 @@ export function calculateRecordForPatient(record, context) {
     result.coefficient = m.coefficient;
     result.volumeMl = Math.min(context.weightKg * positive(m.glucoseMlPerKg), positive(m.maximumGlucoseMl));
     result.glucoseMaximumApplied = result.volumeMl < context.weightKg * m.glucoseMlPerKg;
-    result.mass = result.volumeMl * 100; result.massUnit = 'mg de glucose';
+    result.mass = result.volumeMl * positive(m.glucoseConcentrationMgMl??100); result.massUnit = 'mg de glucose';
     result.exactRateMlH = result.volumeMl / positive(m.durationHours);
     result.rateMlH = round(result.exactRateMlH, 1); result.rateKind = 'glucose';
     result.insulinWithdrawalMl = result.stockConcentration ? result.dose / result.stockConcentration : null;
-    return Object.freeze({ ...result, status:'calculated', message:'Dose d’insuline et volume de G10 % plafonnés séparément. Débit affiché pour le G10 %.' });
+    return Object.freeze({ ...result, status:'calculated', message:'Dose d’insuline et volume de glucose plafonnés séparément. Débit affiché pour le glucose.' });
   }
   if (m.type === 'conditional-dose') {
     const selected = m.cases.find(item => item.maxWeightKg === undefined || context.weightKg <= item.maxWeightKg);
     result.dose = positive(selected.dose); result.uncappedDose = result.dose;
-    result.concentration = concentration(m, m.unit);
+    result.concentration = result.preparation.concentration;
     if (result.concentration !== null) result.volumeMl = result.dose / result.concentration;
+    const minutes=administrationMinutes(record);
+    if(minutes&&result.volumeMl!==null){result.exactRateMlH=result.volumeMl*60/positive(minutes);result.rateMlH=round(result.exactRateMlH,1);}
     return Object.freeze({ ...result, status: 'calculated', message: 'Palier de poids appliqué.' });
   }
   let coefficient = positive(effectiveCoefficient(m, context));
@@ -146,9 +148,11 @@ export function calculateRecordForPatient(record, context) {
     if (m.volumePerDose !== undefined) result.volumeMl = result.dose * positive(m.volumePerDose);
     if (m.massPerMl !== undefined && result.volumeMl !== null) { result.mass = result.volumeMl * positive(m.massPerMl); result.massUnit = m.massUnit; }
     if (m.volumeKind === 'withdrawal') {
-      result.withdrawalMl = result.volumeMl;
-      result.volumeMl = null;
-      result.concentration = null;
+      result.withdrawalMl = m.unit==='mL' ? result.dose : result.stockConcentration ? result.dose/result.stockConcentration : null;
+      const mix=result.preparation.mix;
+      const factor=m.dilutionFactor??(mix?(mix.takeMl+mix.addMl)/positive(mix.takeMl):null);
+      result.volumeMl = factor && result.withdrawalMl!==null ? result.withdrawalMl*factor : m.finalConcentration ? result.dose/m.finalConcentration : null;
+      result.concentration = result.volumeMl!==null && m.unit!=='mL' ? result.dose/result.volumeMl : null;
     }
   } else if (m.type === 'infusion') {
     result.dose = null; result.uncappedDose = null;
@@ -168,6 +172,11 @@ export function calculateRecordForPatient(record, context) {
     result.rateMlH = round(exactRate, 1);
     if (result.preparation.finalVolumeMl) { result.mixtureVolumeMl = result.preparation.finalVolumeMl; result.theoreticalDurationHours = result.mixtureVolumeMl / exactRate; }
   } else throw new CalculationError('invalid-model', 'Type de calcul non reconnu.');
+  const minutes=administrationMinutes(record);
+  if(m.type==='dose' && result.volumeMl!==null && minutes){
+    result.exactRateMlH=result.volumeMl*60/positive(minutes);
+    result.rateMlH=round(result.exactRateMlH,1);
+  }
   return Object.freeze({ ...result, status: 'calculated', message: result.maximumApplied ? 'Plafond du modèle appliqué ; statut précisé dans la fiche.' : 'Calcul effectué sans arrondi intermédiaire.' });
 }
 

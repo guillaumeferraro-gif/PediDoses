@@ -137,9 +137,9 @@ function updateCard(record) {
   notes.className = 'dose-notes';
   const primary = result.rateMlH ?? result.dose ?? result.hourlyAmount;
   const primaryUnit = result.rateMlH !== null ? 'mL/h' : `${unitLabel(result.unit)}${result.dose===null && result.hourlyAmount!==null ? '/h' : ''}`;
-  values.append(make('span', result.rateKind==='glucose' ? 'Débit du G10 %' : 'Simulation · poids retenu', 'dose-value-label'));
+  values.append(make('span', result.rateKind==='glucose' ? `Débit du G${format((record.model.glucoseConcentrationMgMl??100)/10,2)} %` : 'Simulation · poids retenu', 'dose-value-label'));
   values.append(make('strong', `${result.rateMlH !== null ? format(primary, 1) : result.unit === 'mL' ? preparationVolume(primary) : display(primary)} ${primaryUnit}`));
-  if (result.volumeMl !== null && result.unit !== 'mL') values.append(make('span', `${result.rateKind==='glucose' ? 'G10 %' : 'Volume final à administrer'} : ${preparationVolume(result.volumeMl)} mL`, 'dose-volume'));
+  if (result.volumeMl !== null && result.unit !== 'mL') values.append(make('span', `${result.rateKind==='glucose' ? `G${format((record.model.glucoseConcentrationMgMl??100)/10,2)} %` : 'Volume final à administrer'} : ${preparationVolume(result.volumeMl)} mL`, 'dose-volume'));
   if(result.rateKind==='glucose') values.append(make('span',`Insuline rapide : ${display(result.dose)} UI`,'dose-volume'));
   if (result.withdrawalMl !== null) values.append(make('span', `Produit à prélever : ${preparationVolume(result.withdrawalMl)} mL`, 'dose-volume'));
   const messages = [];
@@ -153,11 +153,11 @@ function updateCard(record) {
   calculation.append(make('p', `Poids retenu : ${format(result.weightKg)} kg (${result.weightSource === 'measured' ? 'saisi' : 'estimé'}).`));
   if (result.dose !== null) calculation.append(make('p', `Quantité calculée${record.model.durationHours ? ` sur ${record.model.durationHours} h` : ''} : ${display(result.dose)} ${unitLabel(result.unit)}${result.maximumApplied ? ' après plafond' : ''}.`));
   if (result.hourlyAmount !== null) calculation.append(make('p', `Quantité par heure : ${display(result.hourlyAmount)} ${unitLabel(result.unit)}/h.`));
-  if (result.rateMlH !== null) calculation.append(make('p', `${result.rateKind==='glucose' ? 'Débit du G10 %' : 'Débit final'} : ${format(result.rateMlH, 1)} mL/h (arrondi final à 0,1 mL/h).`));
+  if (result.rateMlH !== null) calculation.append(make('p', `${result.rateKind==='glucose' ? `Débit du G${format((record.model.glucoseConcentrationMgMl??100)/10,2)} %` : 'Débit final'} : ${format(result.rateMlH, 1)} mL/h (arrondi final à 0,1 mL/h).`));
   if (result.concentration !== null) calculation.append(make('p', `Concentration finale : ${concentrationText(result.concentration, result.unit)}.`));
   if (result.mass !== null) calculation.append(make('p', `Quantité correspondante : ${display(result.mass)} ${unitLabel(result.massUnit)}.`));
-  if (result.volumeMl !== null) calculation.append(make('p', `${result.rateKind==='glucose' ? 'Volume de G10 %' : 'Volume de la solution finale à administrer'} : ${preparationVolume(result.volumeMl)} mL.`));
-  if (result.withdrawalMl !== null) calculation.append(make('p', `Volume de produit à prélever : ${preparationVolume(result.withdrawalMl)} mL${result.stockConcentration!==null ? ` à ${concentrationText(result.stockConcentration, result.unit)}` : ' de solution à 10 %'}.`));
+  if (result.volumeMl !== null) calculation.append(make('p', `${result.rateKind==='glucose' ? `Volume de G${format((record.model.glucoseConcentrationMgMl??100)/10,2)} %` : 'Volume de la solution finale à administrer'} : ${preparationVolume(result.volumeMl)} mL.`));
+  if (result.withdrawalMl !== null) calculation.append(make('p', `Volume de produit à prélever : ${preparationVolume(result.withdrawalMl)} mL${result.stockConcentration!==null ? ` à ${concentrationText(result.stockConcentration, result.unit)}` : ' de produit avant dilution'}.`));
   if (result.addMl !== null) calculation.append(make('p', `Diluant à ajouter : ${preparationVolume(result.addMl)} mL (${record.model.diluent}).`));
   if (result.mixtureVolumeMl !== null) calculation.append(make('p', `Volume final : ${preparationVolume(result.mixtureVolumeMl)} mL.`));
   calculation.append(make('p', 'Les calculs internes conservent leur précision ; aucun arrondi n’est réinjecté dans le calcul suivant.'));

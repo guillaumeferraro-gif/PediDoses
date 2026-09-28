@@ -1,12 +1,12 @@
-# Périmètre clinique — France — v0.9
+# Périmètre clinique — France — v0.10
 
-Usage demandé : calculs rapides en SMUR pédiatrique. Le tableau source porte l’en-tête CHU Toulouse / SMUR pédiatrique 31 ; sa validation institutionnelle datée n’a pas été fournie. Cette version intègre les décisions de l’utilisateur du 26 septembre 2026, sans leur attribuer une validation clinique du logiciel.
+Usage demandé : calculs rapides en SMUR pédiatrique. Le tableau source porte l’en-tête CHU Toulouse / SMUR pédiatrique 31 ; sa validation institutionnelle datée n’a pas été fournie. Cette version intègre les décisions de l’utilisateur des 26–28 septembre 2026, sans leur attribuer une validation clinique du logiciel.
 
-Le référentiel actif comporte 66 fiches. L’audit historique conserve la transcription initiale et son exemple à 10 kg.
+Le référentiel actif comporte 67 fiches. L’audit historique conserve la transcription initiale et son exemple à 10 kg.
 
 ## Corrections intégrées
 
-| Médicament | Règle v0.9 |
+| Médicament | Règle active |
 | --- | --- |
 | Chlorure de calcium | 20 mg/kg de chlorure, maximum 1 g = 10 mL ; IVD |
 | Gluconate de calcium 10 % | ERC : 0,5 mL/kg, maximum 20 mL de produit. Prélèvement seul tant que dilution et durée ne sont pas précisées ; aucune conversion en calcium élément |
@@ -33,42 +33,28 @@ Le référentiel actif comporte 66 fiches. L’audit historique conserve la tran
 | Naloxone | 0,4 mg/1 mL ; maximum 2 mg ; IVD ; aucune répétition affichée |
 | Atracurium IVSE | 0,5 mg/kg/h initialement ; concentration 1 mg/mL ; aucun plafond ni durée de seringue imposée |
 | Clonazépam IVSE | 0,1 mg/kg, maximum 1 mg sur 6 h ; NaCl 0,9 % ; volume final antérieur de 6 mL conservé |
-| Isoprénaline | Posologie maximale 2 mcg/kg/min |
+| Isoprénaline | Départ et pas 0,02 mcg/kg/min ; avertissement au-delà de 1 mcg/kg/min, dépassable après confirmation |
 | Midazolam IVSE | Aucun plafond ; ampoule 5 mg/mL, sans volume de contenant imposé |
 | Morphine IVSE | PSE, sans PCA ni palier à trois mois. 20 mcg/kg/h initialement ; ampoule 10 mg/10 mL ; 0,1 mg/mL sous 10 kg, pur à 1 mg/mL dès 10 kg |
 | Noradrénaline IVSE | Préparation antérieure 1 mg/50 mL conservée ; aucune capacité de seringue de 60 mL affichée |
-| Nicardipine | Charge 10 à 20 mcg/kg ; entretien 0,5 à 5 mcg/kg/min ; aucun plafond de dose totale. 10 mg/10 mL + 40 mL NaCl 0,9 % |
-| Salbutamol IVSE | < 21 kg : 5 mg + 45 mL NaCl ; 21 à < 42 kg : 10 mg + 40 mL ; ≥ 42 kg : 15 mg + 35 mL. Ampoules 5 mg/5 mL. Posologie 0,1 à 2 mcg/kg/min pour les trois concentrations |
-| Sufentanil | **50 mcg/10 mL = 5 mcg/mL** ; aucun plafond de débit. Préparation antérieure à 1 mcg/mL conservée |
+| Nicardipine | Charge 10 à 20 mcg/kg ; entretien initial 0,5 mcg/kg/min ; pas 0,25 ; avertissement au-delà de 2 mcg/kg/min, dépassable après confirmation. 10 mg/10 mL + 40 mL NaCl 0,9 % |
+| Salbutamol IVSE | < 21 kg : 5 mg + 45 mL NaCl ; 21 à < 42 kg : 10 mg + 40 mL ; ≥ 42 kg : 15 mg + 35 mL. Ampoules 5 mg/5 mL. Départ et pas 0,1 mcg/kg/min ; avertissement au-delà de 5 mcg/kg/min, dépassable après confirmation |
+| Sufentanil | **50 mcg/10 mL = 5 mcg/mL** ; départ 0,2 mcg/kg/h, pas 0,1, avertissement au-delà de 1 mcg/kg/h dépassable après confirmation. Préparation antérieure à 1 mcg/mL conservée |
+| Salbutamol IV, charge | 5 mcg/kg sur 5 min ; même dilution pondérale que l’entretien |
 | Salbutamol nébulisé | Aucune répétition affichée |
 | CGR, PFC, CPA | Aucune vitesse ni modalité transfusionnelle ajoutée. Volume prescrit et limite antérieure d’une poche conservés |
 
 Le bolus d’atracurium est exprimé en mL/kg **par dose** ; mL/kg/h s’applique à l’IVSE. L’amoxicilline/clavulanate est calculée en amoxicilline, sans addition des 50 mg d’acide clavulanique aux 500 mg.
 
-## Pas de réglage à fournir
+## Réglages v0.10
 
-Les commandes +/− sont en place dans les deux vues, avec recalcul du débit à concentration constante et contrôle des bornes. Les pas restent absents jusqu’à la réponse de l’utilisateur. Les valeurs des tests ne sont pas des réglages cliniques.
+Les dix triplets pas/départ/seuil fournis par l’utilisateur sont repris dans le [tableau du README](./README.md#posologies-réglables). Le seuil est un avertissement dépassable après confirmation, renouvelée pour chaque augmentation au-delà. Annuler conserve le réglage précédent. Les deux vues partagent les réglages et le changement de patient restaure les doses de départ.
 
-| Réglage | Unité du pas | Limite explicite |
-| --- | --- | --- |
-| Adrénaline IVSE | mcg/kg/min | — |
-| Alprostadil | ng/kg/min | — |
-| Atracurium IVSE | mg/kg/h | Aucun plafond demandé |
-| Clonazépam IVSE | mg/kg sur 6 h | 1 mg total sur 6 h |
-| Dobutamine | mcg/kg/min | — |
-| Dopamine | mcg/kg/min | — |
-| Isoprénaline | mcg/kg/min | Maximum 2 |
-| Midazolam IVSE | mcg/kg/min | Aucun plafond demandé |
-| Morphine IVSE | mcg/kg/h | — |
-| Noradrénaline IVSE | mcg/kg/min | — |
-| Nicardipine, charge | mcg/kg | 10 à 20 |
-| Nicardipine, entretien | mcg/kg/min | 0,5 à 5 |
-| Salbutamol IVSE | mcg/kg/min | 0,1 à 2 |
-| Sufentanil | mcg/kg/h | Aucun plafond demandé |
-| Tranexamique avant 10 ans | mg/kg/h | Concentration finale encore nécessaire pour le débit |
-| Tranexamique dès 10 ans | mg/h | Schéma initial 125 mg/h pendant 8 h |
+Les catécholamines démarrent aux doses fournies (0,1 mcg/kg/min pour adrénaline/noradrénaline, 5 pour dopamine/dobutamine), en remplacement du débit poids/3. Les anciens plafonds de posologie d’isoprénaline, nicardipine entretien et salbutamol sont remplacés par les seuils demandés le 28 septembre.
 
-Adrénaline, noradrénaline, dopamine et dobutamine démarrent au débit local poids/3. Le réglage part de la dose exacte délivrée avec cette concentration. Le clonazépam conserve la concentration initialement préparée afin que le changement de posologie modifie réellement le débit.
+Atracurium IVSE, clonazépam IVSE, charge de nicardipine et tranexamique entretien sont sans pas. La morphine est suspendue pour le réglage : 20 mcg/kg/h reste la dose précédente affichée ; le 0,1 mentionné en suspens n’est pas adopté comme nouvelle posologie.
+
+Le tableau d’administration permet de modifier les paramètres de calcul, ampoules, unités, durées, voies, préparations, paliers, pas et limites. Les configurations sont enregistrées localement et transférables par JSON. Les textes libres ne remplacent pas les paramètres numériques et doivent être tenus cohérents avec eux.
 
 ## Points encore ouverts
 
@@ -87,4 +73,6 @@ Consultées le 26 septembre 2026 :
 - [ERC 2025, Paediatric Life Support](https://www.erc.edu/media/03xnpjmj/gl2025-09-pls-e.pdf), hyperkaliémie : gluconate 10 % 0,5 mL/kg (maximum 20 mL) ; insuline 0,1 UI/kg (maximum 10 UI) avec glucose 10 % 5 mL/kg (maximum 250 mL) sur 30 min.
 - [BDPM, gluconate de calcium PROAMP 10 %](https://base-donnees-publique.medicaments.gouv.fr/medicament/68332774/extrait) : composition et dilution spécifiques. Cette spécialité n’est pas supposée être celle du stock sans confirmation.
 
-Les 67 tests logiciels, le contrôle des ampoules et ces références ciblées ne valident pas l’ensemble du protocole. La relecture clinique/pharmaceutique, le contrôle visuel de l’application et les essais en situation de soins restent à réaliser.
+- [BDPM, SALBUTAMOL VIATRIS 5 mg/5 mL](https://base-donnees-publique.medicaments.gouv.fr/medicament/63266758/extrait), consulté le 28 septembre 2026 : dose de charge pédiatrique IV de 5 mcg/kg sur 5 min. Le seuil d’entretien de 5 mcg/kg/min vient de la décision locale de l’utilisateur ; il n’est pas présenté comme issu de ce RCP.
+
+Les tests logiciels, le contrôle des ampoules et ces références ciblées ne valident pas l’ensemble du protocole. La relecture clinique/pharmaceutique, le contrôle visuel de l’application et les essais en situation de soins restent à réaliser.

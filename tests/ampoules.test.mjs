@@ -74,7 +74,7 @@ test('une ampoule différente adapte le prélèvement en gardant les cibles de d
   close(calc('adrenaline-iv', 50, records).volumeMl, 0.5);
   close(calc('adrenaline-ivc', 10, records).concentration, 20);
   close(calc('adrenaline-ivc', 10, records).mixtureVolumeMl, 50);
-  close(calc('adrenaline-ivc', 10, records).exactRateMlH, 10 / 3);
+  close(calc('adrenaline-ivc', 10, records).exactRateMlH, 3);
   close(calc('adrenaline-im', 10, records).volumeMl, 0.1);
 });
 

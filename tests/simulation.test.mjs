@@ -11,8 +11,8 @@ const records = prepareSimulationRecords(configured);
 const patient = (weight = 10, age = 12) => resolvePatientContext({ weight: String(weight), age: String(age), ageUnit: 'months' });
 const row = (id, context = patient(), source = records) => buildSimulationRow(source.find(r => r.id === id), context);
 
-test('simulation : les 66 lignes sont présentes, y compris les doses provisoires, sans changer les fiches', () => {
-  assert.equal(records.length, 66);
+test('simulation : les 67 lignes sont présentes, y compris les doses provisoires, sans changer les fiches', () => {
+  assert.equal(records.length, 67);
   for (const context of [null, patient(3, 0), patient(), patient(50, 120)]) {
     for (const record of records) {
       const r = buildSimulationRow(record, context);
@@ -33,14 +33,14 @@ test('simulation : les 66 lignes sont présentes, y compris les doses provisoire
 test('simulation : doses massiques en mg, unités non massiques conservées et bases explicites', () => {
   assert.equal(row('adrenaline-iv').dose, '0,1 mg');
   assert.equal(row('atropine').dose, '0,2 mg');
-  assert.equal(row('alprostadil').dose, '0,03 mg/h');
+  assert.equal(row('alprostadil').dose, '0,015 mg/h');
   assert.equal(row('bicarbonate-acr').dose, '10 mmol');
   assert.equal(row('defibrillation').dose, '40 J');
   assert.equal(row('insuline-glucose').dose, '1 UI');
   assert.equal(row('insuline-glucose').volume,'50,00 mL');
   assert.equal(row('insuline-glucose').rateLabel,'Débit G10 %');
   assert.equal(row('calcium-gluconate').dose, '5 mL');
-  assert.match(row('calcium-gluconate').doseDetail, /solution à 10 %/);
+  assert.match(row('calcium-gluconate').doseDetail, /produit avant dilution/);
 });
 
 test('simulation : plafonds du tableau appliqués avant conversion, avec statut provisoire', () => {
@@ -67,15 +67,15 @@ test('simulation : les volumes prélevés ne deviennent pas des volumes injecté
   assert.equal(row('insuline-glucose').rate, '100,0 mL/h');
 });
 
-test('simulation : les quatre débits poids/3 restent indépendants de la dose nominale', () => {
+test('simulation : les quatre débits correspondent aux doses de départ', () => {
   for (const id of ['adrenaline-ivc', 'noradrenaline', 'dopamine', 'dobutamine']) {
     const r = row(id, patient(12.34));
-    assert.equal(r.rate, '4,1 mL/h');
-    assert.equal(r.result.exactRateMlH, 12.34 / 3);
+    assert.equal(r.rate, '3,7 mL/h');
+    assert.ok(Math.abs(r.result.exactRateMlH-3.702)<1e-10);
     assert.equal(r.volume,id==='noradrenaline' ? '—':'50,00 mL');
     assert.equal(r.volumeDetail,id==='noradrenaline' ? '':'préparation');
-    assert.equal(r.dose, ['dopamine', 'dobutamine'].includes(id) ? '50 mg' : '1 mg');
-    assert.equal(r.doseDetail, 'par seringue');
+    assert.equal(r.dose, ['dopamine', 'dobutamine'].includes(id) ? '3,702 mg/h' : '0,07404 mg/h');
+    assert.equal(r.doseDetail, '');
   }
 });
 

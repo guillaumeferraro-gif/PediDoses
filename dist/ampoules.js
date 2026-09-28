@@ -19,6 +19,7 @@ const overrides = {
   sufentanil:{amount:50,volumeMl:10,unit:'mcg',status:'confirmé'},
   'triphosadenine-2':{presentation:'Triphosadénine',amount:20,volumeMl:2,unit:'mg'},
   'nicardipine-charge':{presentation:'Nicardipine',amount:10,volumeMl:10,unit:'mg'},
+  'salbutamol-charge':{presentation:'Salbutamol injectable',amount:5,volumeMl:5,unit:'mg',status:'confirmé'},
   amoxicilline: { presentation: 'Poudre pour solution injectable', amount: 500, unit: 'mg', status: 'confirmé' },
   cefotaxime: { presentation: 'Poudre pour solution injectable', amount: 500, unit: 'mg', status: 'confirmé' },
   ceftriaxone: { presentation: 'Poudre pour solution injectable', amount: 1, unit: 'g', status: 'confirmé' },

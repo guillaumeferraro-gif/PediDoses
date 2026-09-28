@@ -1,4 +1,5 @@
 import { preparationVariants } from './smur-preparation.js';
+import { administrationText } from './administration.js';
 
 export const numberText = (value, digits = 6) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: digits }).format(value);
 export const unitText = unit => unit;
@@ -16,9 +17,6 @@ function quotientText(numerator, denominator) {
   return Math.abs(value - Number(value.toFixed(6))) < 1e-12 ? numberText(value) : `(${numberText(numerator)} ÷ ${numberText(denominator)})`;
 }
 
-// These ceilings are present in the supplied Sheet but have not been confirmed
-// by the clinical reviewer. They are shown for review, not added to the engine.
-const pendingCeilings = { 'ketamine-analgesie': 80, 'atracurium-bolus': 30, 'midazolam-ij': 10 };
 const presentations = {
   'calcium-chlorure':'Chlorure de calcium 1 g/10 mL — 100 mg/mL de chlorure de calcium.',
   propofol:'Propofol 200 mg/20 mL — 10 mg/mL.', 'propofol-lisa':'Propofol 200 mg/20 mL — 10 mg/mL.',
@@ -111,7 +109,7 @@ function standardDoses(record, preparations) {
     if (branch.unavailable) return { condition, dose: 'Pas de posologie fournie pour ce palier', concentration: '—', volume: 'Calcul indisponible' };
     const fixed = branch.fixed !== undefined;
     let dose = `${amountText(fixed ? branch.fixed : branch.coefficient, m.unit)}${fixed ? '' : '/kg'}${period}`;
-    if (record.id === 'amoxicilline-clavulanique') dose = '80 mg/kg/jour ÷ 3, puis arrondi à la dizaine de mg supérieure (amoxicilline)';
+    if (m.dailyCoefficient) dose = `${numberText(m.dailyCoefficient)} ${m.unit}/kg/jour ÷ ${numberText(m.divisionsPerDay)}, puis arrondi au multiple supérieur de ${numberText(m.roundDoseUpTo??1)} ${m.unit} (amoxicilline)`;
     else if (antibiotic) dose += ' — une seule dose';
     if (branch.hourly !== undefined) dose = `${amountText(branch.hourly, m.unit)}/h pendant ${branch.duration} h = ${amountText(branch.hourly * branch.duration, m.unit)}`;
     if (m.minimumCoefficient && m.maximumCoefficient) dose = `${numberText(m.minimumCoefficient)} à ${numberText(m.maximumCoefficient)} ${m.unit}/kg${infusion ? m.periodMinutes === 60 ? '/h' : '/min' : '/dose'}`;
@@ -124,8 +122,8 @@ function standardDoses(record, preparations) {
     if (m.unit === 'J') { volume = 'Sans objet'; finalConcentration = 'Sans objet'; }
     else if (m.unit === 'mL') { volume = m.volumeKind === 'withdrawal' ? `À prélever : ${dose}. Volume après dilution à préciser.` : dose; finalConcentration = m.volumeKind === 'withdrawal' ? 'Produit à 10 % avant dilution' : 'Produit prêt à l’emploi'; }
     else if (m.volumePerDose) {
-      volume = `${quotientText(branch.coefficient * (record.id === 'resikali-ir' ? 150 : 100), record.id === 'resikali-ir' ? 40 : 15)} mL/kg/dose`;
-      finalConcentration = record.id === 'resikali-ir' ? '40 g / 150 mL (nominal)' : '15 g / 100 mL (nominal)';
+      volume = `${numberText(branch.coefficient * m.volumePerDose)} mL/kg/dose`;
+      finalConcentration = concentrationText(1/m.volumePerDose,m.unit);
     } else if (prep.concentration !== null && (!antibiotic || m.volumeKind === 'withdrawal')) {
       const numerator = branch.hourly ?? ((fixed ? branch.fixed : branch.coefficient) * (infusion ? 60 / m.periodMinutes : 1));
       volume = `${quotientText(numerator, prep.concentration)} mL${fixed || branch.hourly !== undefined ? '' : '/kg'}${infusion ? '/h' : '/dose'}`;
@@ -138,8 +136,19 @@ function standardDoses(record, preparations) {
       const factor = infusion ? 60 / m.periodMinutes : 1;
       volume = `${quotientText(m.minimumCoefficient * factor, prep.concentration)} à ${quotientText(m.maximumCoefficient * factor, prep.concentration)} mL/kg${infusion ? '/h' : '/dose'}`;
     }
+    if(m.volumeKind==='withdrawal'){
+      const factor=m.dilutionFactor??(prep.mix?(prep.takeMl+prep.addMl)/prep.takeMl:null);
+      const source= m.unit==='mL'?1:prep.stockConcentration;
+      const final=m.finalConcentration??(factor&&source?source/factor:null);
+      if(final){
+        const perDose=fixed?branch.fixed:branch.coefficient;
+        volume=`${quotientText(perDose,final)} mL${fixed?'':'/kg'}/dose après dilution`;
+        finalConcentration=concentrationText(final,m.unit);
+      }
+    }
     if (m.preparationMinimumAgeMonths !== undefined && branch.hourly === undefined) {
-      finalConcentration='À préciser'; volume='Débit en mL/h à préciser après choix de la concentration';
+      finalConcentration=m.youngerFinalConcentration ? concentrationText(m.youngerFinalConcentration,m.unit):'À préciser';
+      volume=m.youngerFinalConcentration ? `${quotientText(branch.coefficient*60/m.periodMinutes,m.youngerFinalConcentration)} mL/kg/h`:'Débit en mL/h à préciser après choix de la concentration';
     }
     return { condition, dose, concentration: finalConcentration, volume };
   }));
@@ -148,7 +157,7 @@ function standardDoses(record, preparations) {
 function preparationRows(record, variants) {
   const m = record.model;
   if (m.preparationMinimumAgeMonths !== undefined) return [
-    {condition:`Âge < ${ageText(m.preparationMinimumAgeMonths)}`,text:`Diluant : ${m.diluent}. Concentration finale à préciser.`},
+    {condition:`Âge < ${ageText(m.preparationMinimumAgeMonths)}`,text:`Diluant : ${m.diluent}. Concentration finale : ${m.youngerFinalConcentration ? concentrationText(m.youngerFinalConcentration,m.unit) : 'à préciser'}.`},
     {condition:`Âge ≥ ${ageText(m.preparationMinimumAgeMonths)}`,text:`Préparation existante conservée : ${volumeText(variants[0].takeMl)} mL du produit + ${volumeText(variants[0].addMl)} mL de ${m.diluent}, soit ${concentrationText(variants[0].concentration,m.unit)}.`},
   ];
   if (m.type === 'fixed-duration-mixture') {
@@ -161,7 +170,10 @@ function preparationRows(record, variants) {
       { condition: `${m.fixedDoseFromAgeMonths ? `Âge ≥ ${ageText(m.fixedDoseFromAgeMonths)} ou ` : ''}poids ≥ ${threshold} kg`, text: `Prélever ${volumeText(maximumWithdrawal)} mL de produit (${amountText(m.maximumDose, m.unit)}) + ${volumeText(m.finalVolumeMl - maximumWithdrawal)} mL de ${m.diluent} → volume final ${volumeText(m.finalVolumeMl)} mL, soit ${concentrationText(m.maximumDose / m.finalVolumeMl, m.unit)}.` },
     ];
   }
+  if (m.dilutionFactor) return [{condition:'Préparation',text:`Volume final = prélèvement × ${numberText(m.dilutionFactor)} ; diluant : ${m.diluent||'à préciser'}.`}];
+  if (m.finalConcentration) return [{condition:'Préparation',text:`Concentration finale : ${concentrationText(m.finalConcentration,m.unit)} ; diluant : ${m.diluent||'à préciser'}.`}];
   if (m.volumeKind === 'withdrawal' && m.stock) return [{ condition: 'Préparation', text: `Produit à prélever à ${concentrationText(variants[0].stockConcentration, m.unit)} ; dilution finale ${record.category === 'antibiotiques' ? 'laissée à l’IDE' : 'à préciser'}.` }];
+  if(m.unit==='mL'&&m.mix)return [{condition:'Préparation',text:`${volumeText(m.mix.takeMl)} mL de produit + ${volumeText(m.mix.addMl)} mL de ${m.diluent||'diluant'}.`}];
   if (!m.stock) return [{ condition: 'Préparation', text: record.protocol.dilution }];
   return variants.map(prep => ({ condition: prep.condition, text: prep.mix ?
     `Prélever ${volumeText(prep.takeMl)} mL du produit + ${volumeText(prep.addMl)} mL de ${prep.diluent} → volume final ${volumeText(prep.finalVolumeMl)} mL, soit ${concentrationText(prep.concentration, m.unit)}.` :
@@ -172,14 +184,15 @@ function ceilingText(record) {
   const m = record.model;
   if (m.limitToOneBag) return 'Aucun maximum fixe en mL. Transfuser le volume prescrit, au maximum le contenu d’une poche de volume variable.';
   if (['instruction', 'unresolved', 'fixed-rate', 'insulin-glucose'].includes(m.type)) return '';
+  if (m.warningCoefficient) return `Seuil d’avertissement : ${numberText(m.warningCoefficient)} ${m.unit}/kg${m.type==='infusion'?m.periodMinutes===60?'/h':'/min':m.durationHours?`/${m.durationHours} h`:'/dose'}. Dépassement possible après confirmation.`;
   if (m.maximumCoefficient) return `Posologie maximale : ${numberText(m.maximumCoefficient)} ${m.unit}/kg${m.type==='infusion' ? m.periodMinutes===60 ? '/h' : '/min' : '/dose'}.${m.noCeiling ? ' Aucun plafond de dose totale ajouté.' : ''}`;
-  if (m.noCeiling) return 'Aucun plafond de dose ajouté ; respecter la plage de posologie lorsqu’elle est définie.';
-  if (record.id === 'midazolam-iv') return 'Aucun plafond documenté à ce stade.';
-  if (['suxamethonium', 'gentamicine', 'cardioversion'].includes(record.id)) return 'Aucun plafond, conformément à la décision locale.';
-  const pending = pendingCeilings[record.id];
+  if (!Number.isFinite(m.maximumDose) && m.noCeiling) return 'Aucun plafond de dose ajouté ; respecter la plage de posologie lorsqu’elle est définie.';
+  if (!Number.isFinite(m.maximumDose) && record.id === 'midazolam-iv') return 'Aucun plafond documenté à ce stade.';
+  if (!Number.isFinite(m.maximumDose) && ['suxamethonium', 'gentamicine', 'cardioversion'].includes(record.id)) return 'Aucun plafond, conformément à la décision locale.';
+  const pending = m.pendingCeiling;
   const ceiling = m.maximumDose ?? pending;
   if (!Number.isFinite(ceiling)) return 'Aucun plafond renseigné dans le tableau pour cette ligne ; cela ne vaut pas validation d’une dose illimitée.';
-  const status = Number.isFinite(pending) ? 'Plafond du tableau à valider ; non appliqué au calcul' : 'Plafond retenu dans le modèle';
+  const status = !Number.isFinite(m.maximumDose) && Number.isFinite(pending) ? 'Plafond du tableau à valider ; non appliqué au calcul' : 'Plafond retenu dans le modèle';
   const duration = m.durationHours ? ` sur ${m.durationHours} h` : '';
   const thresholds = (m.tiers || [{ coefficient: m.coefficient }]).map(tier => `${numberText(ceiling / tier.coefficient)} kg pour ${amountText(tier.coefficient, m.unit)}/kg`).join(' ; ');
   const thresholdText = m.fixedDoseFromWeightKg !== undefined ? ` Dose fixe à partir de ${m.fixedDoseFromWeightKg} kg.` : m.coefficient ? ` Seuil d’atteinte du plafond pondéral : ${thresholds}.` : '';
@@ -194,7 +207,7 @@ export function buildMedicationSheet(record) {
   if (!presentations[record.id] && !record.sourceCells[0]) questions.push('Renseigner la présentation disponible et sa reconstitution éventuelle.');
   if (containerUnknown.has(record.id) && !record.ampoule?.volumeMl) questions.push('Préciser le volume du contenant disponible ; la concentration seule est renseignée.');
   if (['midazolam-iv','midazolam-ij'].includes(record.id) && record.ampoule?.status !== 'confirmé') questions.push('Confirmer la présentation de l’onglet Ampoules par rapport au stock effectivement embarqué.');
-  let administration = record.protocol.administration;
+  let administration = administrationText(record);
   if (administration === 'IV' && record.category !== 'antibiotiques') {
     administration = 'IV — durée ou vitesse non précisée';
     questions.push('Préciser IV directe, IV lente ou perfusion, avec la durée/vitesse.');
@@ -204,20 +217,14 @@ export function buildMedicationSheet(record) {
   if (m.type === 'instruction') doseRows = [{ condition: 'Consigne', dose: record.protocol.posology, concentration: 'Sans objet', volume: 'Sans objet' }];
   else if (m.type === 'fixed-rate') {
     doseRows = [{ condition: 'Tous les poids · règle SMUR', dose: ['adrenaline-ivc', 'noradrenaline'].includes(record.id) ? '1 mg dans un volume final de 50 mL' : '50 mg dans un volume final de 50 mL', concentration: concentrationText(variants[0].concentration, m.unit), volume: 'Débit = poids (kg) ÷ 3 mL/h, puis arrondi final à 0,1 mL/h' }];
-  } else if (record.id === 'clonazepam-ivc') doseRows = [
-    {condition:'Poids < 10 kg', dose:'0,1 mg/kg sur 6 h', concentration:'(0,1 × poids) ÷ 6 mg/mL', volume:'Débit initial : 1 mL/h ; concentration conservée lors du réglage'},
-    {condition:'Poids ≥ 10 kg', dose:'1 mg sur 6 h — plafond confirmé', concentration:'1 ÷ 6 mg/mL', volume:'Débit initial : 1 mL/h ; concentration conservée lors du réglage'},
-  ];
-  else if (record.id === 'calcium-gluconate') doseRows = [
-    {condition:'Tous les poids · ERC 2025', dose:'0,5 mL/kg de solution à 10 %, maximum 20 mL (dès 40 kg)', concentration:'Produit à 10 % avant dilution', volume:'À prélever : 0,5 mL/kg, maximum 20 mL. Volume après dilution à préciser.'},
-  ];
+  } else if (m.type==='fixed-duration-mixture') doseRows = [{condition:'Selon poids et plafond',dose:`${numberText(m.coefficient)} ${m.unit}/kg sur ${numberText(m.durationHours)} h, maximum ${numberText(m.maximumDose)} ${m.unit}`,concentration:`Quantité préparée ÷ ${numberText(m.finalVolumeMl)} mL`,volume:'Débit selon la dose et la concentration préparée'}];
+  else if (record.id === 'calcium-gluconate') doseRows = standardDoses(record,variants).map(row=>({...row,dose:`${numberText(m.coefficient)} mL/kg de produit${Number.isFinite(m.maximumDose)?`, maximum ${numberText(m.maximumDose)} mL`:''}`,concentration:record.ampoule?.description||'Produit avant dilution'}));
   else if (m.type === 'insulin-glucose') doseRows = [
-    {condition:'Insuline rapide',dose:'0,1 UI/kg, maximum 10 UI',concentration:'Concentration de l’insuline à renseigner',volume:'Volume d’insuline à préciser'},
-    {condition:'G10 %',dose:'5 mL/kg, maximum 250 mL, sur 30 min',concentration:'Glucose : 0,1 g/mL',volume:'Débit du G10 % : 10 mL/kg/h, maximum 500 mL/h'},
+    {condition:'Insuline rapide',dose:`${numberText(m.coefficient)} UI/kg, maximum ${numberText(m.maximumDose)} UI`,concentration:concentrationText(variants[0].stockConcentration,'UI'),volume:'Prélèvement selon la concentration de l’insuline'},
+    {condition:'Glucose associé',dose:`${numberText(m.glucoseMlPerKg)} mL/kg, maximum ${numberText(m.maximumGlucoseMl)} mL, sur ${numberText(m.durationHours*60)} min`,concentration:concentrationText(m.glucoseConcentrationMgMl??100,'mg'),volume:`Débit du glucose : ${numberText(m.glucoseMlPerKg/m.durationHours)} mL/kg/h, maximum ${numberText(m.maximumGlucoseMl/m.durationHours)} mL/h`},
   ];
   else doseRows = standardDoses(record, variants);
 
-  if (m.type === 'infusion' || m.type === 'fixed-rate') administration = 'PSE — débit affiché en mL/h';
   if (record.ampoule?.comment) questions.push(record.ampoule.comment);
-  return { presentation, doseRows, preparations: record.protocol.dilution === '' ? [] : preparations, administration, questions: [...new Set(questions)], ceiling: ceilingText(record), pendingCeiling: pendingCeilings[record.id] ?? null, particulars: record.protocol.particulars };
+  return { presentation, doseRows, preparations: record.protocol.dilution === '' && !m.mix && !m.finalConcentration && !m.dilutionFactor ? [] : preparations, administration, questions: [...new Set(questions)], ceiling: ceilingText(record), pendingCeiling: m.pendingCeiling ?? null, particulars: record.protocol.particulars };
 }
