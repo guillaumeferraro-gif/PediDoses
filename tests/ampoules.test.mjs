@@ -39,7 +39,7 @@ test('amoxicilline-clavulanate : dose journalière divisée par trois, puis arro
 
 test('magnésium à 15 % avec prélèvement, et triphosadénine plafonnée à 10 mg', () => {
   assert.equal(calc('magnesium', 10).dose, 500);
-  assert.equal(calc('magnesium', 10).volumeMl, null);
+  assert.equal(calc('magnesium', 10).volumeMl, 50);
   close(calc('magnesium',10).withdrawalMl,10/3);
   assert.doesNotMatch(sheet('magnesium').questions.join(' '), /par mL ou par ampoule/);
   assert.equal(calc('triphosadenine',10).status,'calculated');
@@ -116,8 +116,8 @@ test('les schémas liés à une concentration fixe ne sont pas transposés à un
 });
 
 test('nouvelles précisions : paliers de kétamine, midazolam et morphine DC IVL', () => {
-  assert.equal(sheet('ketamine-analgesie').pendingCeiling, 80);
-  assert.match(sheet('ketamine-analgesie').questions.join(' '), /en suspens/);
+  assert.equal(sheet('ketamine-analgesie').pendingCeiling, null);
+  assert.equal(sheet('ketamine-analgesie').questions.length,0);
   assert.equal(calc('ketamine-analgesie', 180).dose, 90);
   assert.equal(sheet('ketamine-intubation').questions.length, 0);
   const records = applyAmpoules(smurRecords, defaultAmpoules(smurRecords));

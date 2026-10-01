@@ -44,7 +44,7 @@ test('insuline/G10 : plafonds indépendants à 50 et 100 kg, débit de glucose e
 
 test('triphosadénine : deux doses distinctes et plafonds indépendants',()=>{
  for(const [weight,first,second] of [[3,3,6],[10,10,20],[50,10,20]]) {
-  assert.equal(calc('triphosadenine',weight).dose,first);assert.equal(calc('triphosadenine-2',weight).dose,second);
+  assert.equal(calc('triphosadenine',weight).dose,first);assert.equal(calc('triphosadenine',weight).secondDose.dose,second);
  }
 });
 
@@ -57,7 +57,7 @@ test('plafonds confirmés et plafonds retirés restent cohérents dans les deux 
   assert.equal(calculateRecordForPatient(r,patient(200)).maximumApplied,false,id);
  }
  assert.equal(calc('propofol-lisa',10).dose,5);assert.equal(calc('propofol-lisa',10).volumeMl,0.5);
- assert.equal(calc('atracurium-bolus',20).dose,10);assert.equal(calc('atracurium-bolus',20).volumeMl,10);
+ assert.equal(record('atracurium-bolus'),undefined);assert.ok(record('atracurium-ivc'));
 });
 
 test('présentations et voies demandées : aucune confusion mcg/mg pour le sufentanil',()=>{

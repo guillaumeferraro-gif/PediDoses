@@ -1,5 +1,5 @@
 import { CalculationError, parseDecimal, ageInMonths } from './calculator.js';
-import { preparationForWeight } from './smur-preparation.js';
+import { preparationForWeight, preparationForDose, modelForSecondDose } from './smur-preparation.js';
 import { administrationMinutes } from './administration.js';
 
 export const weightBounds = Object.freeze({ min: 0.5, max: 200 });
@@ -154,6 +154,11 @@ export function calculateRecordForPatient(record, context) {
       result.volumeMl = factor && result.withdrawalMl!==null ? result.withdrawalMl*factor : m.finalConcentration ? result.dose/m.finalConcentration : null;
       result.concentration = result.volumeMl!==null && m.unit!=='mL' ? result.dose/result.volumeMl : null;
     }
+    if (m.preparationMode === 'dose-only') {
+      result.volumeMl = null; result.withdrawalMl = null; result.concentration = null; result.stockConcentration = null;
+    } else if (m.preparationMode) {
+      Object.assign(result, preparationForDose(m, result.dose, result.stockConcentration));
+    }
   } else if (m.type === 'infusion') {
     result.dose = null; result.uncappedDose = null;
     result.concentration = result.preparation.concentration;
@@ -177,6 +182,8 @@ export function calculateRecordForPatient(record, context) {
     result.exactRateMlH=result.volumeMl*60/positive(minutes);
     result.rateMlH=round(result.exactRateMlH,1);
   }
+  const secondModel = modelForSecondDose(m);
+  if (secondModel) result.secondDose = calculateRecordForPatient({ ...record, model: secondModel }, context);
   return Object.freeze({ ...result, status: 'calculated', message: result.maximumApplied ? 'Plafond du modèle appliqué ; statut précisé dans la fiche.' : 'Calcul effectué sans arrondi intermédiaire.' });
 }
 

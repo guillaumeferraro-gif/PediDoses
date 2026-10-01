@@ -1,4 +1,4 @@
-import { preparationVariants } from './smur-preparation.js';
+import { preparationVariants, modelForSecondDose } from './smur-preparation.js';
 import { administrationText } from './administration.js';
 
 export const numberText = (value, digits = 6) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: digits }).format(value);
@@ -27,7 +27,6 @@ const presentations = {
   naloxone:'Naloxone 0,4 mg/1 mL.',
   sufentanil:'Sufentanil 50 mcg/10 mL — 5 mcg/mL.',
   'nicardipine-charge':'Nicardipine 10 mg/10 mL.',
-  'triphosadenine-2':'Triphosadénine 20 mg/2 mL.',
   'adrenaline-iv': 'Adrénaline 1 mg / 1 mL — 1 mg/mL.',
   'adrenaline-im': 'Adrénaline 1 mg / 1 mL — 1 mg/mL.',
   'adrenaline-ivc': 'Adrénaline 1 mg / 1 mL — 1 mg/mL.',
@@ -41,7 +40,7 @@ const presentations = {
   isofundine: 'Isofundine — flacon de 1 L (1 000 mL).',
   magnesium: 'Sulfate de magnésium 15 % — 1,5 g/10 mL, soit 150 mg/mL.',
   'midazolam-iv': 'Midazolam 5 mg/mL. L’onglet Ampoules mentionne 50 mg / 10 mL.',
-  'midazolam-ij': 'Midazolam 5 mg/mL. L’onglet Ampoules mentionne 50 mg / 10 mL ; forme adaptée à la voie IJ à confirmer.',
+  'midazolam-ij': 'Midazolam 5 mg/1 mL — forme intergingivojugale adaptée.',
   'midazolam-ivc': 'Midazolam 5 mg/mL — deux volumes de contenant, même concentration.',
   'morphine-dc': 'Morphine 1 mg/mL. L’onglet Ampoules mentionne 10 mg / 10 mL.',
   'morphine-titration': 'Morphine 1 mg/mL. L’onglet Ampoules mentionne 10 mg / 10 mL.',
@@ -150,12 +149,18 @@ function standardDoses(record, preparations) {
       finalConcentration=m.youngerFinalConcentration ? concentrationText(m.youngerFinalConcentration,m.unit):'À préciser';
       volume=m.youngerFinalConcentration ? `${quotientText(branch.coefficient*60/m.periodMinutes,m.youngerFinalConcentration)} mL/kg/h`:'Débit en mL/h à préciser après choix de la concentration';
     }
+    if(m.preparationMode==='dose-only'){volume='—';finalConcentration='—';}
+    if(m.preparationMode==='fixed-volume'){volume=`${numberText(m.finalVolumeMl)} mL au total`;finalConcentration=`Dose calculée ÷ ${numberText(m.finalVolumeMl)} mL`;}
+    if(m.preparationMode==='concentration-range'){volume='Volume calculé après arrondi du diluant';finalConcentration=`${numberText(m.minimumFinalConcentration)} à ${numberText(m.targetFinalConcentration)} ${m.unit}/mL`;}
     return { condition, dose, concentration: finalConcentration, volume };
   }));
 }
 
 function preparationRows(record, variants) {
   const m = record.model;
+  if(m.preparationMode==='dose-only')return [];
+  if(m.preparationMode==='fixed-volume')return [{condition:'Préparation',text:`Prélever la dose calculée à ${concentrationText(variants[0].stockConcentration,m.unit)}, puis compléter avec ${m.diluent} jusqu’à ${numberText(m.finalVolumeMl)} mL au total.`}];
+  if(m.preparationMode==='concentration-range')return [{condition:'Préparation',text:`Prélever la dose à ${concentrationText(variants[0].stockConcentration,m.unit)}. Ajouter ${m.diluent} en arrondissant le diluant au multiple supérieur de ${numberText(m.diluentRoundingMl)} mL, ou ${numberText(m.fineDiluentRoundingMl)} mL si nécessaire, pour rester entre ${numberText(m.minimumFinalConcentration)} et ${numberText(m.targetFinalConcentration)} ${m.unit}/mL.`}];
   if (m.preparationMinimumAgeMonths !== undefined) return [
     {condition:`Âge < ${ageText(m.preparationMinimumAgeMonths)}`,text:`Diluant : ${m.diluent}. Concentration finale : ${m.youngerFinalConcentration ? concentrationText(m.youngerFinalConcentration,m.unit) : 'à préciser'}.`},
     {condition:`Âge ≥ ${ageText(m.preparationMinimumAgeMonths)}`,text:`Préparation existante conservée : ${volumeText(variants[0].takeMl)} mL du produit + ${volumeText(variants[0].addMl)} mL de ${m.diluent}, soit ${concentrationText(variants[0].concentration,m.unit)}.`},
@@ -182,6 +187,7 @@ function preparationRows(record, variants) {
 
 function ceilingText(record) {
   const m = record.model;
+  if(m.secondCoefficient!==undefined)return `1re dose : ${Number.isFinite(m.maximumDose)?amountText(m.maximumDose,m.unit):'sans plafond'} ; 2e dose : ${Number.isFinite(m.secondMaximumDose)?amountText(m.secondMaximumDose,m.unit):'sans plafond'}.`;
   if (m.limitToOneBag) return 'Aucun maximum fixe en mL. Transfuser le volume prescrit, au maximum le contenu d’une poche de volume variable.';
   if (['instruction', 'unresolved', 'fixed-rate', 'insulin-glucose'].includes(m.type)) return '';
   if (m.warningCoefficient) return `Seuil d’avertissement : ${numberText(m.warningCoefficient)} ${m.unit}/kg${m.type==='infusion'?m.periodMinutes===60?'/h':'/min':m.durationHours?`/${m.durationHours} h`:'/dose'}. Dépassement possible après confirmation.`;
@@ -224,6 +230,8 @@ export function buildMedicationSheet(record) {
     {condition:'Glucose associé',dose:`${numberText(m.glucoseMlPerKg)} mL/kg, maximum ${numberText(m.maximumGlucoseMl)} mL, sur ${numberText(m.durationHours*60)} min`,concentration:concentrationText(m.glucoseConcentrationMgMl??100,'mg'),volume:`Débit du glucose : ${numberText(m.glucoseMlPerKg/m.durationHours)} mL/kg/h, maximum ${numberText(m.maximumGlucoseMl/m.durationHours)} mL/h`},
   ];
   else doseRows = standardDoses(record, variants);
+  const secondModel=modelForSecondDose(m);
+  if(secondModel) doseRows=[...doseRows.map(row=>({...row,condition:`1re dose · ${row.condition}`})),...standardDoses({...record,model:secondModel},variants).map(row=>({...row,condition:`2e dose · ${row.condition}`}))];
 
   if (record.ampoule?.comment) questions.push(record.ampoule.comment);
   return { presentation, doseRows, preparations: record.protocol.dilution === '' && !m.mix && !m.finalConcentration && !m.dilutionFactor ? [] : preparations, administration, questions: [...new Set(questions)], ceiling: ceilingText(record), pendingCeiling: m.pendingCeiling ?? null, particulars: record.protocol.particulars };

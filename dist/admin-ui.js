@@ -35,7 +35,7 @@ const number=(obj,key,label=modelFields[key]??key)=>input(label,obj[key],v=>setN
 function doseUnit(record,next){convertDoseUnit(record,next);renderTable();}
 function stockUnit(record,next){convertStockUnit(record,next);renderTable();}
 function stockSummary(record){const c=stockConcentration(record.ampoule);return c==null?'Concentration non renseignée':`${fmt(c)} ${record.ampoule.unit}/mL`;}
-function preparationSummary(record){const m=record.model;if(m.weightMixes||m.weightMix)return 'Dilutions selon le poids — voir Détails';if(m.finalConcentration)return `${fmt(m.finalConcentration)} ${m.unit}/mL`;if(m.mix)return `${fmt(m.mix.takeMl)} mL + ${fmt(m.mix.addMl)} mL`;if(m.finalVolumeMl)return `Compléter à ${fmt(m.finalVolumeMl)} mL`;if(m.dilutionFactor)return `Volume prélevé × ${fmt(m.dilutionFactor)}`;return m.volumeKind==='withdrawal'?'Dilution à préciser':'Sans dilution renseignée';}
+function preparationSummary(record){const m=record.model;if(m.preparationMode==='dose-only')return 'Dose seule';if(m.preparationMode==='concentration-range')return `${fmt(m.minimumFinalConcentration)} à ${fmt(m.targetFinalConcentration)} ${m.unit}/mL — diluant arrondi`;if(m.weightMixes||m.weightMix)return 'Dilutions selon le poids — voir Détails';if(m.finalConcentration)return `${fmt(m.finalConcentration)} ${m.unit}/mL`;if(m.mix)return `${fmt(m.mix.takeMl)} mL + ${fmt(m.mix.addMl)} mL`;if(m.finalVolumeMl)return `Compléter à ${fmt(m.finalVolumeMl)} mL`;if(m.dilutionFactor)return `Volume prélevé × ${fmt(m.dilutionFactor)}`;return m.volumeKind==='withdrawal'?'Dilution à préciser':'Sans dilution renseignée';}
 function updateConcentration(record){const n=byId(`admin-concentration-${record.id}`);if(n)n.textContent=stockSummary(record);}
 function setDuration(record,value){
  if(['fixed-duration-mixture','insulin-glucose'].includes(record.model.type)){if(value===null)delete record.model.durationHours;else record.model.durationHours=value/60;}
@@ -52,14 +52,16 @@ function renderTable(){
   const dose=make('td');
   if(r.model.coefficient!==undefined){
    if(r.model.tiers)dose.append(make('small','Doses par palier d’âge — Détails'));
-   else dose.append(number(r.model,r.model.dailyCoefficient!==undefined?'dailyCoefficient':'coefficient',r.model.dailyCoefficient!==undefined?'Dose par kg et par jour':'Départ par kg'));
+   else dose.append(number(r.model,r.model.dailyCoefficient!==undefined?'dailyCoefficient':'coefficient',r.model.dailyCoefficient!==undefined?'Dose par kg et par jour':r.model.secondCoefficient!==undefined?'1re dose par kg':'Départ par kg'));
+   if(r.model.secondCoefficient!==undefined)dose.append(number(r.model,'secondCoefficient','2e dose par kg'));
    dose.append(select('Unité',r.model.unit,doseUnits,v=>doseUnit(r,v)));
    if(r.model.type==='infusion')dose.append(select('Période',String(r.model.periodMinutes),[['1','par minute'],['60','par heure']],v=>{convertDosePeriod(r,Number(v));renderTable();}));
    if(r.model.dailyCoefficient||r.model.fixedDoseFromAgeMonths!==undefined)dose.append(make('small','Règle à paliers ou journalière : voir Détails'));
   }else if(r.model.type==='conditional-dose')dose.append(make('small','Doses par palier — Détails'),select('Unité',r.model.unit,doseUnits,v=>doseUnit(r,v)));
   else dose.append(make('small','Consigne — Détails'));
-  const adjustment=make('td');if(['dose','infusion','fixed-duration-mixture'].includes(r.model.type)&&!r.model.tiers&&!r.model.dailyCoefficient){adjustment.append(select('Réglage',r.model.adjustmentStatus??'fixed',[['fixed','Sans pas'],['enabled','Avec +/−'],['suspended','En suspens']],v=>{r.model.adjustmentStatus=v;}),number(r.model,'doseStep','Pas (unité de posologie)'));}else adjustment.append(make('span','—'));
+  const adjustment=make('td');if(['dose','infusion','fixed-duration-mixture'].includes(r.model.type)&&!r.model.tiers&&!r.model.dailyCoefficient&&r.model.secondCoefficient===undefined){adjustment.append(select('Réglage',r.model.adjustmentStatus??'fixed',[['fixed','Sans pas'],['enabled','Avec +/−'],['suspended','En suspens']],v=>{r.model.adjustmentStatus=v;}),number(r.model,'doseStep','Pas (unité de posologie)'));}else adjustment.append(make('span','—'));
   const threshold=make('td');if(r.model.coefficient!==undefined)threshold.append(number(r.model,'warningCoefficient','Seuil dépassable après avertissement'),...(r.model.type==='infusion'?[]:[number(r.model,'maximumDose','Plafond par dose (quantité)')]));else threshold.append(make('span','—'));
+  if(r.model.secondCoefficient!==undefined)threshold.append(number(r.model,'secondMaximumDose','Plafond de la 2e dose'));
   const ampoule=make('td');if(r.ampoule.status!=='sans objet'){
    for(const [key,label]of [['amount','Quantité par contenant'],['volumeMl','Volume du contenant (mL)']])ampoule.append(input(label,r.ampoule[key],v=>{r.ampoule[key]=v;updateConcentration(r);},{number:true}));
    ampoule.append(select('Unité de l’ampoule',r.ampoule.unit,['',...stockUnits],v=>stockUnit(r,v)));
@@ -85,7 +87,7 @@ function editRecord(r){
  const dose=section(`Posologie et limites — unité : ${r.model.unit??'sans objet'}`);
  const optional=['pendingCeiling','minimumCoefficient','maximumCoefficient','warningCoefficient'];
  if(r.model.type!=='infusion')optional.push('maximumDose');
- if(r.model.type==='dose')optional.push('finalConcentration');
+ if(r.model.type==='dose')optional.push('finalConcentration','finalVolumeMl','minimumFinalConcentration','targetFinalConcentration','diluentRoundingMl','fineDiluentRoundingMl');
  if(r.model.volumeKind==='withdrawal')optional.push('dilutionFactor');
  if(r.model.type==='infusion')optional.push('finalConcentration');
  if(r.model.preparationMinimumAgeMonths!==undefined)optional.push('youngerFinalConcentration');
@@ -100,7 +102,9 @@ function editRecord(r){
  const amp=section('Ampoule et présentation');
  for(const [key,label]of [['presentation','Présentation'],['expression','Expression de la quantité'],['comment','Commentaire'],['source','Source']])amp.append(input(label,r.ampoule[key],v=>{r.ampoule[key]=v;}));
  amp.append(input('Concentration déclarée (si quantité ou volume absent)',r.ampoule.declaredConcentration,v=>{r.ampoule.declaredConcentration=v;},{number:true}),select('Statut',r.ampoule.status,['confirmé','à confirmer','sans objet'],v=>{r.ampoule.status=v;}));
- const prep=section('Préparation et dilution');prep.append(input('Diluant',r.model.diluent??'',v=>{r.model.diluent=v;}));
+ const prep=section('Préparation et dilution');
+ if(r.model.type==='dose')prep.append(select('Mode de préparation',r.model.preparationMode??'',[['','Selon ampoule et dilution'],['fixed-volume','Compléter à un volume final'],['concentration-range','Concentration avec diluant arrondi'],['dose-only','Dose seule']],v=>{if(v)r.model.preparationMode=v;else delete r.model.preparationMode;}));
+ prep.append(input('Diluant',r.model.diluent??'',v=>{r.model.diluent=v;}));
  if(!r.model.weightMix&&!r.model.weightMixes&&!['instruction','conditional-dose','fixed-duration-mixture'].includes(r.model.type))editMix(r.model,'mix','Dilution commune',prep);
  if(r.model.weightMix){const w=r.model.weightMix;prep.append(number(w,'thresholdKg','Seuil de poids (kg)'));editMix(w,'below','Sous le seuil',prep);editMix(w,'atOrAbove','Dès le seuil',prep);}
  if(r.model.weightMixes)for(const [i,w]of r.model.weightMixes.entries()){

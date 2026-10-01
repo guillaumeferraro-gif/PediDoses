@@ -46,6 +46,7 @@ function shortPosology(record, result, context) {
   const m = record.model;
   if (m.type === 'instruction') return record.protocol.posology;
   if (m.type === 'fixed-rate') return 'Débit = poids ÷ 3';
+  if(m.secondCoefficient!==undefined)return `1re : ${number(m.coefficient)} ${m.unit}/kg${Number.isFinite(m.maximumDose)?` (max. ${number(m.maximumDose)} ${m.unit})`:''} ; 2e : ${number(m.secondCoefficient)} ${m.unit}/kg${Number.isFinite(m.secondMaximumDose)?` (max. ${number(m.secondMaximumDose)} ${m.unit})`:''}`;
   if (record.id === 'calcium-gluconate') return `${number(m.coefficient)} mL/kg${m.maximumDose?` · max. ${number(m.maximumDose)} mL`:''}`;
   if (m.type === 'insulin-glucose') return `${number(m.coefficient)} UI/kg (max. ${number(m.maximumDose)} UI) + ${glucose(m)} ${number(m.glucoseMlPerKg)} mL/kg (max. ${number(m.maximumGlucoseMl)} mL) sur ${number(m.durationHours*60)} min`;
   if (m.fixedHourlyFromAgeMonths !== undefined) {
@@ -77,6 +78,11 @@ function shortPosology(record, result, context) {
 function shortPreparation(record, result, context) {
   const m = record.model;
   if (m.type === 'instruction' || m.unit === 'J' || m.limitToOneBag) return { text: '', detail: '' };
+  if(m.preparationMode==='dose-only')return {text:'',detail:''};
+  if(['fixed-volume','concentration-range'].includes(m.preparationMode)){
+    if(result.status==='calculated')return {text:`${ml(result.withdrawalMl)} de produit + ${ml(result.addMl)} ${m.diluent}`,detail:`→ ${ml(result.volumeMl)} · ${concentrationText(result.concentration,m.unit)}`};
+    return {text:m.preparationMode==='fixed-volume'?`Compléter à ${ml(m.finalVolumeMl)} avec ${m.diluent}`:`${m.diluent} · concentration finale de ${number(m.minimumFinalConcentration)} à ${number(m.targetFinalConcentration)} ${m.unit}/mL`,detail:''};
+  }
   if (m.dilutionFactor) return {text:`Prélèvement × ${number(m.dilutionFactor)} en volume final · ${m.diluent||'diluant à préciser'}`,detail:Number.isFinite(result.withdrawalMl)?`${ml(result.withdrawalMl)} de produit à prélever`:''};
   if (m.finalConcentration) return {text:`Concentration finale : ${concentrationText(m.finalConcentration,m.unit)}`,detail:m.diluent||'Diluant à préciser'};
   if (record.id === 'calcium-gluconate'&&!m.mix) return { text: 'Dilution finale à préciser', detail: 'Volume prélevé de produit' };
@@ -152,7 +158,7 @@ export function buildSimulationRow(record, context, { bagVolumeMl } = {}) {
     if (minutes) { row.rate = rate(result.volumeMl * 60 / Number(minutes)); row.rateDetail = `sur ${minutes} min`; }
   } else if (Number.isFinite(result.withdrawalMl)) {
     row.volumeDetail = `${ml(result.withdrawalMl)} à prélever · volume administré à préciser`;
-  } else if (m.unit !== 'J') row.volumeDetail = 'Volume à préciser';
+  } else if (m.unit !== 'J' && m.preparationMode!=='dose-only') row.volumeDetail = 'Volume à préciser';
   if (m.limitToOneBag) {
     row.doseLabel = 'Prescrit'; row.volumeLabel = 'À transfuser';
     row.volume = '—'; row.volumeDetail = ''; row.doseDetail = 'au maximum 1 poche';
@@ -176,6 +182,14 @@ export function simulationListContent(row) {
   if (meaningful(row.dose) && !sameVolume) metrics.push({ type: 'dose', label: row.doseLabel, value: row.dose, detail: row.doseDetail });
   if (meaningful(row.volume)) metrics.push({ type: 'volume', label: row.volumeLabel, value: row.volume, detail: row.volumeDetail || (sameVolume ? row.doseDetail : '') });
   if (meaningful(row.rate)) metrics.push({ type: 'rate', label: row.rateLabel, value: row.rate, detail: row.rateDetail });
+  if(row.result.secondDose){
+    metrics.length=0;
+    for(const [label,result]of [['1re dose',row.result],['2e dose',row.result.secondDose]]){
+      metrics.push({type:'dose',label,value:mass(result.dose,result.unit),detail:result.maximumApplied?'plafond':''});
+      if(Number.isFinite(result.volumeMl))metrics.push({type:'volume',label:`Volume · ${label}`,value:ml(result.volumeMl),detail:''});
+      if(Number.isFinite(result.rateMlH))metrics.push({type:'rate',label:`Débit · ${label}`,value:rate(result.rateMlH),detail:row.rateDetail});
+    }
+  }
   return {
     ampoule: meaningful(row.ampoule) ? row.ampoule : '',
     dilution: meaningful(row.dilution) ? row.dilution : '',

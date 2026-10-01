@@ -1,6 +1,7 @@
-import {defaultConfiguration,validateConfiguration,configurationStorageKey} from './protocol-config.js';
+import {defaultConfiguration,validateConfiguration,configurationStorageKey,upgradeConfiguration,convertStockUnit} from './protocol-config.js';
 import {ampouleStorageKey,applyAmpoules} from './ampoules.js';
 import {smurRecords} from './smur-data.js';
+import {configurationUpdates,retiredRecordIds} from './configuration-updates.js';
 
 export function createProtocolStore({storage,access}){
  let configuration=defaultConfiguration();
@@ -8,14 +9,20 @@ export function createProtocolStore({storage,access}){
  const listeners=new Set();
  try{
   const stored=storage?.getItem(configurationStorageKey);
-  if(stored){const value=JSON.parse(stored);validateConfiguration(value);configuration=value;message='Réglages personnalisés sur cet appareil.';}
+  if(stored){const original=JSON.parse(stored),value=upgradeConfiguration(original);validateConfiguration(value);configuration=value;message=original.schemaVersion===1?'Corrections v0.11 appliquées aux réglages enregistrés. Les autres paramètres personnalisés sont conservés.':'Réglages personnalisés sur cet appareil.';}
   else {
    const legacy=storage?.getItem(ampouleStorageKey);
    if(legacy){
     const items=JSON.parse(legacy).items;if(!Array.isArray(items))throw new Error('Ancien tableau invalide');
     const old=new Map();for(const item of items){if(old.has(item.id))throw new Error('Doublon');old.set(item.id,item);}
-    if(items.some(item=>!configuration.records.some(r=>r.id===item.id)))throw new Error('Ampoule inconnue');
+    if(items.some(item=>!retiredRecordIds.includes(item.id)&&!configuration.records.some(r=>r.id===item.id)))throw new Error('Ampoule inconnue');
     const merged=configuration.records.map(r=>old.get(r.id)??r.ampoule);
+    for(const item of merged){
+     const patch=configurationUpdates[item.id]?.ampoule;if(!patch)continue;
+     const base=configuration.records.find(r=>r.id===item.id).ampoule;
+     if(item.unit!==base.unit)convertStockUnit({ampoule:item},base.unit);
+     Object.assign(item,structuredClone(patch.set));for(const key of patch.remove)delete item[key];
+    }
     const adapted=applyAmpoules(smurRecords,merged);
     for(const r of configuration.records){const row=adapted.find(item=>item.id===r.id);r.ampoule=merged.find(item=>item.id===r.id);for(const k of ['mix','weightMix','weightMixes'])if(row.model[k]!==undefined)r.model[k]=structuredClone(row.model[k]);}
     validateConfiguration(configuration);message='Anciennes ampoules reprises ; nouveaux réglages de posologie de cette version.';

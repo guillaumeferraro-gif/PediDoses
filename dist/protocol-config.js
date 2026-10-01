@@ -2,13 +2,16 @@ import {smurRecords,smurCategories} from './smur-data.js';
 import {defaultAmpoules,stockConcentration,ampouleDescription,ampouleStatuses} from './ampoules.js';
 import {convertUnit} from './catalog-audit.js';
 import {calculateRecordForPatient} from './patient-calculator.js';
+import {configurationUpdates,retiredRecordIds} from './configuration-updates.js';
 
 export const configurationStorageKey='pedidoses.protocol.v1';
-export const schemaVersion=1;
+export const schemaVersion=2;
 export const doseUnits=['g','mg','mcg','ng','mmol','UI','mL','J'];
 export const stockUnits=['g','mg','mcg','ng','mmol','UI'];
 export const routes=['','IV','IVL','IVD','IVSE','PSE','IM','Intrarectale','Intergingivojugale','Nébulisation'];
 export const modelFields={
+ secondCoefficient:'Deuxième dose par kg',secondMaximumDose:'Plafond de la deuxième dose',
+ minimumFinalConcentration:'Concentration finale minimale (unité de dose/mL)',targetFinalConcentration:'Concentration finale cible maximale (unité de dose/mL)',diluentRoundingMl:'Arrondi supérieur du diluant (mL)',fineDiluentRoundingMl:'Arrondi fin du diluant pour petits volumes (mL)',
  coefficient:'Dose de départ par kg',doseStep:'Pas de réglage',warningCoefficient:'Seuil d’avertissement dépassable',minimumCoefficient:'Posologie minimale',maximumCoefficient:'Limite non dépassable de posologie',maximumDose:'Plafond de quantité par dose',pendingCeiling:'Plafond historique en attente de validation',
  periodMinutes:'Période de la posologie (min)',durationHours:'Durée de la dose préparée (h)',finalVolumeMl:'Volume final de la préparation (mL)',preparedCoefficient:'Quantité préparée par kg',preparedMaximumDose:'Quantité maximale préparée',
  dailyCoefficient:'Dose journalière par kg',divisionsPerDay:'Nombre de prises par jour',roundDoseUpTo:'Arrondi supérieur de dose (multiple)',
@@ -18,7 +21,7 @@ export const modelFields={
  glucoseMlPerKg:'Glucose associé (mL/kg)',maximumGlucoseMl:'Volume maximal de glucose associé (mL)',glucoseConcentrationMgMl:'Concentration du glucose associé (mg/mL)',
  volumePerDose:'Volume par unité prescrite (mL/unité)',massPerMl:'Masse par mL (unité de masse/mL)',
 };
-const allowedModel=new Set(['type','unit','mix','weightMix','weightMixes','tiers','cases','diluent','volumeKind','massUnit','noCeiling','limitToOneBag','adjustmentStatus','blockReason',...Object.keys(modelFields)]);
+const allowedModel=new Set(['type','unit','mix','weightMix','weightMixes','tiers','cases','diluent','volumeKind','massUnit','noCeiling','limitToOneBag','adjustmentStatus','blockReason','preparationMode',...Object.keys(modelFields)]);
 const allowedRecord=new Set(['id','name','category','model','protocol','ampoule','hideBelowAgeMonths','hideAboveAgeMonths']);
 const types=['dose','infusion','fixed-duration-mixture','insulin-glucose','conditional-dose','instruction','unresolved'];
 const cleanModel=model=>Object.fromEntries(Object.entries(structuredClone(model)).filter(([key])=>allowedModel.has(key)));
@@ -59,13 +62,24 @@ export function validateConfiguration(config){
   keys(m,[...allowedModel],r.name);if(!types.includes(m.type))fail(r.name,'type de calcul invalide.');
   if(m.type!=='instruction'&&!doseUnits.includes(m.unit))fail(r.name,'unité de dose invalide.');
   for(const key of Object.keys(modelFields))if(m[key]!==undefined){
-   if(m[key]===null&&['maximumDose','doseStep'].includes(key))continue;
+   if(m[key]===null&&['maximumDose','secondMaximumDose','doseStep'].includes(key))continue;
    positive(m[key],r.name,modelFields[key],key==='minimumCoefficient'||key.includes('AgeMonths'));
   }
   for(const key of ['noCeiling','limitToOneBag'])if(m[key]!==undefined&&typeof m[key]!=='boolean')fail(r.name,`${key} invalide.`);
   if(m.volumeKind!==undefined&&!['withdrawal','final'].includes(m.volumeKind))fail(r.name,'nature du volume invalide.');
   if(m.diluent!==undefined)string(m.diluent,r.name,'diluant');
   if(m.adjustmentStatus!==undefined&&!['enabled','fixed','suspended'].includes(m.adjustmentStatus))fail(r.name,'état du réglage invalide.');
+  if(m.preparationMode!==undefined){
+   if(m.type!=='dose'||!['fixed-volume','concentration-range','dose-only'].includes(m.preparationMode))fail(r.name,'mode de préparation invalide.');
+   if(m.mix||m.weightMix||m.weightMixes||m.finalConcentration!==undefined||m.dilutionFactor!==undefined||m.volumePerDose!==undefined||m.volumeKind==='withdrawal')fail(r.name,'choisir un seul mode de préparation.');
+   if(m.preparationMode==='fixed-volume')positive(m.finalVolumeMl,r.name,'volume final');
+   if(m.preparationMode==='concentration-range'){
+    for(const k of ['minimumFinalConcentration','targetFinalConcentration','diluentRoundingMl','fineDiluentRoundingMl'])positive(m[k],r.name,modelFields[k]);
+    if(m.minimumFinalConcentration>m.targetFinalConcentration)fail(r.name,'concentration minimale supérieure à la cible.');
+    if(m.fineDiluentRoundingMl>m.diluentRoundingMl)fail(r.name,'l’arrondi fin doit être inférieur ou égal à l’arrondi principal.');
+   }
+  }
+  if(m.secondCoefficient!==undefined&&(m.type!=='dose'||m.adjustmentStatus==='enabled'||m.tiers||m.cases||m.dailyCoefficient!==undefined||m.fixedDoseFromAgeMonths!==undefined||m.fixedDoseFromWeightKg!==undefined))fail(r.name,'les deux doses successives requièrent deux posologies par kg sans autre palier.');
   if(m.dilutionFactor!==undefined&&m.dilutionFactor<1)fail(r.name,'le facteur de dilution doit être au moins 1.');
   if((m.finalConcentration!==undefined||m.dilutionFactor!==undefined)&&(m.mix||m.weightMix||m.weightMixes))fail(r.name,'choisir une concentration finale, un facteur de dilution OU des volumes de dilution.');
   if(m.finalConcentration!==undefined&&m.dilutionFactor!==undefined)fail(r.name,'choisir une concentration finale OU un facteur de dilution.');
@@ -112,23 +126,50 @@ export function validateConfiguration(config){
   const c=stockConcentration(a);
   if(c!==null){positive(c,r.name,'concentration de l’ampoule');if(!a.unit)fail(r.name,'unité de l’ampoule requise.');if(!['mL','J'].includes(m.unit)&&m.type!=='instruction')convertUnit(c,a.unit,m.unit);}
   if(a.amount!==null&&a.volumeMl!==null&&a.declaredConcentration!==null&&Math.abs(c-a.declaredConcentration)>Math.max(1,c)*1e-9)fail(r.name,'concentration déclarée différente de quantité ÷ volume.');
-  if((m.mix||m.weightMix||m.weightMixes||m.type==='fixed-duration-mixture')&&c===null)fail(r.name,'concentration de l’ampoule nécessaire à la dilution.');
+  if((m.mix||m.weightMix||m.weightMixes||m.type==='fixed-duration-mixture'||['fixed-volume','concentration-range'].includes(m.preparationMode))&&c===null)fail(r.name,'concentration de l’ampoule nécessaire à la dilution.');
   if(m.type==='infusion'&&c===null&&m.finalConcentration===undefined)fail(r.name,'concentration nécessaire au calcul de débit.');
  }
  const records=compile(config);
  for(const r of records)for(const weightKg of [0.5,10,200])for(const ageMonths of [0,24,120]){
-  try{const result=calculateRecordForPatient(r,{weightKg,ageMonths,weightSource:'measured'});for(const k of ['dose','hourlyAmount','exactRateMlH','volumeMl','concentration'])if(result[k]!==null&&result[k]!==undefined&&!Number.isFinite(result[k]))fail(r.name,'le calcul produit un nombre non fini.');}
+  try{const result=calculateRecordForPatient(r,{weightKg,ageMonths,weightSource:'measured'});for(const dose of [result,...(result.secondDose?[result.secondDose]:[])])for(const k of ['dose','uncappedDose','hourlyAmount','exactRateMlH','volumeMl','concentration'])if(dose[k]!==null&&dose[k]!==undefined&&!Number.isFinite(dose[k]))fail(r.name,'le calcul produit un nombre non fini.');}
   catch(error){if(error.code!=='age-required')fail(r.name,error.message);}
  }
  return records;
 }
-export function parseConfiguration(text){if(typeof text!=='string'||text.length>1500000)throw new Error('Configuration absente ou supérieure à 1,5 Mo.');const value=JSON.parse(text);validateConfiguration(value);return value;}
+export function upgradeConfiguration(value){
+ safeData(value);
+ if(value?.schemaVersion!==1)return value;
+ keys(value,['schemaVersion','records'],'Configuration');
+ const expected=new Set([...smurRecords.map(r=>r.id),...retiredRecordIds]);
+ if(!Array.isArray(value.records)||value.records.length!==expected.size)throw new Error('Ancienne configuration incomplète.');
+ const seen=new Set();for(const r of value.records){if(!expected.has(r.id)||seen.has(r.id))throw new Error('Ancien identifiant inconnu ou en double.');seen.add(r.id);}
+ const next=structuredClone(value),second=next.records.find(r=>r.id==='triphosadenine-2');
+ const defaults=new Map(defaultConfiguration().records.map(r=>[r.id,r]));
+ next.records=next.records.filter(r=>!retiredRecordIds.includes(r.id));
+ for(const r of next.records){
+  const patch=configurationUpdates[r.id];if(!patch)continue;
+  const base=defaults.get(r.id);
+  if(r.model.unit!==base.model.unit)convertDoseUnit(r,base.model.unit);
+  if(patch.ampoule&&r.ampoule.unit!==base.ampoule.unit)convertStockUnit(r,base.ampoule.unit);
+  if(patch.name)r.name=patch.name;
+  for(const group of ['model','protocol','ampoule'])if(patch[group]){
+   Object.assign(r[group],structuredClone(patch[group].set));
+   for(const key of patch[group].remove)delete r[group][key];
+  }
+  if(r.id==='triphosadenine'){
+   r.model.secondCoefficient=convertUnit(second.model.coefficient,second.model.unit,r.model.unit);
+   r.model.secondMaximumDose=second.model.maximumDose==null?null:convertUnit(second.model.maximumDose,second.model.unit,r.model.unit);
+  }
+ }
+ next.schemaVersion=schemaVersion;validateConfiguration(next);return next;
+}
+export function parseConfiguration(text){if(typeof text!=='string'||text.length>1500000)throw new Error('Configuration absente ou supérieure à 1,5 Mo.');const value=upgradeConfiguration(JSON.parse(text));validateConfiguration(value);return value;}
 export function serializeConfiguration(config){validateConfiguration(config);return JSON.stringify(config,null,2);}
 
 // Unit changes preserve the administered quantity; changing a number changes the prescription.
 export function convertDoseUnit(record,next){
  const m=record.model,ratio=convertUnit(1,m.unit,next);
- for(const key of ['coefficient','doseStep','warningCoefficient','minimumCoefficient','maximumCoefficient','maximumDose','pendingCeiling','preparedCoefficient','preparedMaximumDose','dailyCoefficient','roundDoseUpTo','fixedDose','fixedHourlyAmount','youngerFinalConcentration','finalConcentration'])if(m[key]!=null)m[key]*=ratio;
+ for(const key of ['coefficient','doseStep','warningCoefficient','minimumCoefficient','maximumCoefficient','maximumDose','pendingCeiling','preparedCoefficient','preparedMaximumDose','dailyCoefficient','roundDoseUpTo','fixedDose','fixedHourlyAmount','youngerFinalConcentration','finalConcentration','secondCoefficient','secondMaximumDose','minimumFinalConcentration','targetFinalConcentration'])if(m[key]!=null)m[key]*=ratio;
  for(const tier of m.tiers??[])tier.coefficient*=ratio;
  for(const tier of m.cases??[])tier.dose*=ratio;
  if(m.volumePerDose)m.volumePerDose/=ratio;

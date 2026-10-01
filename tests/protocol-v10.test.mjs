@@ -108,15 +108,15 @@ test('changer mg/mcg ou minute/heure conserve la dose physique et le débit, y c
 });
 
 test('durées et dilutions modifiables : un prélèvement ne donne un débit qu’après définition du volume final',()=>{
- const config=defaultConfiguration(),r=row(config,'levetiracetam');
- assert.equal(calc(record('levetiracetam')).exactRateMlH,null);
+ const config=defaultConfiguration(),r=row(config,'gentamicine');
+ assert.equal(calc(record('gentamicine')).exactRateMlH,null);
  r.model.dilutionFactor=2;r.model.diluent='NaCl 0,9 %';r.protocol.durationMinutes=10;
- let changed=validateConfiguration(config).find(r=>r.id==='levetiracetam');
- close(calc(changed).withdrawalMl,4);close(calc(changed).volumeMl,8);close(calc(changed).exactRateMlH,48);
- assert.match(buildMedicationSheet(changed).doseRows[0].volume,/0,8 mL\/kg\/dose après dilution/);
- assert.equal(buildSimulationRow(changed,context()).rate,'48,0 mL/h');
+ let changed=validateConfiguration(config).find(r=>r.id==='gentamicine');
+ close(calc(changed).withdrawalMl,2.5);close(calc(changed).volumeMl,5);close(calc(changed).exactRateMlH,30);
+ assert.match(buildMedicationSheet(changed).doseRows[0].volume,/0,5 mL\/kg\/dose après dilution/);
+ assert.equal(buildSimulationRow(changed,context()).rate,'30,0 mL/h');
  delete r.model.dilutionFactor;r.model.mix={takeMl:5,addMl:5};
- changed=validateConfiguration(config).find(r=>r.id==='levetiracetam');close(calc(changed).volumeMl,8);
+ changed=validateConfiguration(config).find(r=>r.id==='gentamicine');close(calc(changed).volumeMl,5);
  const calcium=row(config,'calcium-gluconate');calcium.model.dilutionFactor=2;calcium.protocol.durationMinutes=20;
  const cr=validateConfiguration(config).find(r=>r.id==='calcium-gluconate');close(calc(cr).withdrawalMl,5);close(calc(cr).volumeMl,10);close(calc(cr).exactRateMlH,30);
 });
@@ -142,10 +142,10 @@ const digest=async code=>Array.from(new Uint8Array(await crypto.subtle.digest('S
 const memoryStorage=()=>{const map=new Map();return {getItem:key=>map.get(key)??null,setItem:(key,v)=>map.set(key,v)};};
 
 test('code fixe : mauvais code refusé, écriture verrouillée, sauvegarde atomique et persistance sans patient',async()=>{
- const access=new AdminAccess(await digest('654321')),storage=memoryStorage(),store=createProtocolStore({storage,access});
+ const access=new AdminAccess(await digest('87654321')),storage=memoryStorage(),store=createProtocolStore({storage,access});
  const config=store.getConfiguration();row(config,'sufentanil').model.doseStep=.2;
- assert.throws(()=>store.apply(config),/code d’administration/);assert.equal(await access.unlock('000000'),false);
- assert.equal(await access.unlock('654321'),true);store.apply(config);
+ assert.throws(()=>store.apply(config),/code d’administration/);assert.equal(await access.unlock('00000000'),false);
+ assert.equal(await access.unlock('87654321'),true);store.apply(config);
  assert.equal(store.getRecords().find(r=>r.id==='sufentanil').model.doseStep,.2);
  const reloaded=createProtocolStore({storage,access:new AdminAccess()});assert.equal(reloaded.getRecords().find(r=>r.id==='sufentanil').model.doseStep,.2);
  assert.deepEqual(Object.keys(JSON.parse(storage.getItem(configurationStorageKey))).sort(),['records','schemaVersion']);
@@ -158,7 +158,7 @@ test('code fixe : mauvais code refusé, écriture verrouillée, sauvegarde atomi
 });
 
 test('un déverrouillage en cours ne peut pas rouvrir une administration verrouillée ensuite',async()=>{
- const access=new AdminAccess(await digest('654321'));const pending=access.unlock('654321');access.lock();
+ const access=new AdminAccess(await digest('87654321'));const pending=access.unlock('87654321');access.lock();
  assert.equal(await pending,false);assert.equal(access.unlocked,false);
  for(const invalid of ['',null,123456,'65432','6543217'])assert.equal(await access.unlock(invalid),false);
 });
@@ -184,8 +184,8 @@ test('les anciennes ampoules sont reprises sans perdre la nouvelle charge ni cha
  const storage=memoryStorage(),items=defaultAmpoules(smurRecords).filter(r=>r.id!=='salbutamol-charge');
  items.find(r=>r.id==='adrenaline-ivc').amount=2;storage.setItem(ampouleStorageKey,JSON.stringify({items}));
  const store=createProtocolStore({storage,access:new AdminAccess()});assert.match(store.message,/Anciennes ampoules/);
- assert.equal(store.getRecords().length,67);const r=store.getRecords().find(r=>r.id==='adrenaline-ivc');
+ assert.equal(store.getRecords().length,65);const r=store.getRecords().find(r=>r.id==='adrenaline-ivc');
  close(r.model.mix.takeMl,.5);close(calc(r).concentration,20);close(calc(r).exactRateMlH,3);
  storage.setItem(configurationStorageKey,'{invalid');const fallback=createProtocolStore({storage,access:new AdminAccess()});
- assert.match(fallback.message,/incompatible/);assert.equal(fallback.getRecords().length,67);
+ assert.match(fallback.message,/incompatible/);assert.equal(fallback.getRecords().length,65);
 });

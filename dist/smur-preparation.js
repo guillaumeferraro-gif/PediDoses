@@ -26,3 +26,42 @@ export function preparationForWeight(model, weightKg) {
     (variant.minWeightKg === undefined || weightKg >= variant.minWeightKg) &&
     (variant.maxWeightKgExclusive === undefined || weightKg < variant.maxWeightKgExclusive));
 }
+
+export function modelForSecondDose(model) {
+  if (model.secondCoefficient === undefined) return null;
+  const next = { ...model, coefficient: model.secondCoefficient, maximumDose: model.secondMaximumDose ?? null };
+  delete next.secondCoefficient;
+  delete next.secondMaximumDose;
+  return next;
+}
+
+// The diluent is the only rounded input: recompute the actual final concentration from it.
+export function preparationForDose(model, dose, stockConcentration) {
+  const positive = value => typeof value === 'number' && Number.isFinite(value) && value > 0;
+  if (!positive(dose) || !positive(stockConcentration)) throw new Error('Dose ou concentration de l’ampoule invalide.');
+  const withdrawalMl = dose / stockConcentration;
+  let volumeMl, addMl;
+  if (model.preparationMode === 'fixed-volume') {
+    volumeMl = model.finalVolumeMl;
+    if (!positive(volumeMl) || withdrawalMl > volumeMl) throw new Error('Le prélèvement dépasse le volume final de la préparation.');
+    addMl = volumeMl - withdrawalMl;
+  } else if (model.preparationMode === 'concentration-range') {
+    const min = model.minimumFinalConcentration, target = model.targetFinalConcentration;
+    if (!positive(min) || !positive(target) || min > target || stockConcentration < min) throw new Error('Plage de concentration impossible avec cette ampoule.');
+    const required = Math.max(0, dose / target - withdrawalMl);
+    const steps = [model.diluentRoundingMl, model.fineDiluentRoundingMl];
+    if (steps.some(step => !positive(step))) throw new Error('Arrondi du diluant invalide.');
+    for (const step of steps) {
+      const ratio = required / step;
+      const rounded = Math.ceil(ratio - 4 * Number.EPSILON * Math.max(1, ratio)) * step;
+      const final = dose / (withdrawalMl + rounded);
+      if (final >= min * (1 - 1e-12) && final <= target * (1 + 1e-12)) {
+        addMl = Number(rounded.toPrecision(14));
+        break;
+      }
+    }
+    if (addMl === undefined) throw new Error('Les arrondis de diluant ne permettent pas de respecter la concentration finale.');
+    volumeMl = withdrawalMl + addMl;
+  } else throw new Error('Mode de préparation non reconnu.');
+  return { withdrawalMl, addMl, volumeMl, mixtureVolumeMl: volumeMl, concentration: dose / volumeMl };
+}

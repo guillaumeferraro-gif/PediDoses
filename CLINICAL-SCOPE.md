@@ -1,8 +1,8 @@
-# Périmètre clinique — France — v0.10
+# Périmètre clinique — France — v0.11
 
-Usage demandé : calculs rapides en SMUR pédiatrique. Le tableau source porte l’en-tête CHU Toulouse / SMUR pédiatrique 31 ; sa validation institutionnelle datée n’a pas été fournie. Cette version intègre les décisions de l’utilisateur des 26–28 septembre 2026, sans leur attribuer une validation clinique du logiciel.
+Usage demandé : calculs rapides en SMUR pédiatrique. Le tableau source porte l’en-tête CHU Toulouse / SMUR pédiatrique 31 ; sa validation institutionnelle datée n’a pas été fournie. Cette version intègre les décisions de l’utilisateur des 26–28 septembre et du 1er octobre 2026, sans leur attribuer une validation clinique du logiciel.
 
-Le référentiel actif comporte 67 fiches. L’audit historique conserve la transcription initiale et son exemple à 10 kg.
+Le référentiel actif comporte 65 fiches. L’audit historique conserve la transcription initiale et son exemple à 10 kg.
 
 ## Corrections intégrées
 
@@ -11,17 +11,20 @@ Le référentiel actif comporte 67 fiches. L’audit historique conserve la tran
 | Chlorure de calcium | 20 mg/kg de chlorure, maximum 1 g = 10 mL ; IVD |
 | Gluconate de calcium 10 % | ERC : 0,5 mL/kg, maximum 20 mL de produit. Prélèvement seul tant que dilution et durée ne sont pas précisées ; aucune conversion en calcium élément |
 | Amoxicilline/acide clavulanique | 80 mg/kg/j d’amoxicilline ÷ 3, puis arrondi à la dizaine de mg supérieure ; maximum antérieur de 2 g conservé ; flacon 500 mg/50 mg |
-| Sulfate de magnésium | 1,5 g/10 mL = 15 %. Dose antérieure 50 mg/kg, maximum 2 g, IVL 20 min conservée ; volume prélevé distinct du volume dilué |
-| Triphosadénine | Deux lignes : 1 mg/kg maximum 10 mg, puis 2 mg/kg maximum 20 mg |
+| Sulfate de magnésium | 1,5 g/10 mL = 15 %. 50 mg/kg, maximum 2 g ; IVL 20 min. Compléter avec NaCl 0,9 % à 50 mL finaux. Au plafond : 13,333… mL de produit + 36,666… mL de NaCl |
+| Triphosadénine | Une ligne : 1 mg/kg maximum 10 mg, puis 2 mg/kg maximum 20 mg ; préparation commune, doses et volumes distincts |
 | Insuline + G10 % | 0,1 UI/kg d’insuline rapide, maximum 10 UI, et 5 mL/kg de G10 %, maximum 250 mL, sur 30 min. Plafonds indépendants ; débit G10 % explicitement identifié |
 | Étomidate | Aucun plafond de dose ; âge ≥ 24 mois conservé |
-| Propofol | Aucun plafond ; 200 mg/20 mL. Ligne LISA à 0,5 mg/kg |
+| Kétamine analgésie et sédation | Aucun plafond ; posologies et paliers antérieurs conservés |
+| Morphine titration | IVL sans durée ni débit calculé ; aucun critère d’arrêt affiché |
+| Propofol | Aucun plafond ; 200 mg/20 mL. Ligne LISA à 0,5 mg/kg. Les deux lignes sont en IVL sans durée ni débit calculé |
 | Célocurine | Palier à 18 mois confirmé ; 100 mg/2 mL ; IVL sans durée ni vitesse |
-| Atracurium bolus | 0,5 mg/kg pour tous ; 1 mL = 10 mg + 9 mL NaCl 0,9 %, soit 1 mg/mL et 0,5 mL/kg par dose |
+| Atracurium bolus | Retiré ; l’IVSE est conservé |
 | Clonazépam bolus | Maximum 1 mg ; ampoule seule sans solvant fourni ; IVL 10 min |
 | Diazépam IR | Maximum 10 mg |
-| Phénobarbital | Maximum 600 mg ; IVL 20 min |
-| Lévétiracétam | 40 mg/kg, maximum 3 g ; 500 mg/5 mL ; IVL 5 min |
+| Midazolam IJ | 0,3 mg/kg, maximum 10 mg ; 5 mg/1 mL, forme adaptée confirmée |
+| Phénobarbital | 20 mg/kg avant un mois ; 15 mg/kg dès un mois ; maximum 600 mg ; IVL 20 min. Poudre injectable sans calcul de volume ni consigne de dilution |
+| Lévétiracétam | 40 mg/kg, maximum 3 g ; 500 mg/5 mL ; IVL 5 min. NaCl 0,9 % arrondi pour obtenir 10 à 15 mg/mL finaux |
 | Phénytoïne | Maximum 1 g ; NaCl 0,9 % ; IVL 20 min |
 | SSH | 7,5 % ; IVL 20 min ; aucun volume de contenant requis |
 | Tranexamique, charge | Avant 10 ans : 20 mg/kg, plafond antérieur de 1 g conservé. Dès 10 ans : 1 g. NaCl 0,9 % ; dilution finale à préciser |
@@ -44,7 +47,9 @@ Le référentiel actif comporte 67 fiches. L’audit historique conserve la tran
 | Salbutamol nébulisé | Aucune répétition affichée |
 | CGR, PFC, CPA | Aucune vitesse ni modalité transfusionnelle ajoutée. Volume prescrit et limite antérieure d’une poche conservés |
 
-Le bolus d’atracurium est exprimé en mL/kg **par dose** ; mL/kg/h s’applique à l’IVSE. L’amoxicilline/clavulanate est calculée en amoxicilline, sans addition des 50 mg d’acide clavulanique aux 500 mg.
+L’amoxicilline/clavulanate est calculée en amoxicilline, sans addition des 50 mg d’acide clavulanique aux 500 mg.
+
+Pour le lévétiracétam, la plage de préparation fournie par l’utilisateur est de 5 à 15 mg/mL, avec une cible opérationnelle demandée entre 10 et 15 mg/mL après arrondi. Le calcul vise 15 mg/mL, arrondit le diluant au mL supérieur, puis utilise un arrondi au dixième de mL si le premier arrondi ferait passer sous 10 mg/mL. La concentration réelle et le débit utilisent ce volume final. Par exemple, à 10 kg : 400 mg = 4 mL de produit + 23 mL de NaCl, soit 27 mL à environ 14,81 mg/mL. Les deux pas d’arrondi et les bornes sont modifiables dans l’administration.
 
 ## Réglages v0.10
 
@@ -61,10 +66,8 @@ Le tableau d’administration permet de modifier les paramètres de calcul, ampo
 - Gluconate : spécialité exacte, dilution finale et durée. Le calcul utilise le volume de produit à 10 % ; la teneur exacte en sels ou calcium élément dépend de la spécialité.
 - Insuline rapide : concentration nécessaire pour son prélèvement. Dose en UI et volume/débit du G10 % sont calculables indépendamment.
 - Tranexamique avant 10 ans : concentration finale de l’entretien ; les mg/h sont calculés sans inventer de débit. La dilution finale de la charge reste également à préciser.
-- Magnésium, phénobarbital, lévétiracétam : prélèvement distinct du volume après dilution lorsque celui-ci n’est pas renseigné.
 - Atracurium IVSE : conditionnement disponible à préciser ; cible 1 mg/mL. La présentation historique 50 mg/5 mL reste « à confirmer » dans les ampoules.
 - Nicardipine, charge : durée d’administration non fournie.
-- Questions antérieures : plafonds de kétamine analgésique (80 mg), atracurium bolus (30 mg), midazolam IJ (10 mg), autres points de leurs fiches. Ces plafonds sont appliqués uniquement dans la simulation marquée †, conformément au fonctionnement antérieur.
 
 ## Références ciblées
 
@@ -74,5 +77,10 @@ Consultées le 26 septembre 2026 :
 - [BDPM, gluconate de calcium PROAMP 10 %](https://base-donnees-publique.medicaments.gouv.fr/medicament/68332774/extrait) : composition et dilution spécifiques. Cette spécialité n’est pas supposée être celle du stock sans confirmation.
 
 - [BDPM, SALBUTAMOL VIATRIS 5 mg/5 mL](https://base-donnees-publique.medicaments.gouv.fr/medicament/63266758/extrait), consulté le 28 septembre 2026 : dose de charge pédiatrique IV de 5 mcg/kg sur 5 min. Le seuil d’entretien de 5 mcg/kg/min vient de la décision locale de l’utilisateur ; il n’est pas présenté comme issu de ce RCP.
+
+Consultées le 1er octobre 2026 :
+
+- [BDPM, sulfate de magnésium PROAMP 0,15 g/mL](https://base-donnees-publique.medicaments.gouv.fr/medicament/61106121/extrait) : concentration du produit à 15 %. Le volume final de 50 mL est la décision locale fournie par l’utilisateur.
+- [BDPM, Keppra 100 mg/mL](https://base-donnees-publique.medicaments.gouv.fr/medicament/61901995/extrait) et [EMA, information produit Keppra](https://www.ema.europa.eu/fr/documents/product-information/keppra-epar-product-information_fr.pdf) : présentation 500 mg/5 mL et compatibilité avec NaCl 0,9 %. La cible de 10–15 mg/mL, l’arrondi du diluant et l’IVL de 5 min sont des paramètres du protocole local, sans les attribuer à ces références.
 
 Les tests logiciels, le contrôle des ampoules et ces références ciblées ne valident pas l’ensemble du protocole. La relecture clinique/pharmaceutique, le contrôle visuel de l’application et les essais en situation de soins restent à réaliser.

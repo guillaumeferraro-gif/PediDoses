@@ -11,8 +11,8 @@ const records = prepareSimulationRecords(configured);
 const patient = (weight = 10, age = 12) => resolvePatientContext({ weight: String(weight), age: String(age), ageUnit: 'months' });
 const row = (id, context = patient(), source = records) => buildSimulationRow(source.find(r => r.id === id), context);
 
-test('simulation : les 67 lignes sont présentes, y compris les doses provisoires, sans changer les fiches', () => {
-  assert.equal(records.length, 67);
+test('simulation : les 65 lignes sont présentes, y compris les doses provisoires, sans changer les fiches', () => {
+  assert.equal(records.length, 65);
   for (const context of [null, patient(3, 0), patient(), patient(50, 120)]) {
     for (const record of records) {
       const r = buildSimulationRow(record, context);
@@ -45,7 +45,7 @@ test('simulation : doses massiques en mg, unités non massiques conservées et b
 
 test('simulation : plafonds du tableau appliqués avant conversion, avec statut provisoire', () => {
   assert.equal(row('triphosadenine', patient(30)).dose, '10 mg');
-  assert.equal(row('ketamine-analgesie', patient(180)).dose, '80 mg');
+  assert.equal(row('ketamine-analgesie', patient(180)).dose, '90 mg');
   assert.equal(row('midazolam-iv', patient(100)).dose, '10 mg');
   assert.equal(row('calcium-gluconate', patient(60)).result.withdrawalMl, 20);
   assert.equal(row('adrenaline-iv', patient(49)).volume, '4,90 mL');
@@ -54,7 +54,7 @@ test('simulation : plafonds du tableau appliqués avant conversion, avec statut 
 });
 
 test('simulation : les volumes prélevés ne deviennent pas des volumes injectés', () => {
-  for (const id of ['gentamicine', 'phenobarbital', 'levetiracetam', 'calcium-gluconate', 'magnesium']) {
+  for (const id of ['gentamicine', 'calcium-gluconate']) {
     const r = row(id);
     assert.equal(r.volume, '—', id);
     assert.equal(r.rate, '—', id);

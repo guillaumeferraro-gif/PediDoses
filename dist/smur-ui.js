@@ -135,6 +135,21 @@ function updateCard(record) {
     return;
   }
   notes.className = 'dose-notes';
+  if(result.secondDose){
+    for(const [label,dose]of [['1re dose',result],['2e dose',result.secondDose]]){
+      const group=make('div','','dose-sequence');
+      group.append(make('span',label,'dose-value-label'),make('strong',`${display(dose.dose)} ${unitLabel(dose.unit)}`));
+      if(dose.volumeMl!==null)group.append(make('span',`${preparationVolume(dose.volumeMl)} mL`,'dose-volume'));
+      if(dose.rateMlH!==null)group.append(make('span',`${format(dose.rateMlH,1)} mL/h`,'dose-volume'));
+      if(dose.maximumApplied)group.append(make('small','Plafond appliqué'));
+      values.append(group);
+      calculation.append(make('p',`${label} : ${display(dose.dose)} ${unitLabel(dose.unit)}${dose.volumeMl!==null?` = ${preparationVolume(dose.volumeMl)} mL`:''}${dose.maximumApplied?' après plafond':''}.`));
+    }
+    if(result.concentration!==null)calculation.append(make('p',`Concentration commune : ${concentrationText(result.concentration,result.unit)}.`));
+    const questions=sheets.get(record.id).questions.length;
+    notes.textContent=questions?`${questions} question(s) à résoudre ci-dessous.`:'';
+    return;
+  }
   const primary = result.rateMlH ?? result.dose ?? result.hourlyAmount;
   const primaryUnit = result.rateMlH !== null ? 'mL/h' : `${unitLabel(result.unit)}${result.dose===null && result.hourlyAmount!==null ? '/h' : ''}`;
   values.append(make('span', result.rateKind==='glucose' ? `Débit du G${format((record.model.glucoseConcentrationMgMl??100)/10,2)} %` : 'Simulation · poids retenu', 'dose-value-label'));
@@ -144,7 +159,7 @@ function updateCard(record) {
   if (result.withdrawalMl !== null) values.append(make('span', `Produit à prélever : ${preparationVolume(result.withdrawalMl)} mL`, 'dose-volume'));
   const messages = [];
   if (record.model.type==='infusion' && result.rateMlH===null) messages.push('Débit indisponible : concentration finale à préciser.');
-  if (result.volumeMl === null && record.model.type === 'dose' && record.category !== 'antibiotiques' && !['J', 'mL'].includes(result.unit)) messages.push('Volume indisponible : concentration finale non documentée.');
+  if (result.volumeMl === null && record.model.type === 'dose' && record.model.preparationMode!=='dose-only' && record.category !== 'antibiotiques' && !['J', 'mL'].includes(result.unit)) messages.push('Volume indisponible : concentration finale non documentée.');
   const sheet = sheets.get(record.id);
   if (sheet.questions.length) messages.push(`${sheet.questions.length} question${sheet.questions.length > 1 ? 's' : ''} à résoudre ci-dessous.`);
   if (sheet.pendingCeiling !== null && result.dose > sheet.pendingCeiling) messages.push('La simulation dépasse le plafond du tableau encore à valider : voir la posologie ci-dessous.');
@@ -160,7 +175,7 @@ function updateCard(record) {
   if (result.withdrawalMl !== null) calculation.append(make('p', `Volume de produit à prélever : ${preparationVolume(result.withdrawalMl)} mL${result.stockConcentration!==null ? ` à ${concentrationText(result.stockConcentration, result.unit)}` : ' de produit avant dilution'}.`));
   if (result.addMl !== null) calculation.append(make('p', `Diluant à ajouter : ${preparationVolume(result.addMl)} mL (${record.model.diluent}).`));
   if (result.mixtureVolumeMl !== null) calculation.append(make('p', `Volume final : ${preparationVolume(result.mixtureVolumeMl)} mL.`));
-  calculation.append(make('p', 'Les calculs internes conservent leur précision ; aucun arrondi n’est réinjecté dans le calcul suivant.'));
+  calculation.append(make('p', 'Les arrondis d’affichage ne modifient pas les calculs internes.'));
 }
 
 function renderGroups() {

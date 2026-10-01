@@ -34,12 +34,12 @@ test('le poids connu reste prioritaire et une saisie invalide ne retombe pas sur
   assert.equal(resolvePatientContext(), null);
 });
 
-test('calcule toutes les lignes décidées et conserve 67 fiches', () => {
+test('calcule toutes les lignes décidées et conserve 65 fiches', () => {
   const results = calculateAllRecords(smurRecords, patient('12', '3'));
-  assert.equal(results.size, 67);
+  assert.equal(results.size, 65);
   assert.deepEqual([...results.values()].filter(result => result.status === 'blocked').map(result => result.recordId), []);
   assert.equal(results.get('arret-potassium').status, 'instruction');
-  assert.equal([...results.values()].filter(result => result.status === 'calculated').length, 66);
+  assert.equal([...results.values()].filter(result => result.status === 'calculated').length, 64);
 });
 
 test('applique les concentrations et plafonds confirmés sans plafond au suxaméthonium', () => {
@@ -123,7 +123,7 @@ test('intègre le protocole hyperkaliémie local et les conventions de volume', 
   close(calculate('kayexalate-ir', patient('20')).volumeMl, 100);
 });
 
-test('les 67 fiches sont complètes et les antibiotiques sans dilution respectent la décision locale', () => {
+test('les 65 fiches sont complètes et les antibiotiques sans dilution respectent la décision locale', () => {
   for (const record of smurRecords) {
     const sheet = buildMedicationSheet(record);
     assert.ok(sheet.presentation && (sheet.administration || record.category==='transfusion') && (sheet.preparations.length || record.protocol.dilution === '') && sheet.doseRows.length, record.id);
@@ -198,14 +198,9 @@ test('les quatre préparations restent constantes et le débit suit la dose', ()
   }
 });
 
-test('ne confond pas le volume prélevé de phénobarbital/lévétiracétam et le volume final inconnu', () => {
-  for (const [id, expected] of [['phenobarbital', 3], ['levetiracetam', 4]]) {
-    const result = calculate(id);
-    close(result.withdrawalMl, expected);
-    assert.equal(result.volumeMl, null);
-    assert.equal(result.concentration, null);
-    assert.match(buildMedicationSheet(row(id)).doseRows[0].volume, /À prélever.*Volume final à préciser/);
-  }
+test('phénobarbital sans volume calculé, lévétiracétam avec dilution finale définie', () => {
+  const pheno=calculate('phenobarbital');assert.equal(pheno.withdrawalMl,null);assert.equal(pheno.volumeMl,null);assert.equal(pheno.rateMlH,null);
+  const leve=calculate('levetiracetam');close(leve.withdrawalMl,4);close(leve.addMl,23);close(leve.volumeMl,27);close(leve.concentration,400/27);
 });
 
 test('conserve les coefficients fins et arrondit uniquement les volumes affichés et débits finaux', () => {
@@ -220,10 +215,10 @@ test('conserve les coefficients fins et arrondit uniquement les volumes affiché
 
 test('retire la lidocaïne et classe adrénaline IM dans Anaphylaxie', () => {
   assert.equal(catalogRecords.length, 62);
-  assert.equal(smurRecords.length, 67);
-  assert.equal(new Set(smurRecords.map(record => record.id)).size, 67);
+  assert.equal(smurRecords.length, 65);
+  assert.equal(new Set(smurRecords.map(record => record.id)).size, 65);
   assert.deepEqual(smurCategories.filter(category => !['remplissage', 'anaphylaxie'].includes(category.id)), categories);
-  assert.deepEqual(smurRecords.filter(record=>catalogRecords.some(original=>original.id===record.id)).map(record=>record.id), catalogRecords.map(record => record.id));
+  assert.deepEqual(smurRecords.filter(record=>catalogRecords.some(original=>original.id===record.id)).map(record=>record.id), catalogRecords.filter(r=>r.id!=='atracurium-bolus').map(record => record.id));
   assert.equal(row('adrenaline-im').category, 'anaphylaxie');
   assert.equal(row('lidocaine'), undefined);
   assert.equal(isofundine.kind, 'reference');
