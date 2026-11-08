@@ -24,25 +24,22 @@
   <header class="header">
     <div class="header-inner">
       <a class="brand" href="./" aria-label="PediDoses, accueil">
-        <span class="brand-symbol" aria-hidden="true">P<span>u</span></span>
-        <span>Pedi<strong>Doses</strong></span>
+        <span class="brand-symbol" aria-hidden="true">Pd</span>
+        <span>Pedi<strong>Doses</strong><small>URGENCES PÉDIATRIQUES</small></span>
       </a>
-      <div class="institution-logos" aria-label="CHU de Toulouse et SAMU 31">
-        <img class="chu-logo" src="./assets/chu-toulouse.webp" alt="CHU de Toulouse" width="150" height="76">
-        <img class="samu-logo" src="./assets/samu-31.jpg" alt="SAMU 31" width="66" height="66">
-      </div>
       <span class="version-badge">France <span>v0.11</span></span>
     </div>
   </header>
   <main id="main" class="workspace">
     <div class="page-heading">
-      <div><p class="eyebrow">URGENCES PÉDIATRIQUES · FRANCE</p><h1>Médicaments d’urgence</h1></div>
+      <div><h1>Médicaments d’urgence</h1></div>
       <div class="mode-badge">Prototype à valider</div>
     </div>
-    <div class="notice" role="note">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3 22 21H2L12 3Z"/><path d="M12 9v5m0 3v1"/></svg>
-      <p><strong>Support de validation avec vos collègues.</strong> Chaque fiche expose toutes les posologies, préparations et questions restantes. Les simulations ne constituent pas une validation clinique.</p>
-    </div>
+    <details class="notice">
+      <summary>Support de validation · informations d’utilisation</summary>
+      <p>Chaque fiche donne accès aux posologies, préparations et questions restantes dans « Paliers, précisions et sources ». Les simulations ne constituent pas une validation clinique.</p>
+      <p>Le statut de chaque plafond est précisé dans sa fiche. Les volumes sont affichés à 0,01 mL ; les coefficients en mL/kg gardent leur précision. Seuls les débits de pompe sont arrondis à 0,1 mL/h, sans arrondi en chaîne.</p>
+    </details>
     <nav class="tabs" role="tablist" aria-label="Espace de travail">
       <button type="button" id="quick-tab" role="tab" aria-selected="true" aria-controls="quick-panel" class="tab active">Calculs rapides <span class="count">65</span></button>
       <button type="button" id="ampoules-tab" role="tab" aria-selected="false" aria-controls="ampoules-panel" tabindex="-1" class="tab">Administration</button>
@@ -54,23 +51,23 @@
     <section id="quick-panel" role="tabpanel" aria-labelledby="quick-tab">
       <p id="quick-ampoules-status" class="quick-limit"></p>
       <form id="quick-patient-form" class="quick-patient" autocomplete="off" novalidate aria-label="Âge et poids pour le calcul">
+        <div class="quick-patient-heading"><h2>Patient</h2><button type="button" class="button button-plain" id="quick-reset">Nouveau patient</button></div>
         <div class="quick-patient-grid">
+          <div class="field">
+            <label for="quick-weight">Poids connu</label>
+            <div class="input-with-unit"><input id="quick-weight" name="quick-weight" type="text" inputmode="decimal" placeholder="Facultatif" maxlength="12" aria-describedby="quick-weight-help quick-error"><span>kg</span></div>
+            <p id="quick-weight-help" class="field-help">Prioritaire · virgule ou point.</p>
+          </div>
           <div class="field">
             <label for="quick-age">Âge</label>
             <div class="age-inputs"><input id="quick-age" name="quick-age" type="text" inputmode="decimal" placeholder="Ex. 3" maxlength="24" aria-describedby="quick-age-help quick-error"><label class="sr-only" for="quick-age-unit">Unité de l’âge</label><select id="quick-age-unit" name="quick-age-unit"><option value="years">ans</option><option value="months">mois</option></select></div>
-            <p id="quick-age-help" class="field-help">Estimation automatique si poids inconnu.</p>
-          </div>
-          <div class="field">
-            <label for="quick-weight">Poids connu <span class="required">prioritaire</span></label>
-            <div class="input-with-unit"><input id="quick-weight" name="quick-weight" type="text" inputmode="decimal" placeholder="Facultatif" maxlength="12" aria-describedby="quick-weight-help quick-error"><span>kg</span></div>
-            <p id="quick-weight-help" class="field-help">Virgule ou point. Laisser vide pour estimer.</p>
+            <p id="quick-age-help" class="field-help">Estimation si poids inconnu.</p>
           </div>
           <div id="quick-weight-summary" class="quick-weight-summary" role="status" aria-live="polite" aria-atomic="true">
             <span>Poids retenu</span><strong id="quick-used-weight">— kg</strong><span id="quick-weight-source">En attente de saisie</span>
           </div>
-          <div class="quick-patient-actions"><button type="button" class="button button-soft" id="quick-clear-weight">Effacer le poids connu</button><button type="button" class="button button-plain" id="quick-reset">Nouveau patient</button></div>
         </div>
-        <p id="quick-formula" class="quick-formula"></p>
+        <div class="quick-patient-actions"><p id="quick-formula" class="quick-formula"></p><button type="button" class="button button-plain" id="quick-clear-weight">Effacer le poids</button></div>
         <p id="quick-error" class="quick-error" role="alert" hidden></p>
       </form>
       <div class="catalog-toolbar quick-toolbar">
@@ -78,10 +75,9 @@
         <div class="category-field"><label for="quick-category">Groupe</label><select id="quick-category"><option value="all">Tous les groupes</option></select></div>
       </div>
       <div class="quick-counter-row"><p id="quick-calculation-status" role="status" aria-live="polite"></p><p id="quick-counter"></p></div>
-      <div class="review-actions"><p>Tous les paliers restent visibles, quel que soit l’âge ou le poids saisi.</p><button type="button" class="button button-soft" id="quick-print">Imprimer les fiches affichées</button></div>
-      <p class="quick-limit"><strong>Relecture avant production.</strong> Le statut de chaque plafond est précisé dans sa fiche. Les volumes sont affichés à 0,01 mL ; les coefficients en mL/kg gardent leur précision. Seuls les débits de pompe sont arrondis à 0,1 mL/h, sans arrondi en chaîne.</p>
       <div id="quick-groups"></div>
       <p id="quick-empty" class="catalog-empty" hidden>Aucun médicament trouvé. Modifiez la recherche ou le groupe.</p>
+      <div class="review-actions"><p>Tous les paliers restent accessibles dans les détails des fiches.</p><button type="button" class="button button-soft" id="quick-print">Imprimer les fiches affichées</button></div>
       <details class="quick-estimation"><summary>Estimation du poids</summary><p>Avant 1 an : table mensuelle locale (0 à 11 mois). À partir de 1 an : (âge en années + 4) × 2. Le poids saisi reste prioritaire.</p><p>Changer « mois » en « ans », ou inversement, ne modifie jamais la valeur saisie : seul son sens change pour les calculs.</p><p>Estimation approximative de secours : privilégier le poids connu. Aucune adaptation au poids idéal, à l’obésité ou aux particularités du patient n’est automatisée. Les valeurs restent uniquement en mémoire dans cette page.</p></details>
     </section>
 
@@ -151,7 +147,8 @@
       <section class="panel outstanding-review"><div class="panel-heading"><h2>Autres points à préciser</h2><span id="outstanding-count" class="count"></span></div><div id="outstanding-list"></div></section>
     </section>
     <noscript><p class="notice">Activez JavaScript pour utiliser ce prototype.</p></noscript>
-    <footer class="footer"><span>PediDoses <span class="footer-divider">/</span> France · v0.11 · Fiches de validation complètes</span><span>Validation clinique à finaliser · Aucune prescription générée</span></footer>
+    <footer class="footer"><div class="institution-logos" aria-label="CHU de Toulouse et SAMU 31"><img class="chu-logo" src="./assets/chu-toulouse.webp" alt="CHU de Toulouse" width="150" height="76"><img class="samu-logo" src="./assets/samu-31.jpg" alt="SAMU 31" width="66" height="66"></div><span>PediDoses <span class="footer-divider">/</span> France · v0.11</span><span>Validation clinique à finaliser · Aucune prescription générée</span></footer>
   </main>
 </body>
 </html>
+
