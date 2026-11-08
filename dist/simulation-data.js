@@ -26,7 +26,7 @@ export function prepareSimulationRecords(records) {
   });
 }
 
-function shortAmpoule(record) {
+export function shortAmpoule(record) {
   if (record.model.limitToOneBag) return 'Poche de volume variable';
   const a = record.ampoule;
   if (!a) return record.sourceCells[0] || 'À préciser';
@@ -42,7 +42,7 @@ function shortAmpoule(record) {
   return text;
 }
 
-function shortPosology(record, result, context) {
+export function shortPosology(record, result, context) {
   const m = record.model;
   if (m.type === 'instruction') return record.protocol.posology;
   if (m.type === 'fixed-rate') return 'Débit = poids ÷ 3';
@@ -198,3 +198,4 @@ export function simulationListContent(row) {
     metrics,
   };
 }
+

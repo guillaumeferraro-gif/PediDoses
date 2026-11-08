@@ -13,6 +13,14 @@ Les paramètres suivent les décisions de l’utilisateur des 26–28 septembre 
 - Les prélèvements et volumes finaux sont distincts. Aucun débit d’injection n’est déduit d’un prélèvement si la dilution finale manque.
 - Les débits sont arrondis à 0,1 mL/h à l’affichage ; les volumes de préparation à 0,01 mL. Les calculs utilisent les valeurs exactes, sauf les arrondis prescrits de dose pour l’amoxicilline/clavulanate et de diluant pour le lévétiracétam.
 
+## Interface Clinique
+
+« Calculs rapides » affiche les médicaments dans une colonne sur smartphone et deux colonnes à partir de 720 px. La dose et le volume à administrer, ou le débit, restent visibles. Les prélèvements sont identifiés séparément.
+
+Chaque carte se déplie sur six lignes compactes : **Présentation, Posologie, Prélèvement, Diluant, Volume final, Administration**. Le volume final décrit la préparation ; le volume à administrer reste identifié dans le résultat principal. « Paliers, précisions et sources » conserve la fiche complète et les points de relecture.
+
+Les détails ouverts restent ouverts lors d’un recalcul ou d’un filtrage. « Nouveau patient » les referme. L’impression ouvre les préparations et les références des fiches affichées, puis restaure leur état. Les commandes de dépliage et de dose ont une cible tactile d’au moins 44 px.
+
 ## Corrections v0.11
 
 - Triphosadénine : une seule ligne, une préparation commune et les deux couples dose/volume. Les deux posologies et plafonds sont modifiables dans la même ligne d’administration.
@@ -97,7 +105,13 @@ Les tests GitHub Actions se lancent sur les pushes de `main` et les pull request
 | `dist/admin-access.js`, `dist/admin-ui.js`, `dist/admin.css` | Code fixe et tableau intégré |
 | `dist/dose-adjustments.js`, `dist/dose-controls.js` | Réglages et confirmation des dépassements |
 | `dist/smur-ui.js`, `dist/simulation-ui.js`, `dist/simulation-data.js` | Deux vues des résultats |
+| `dist/quick-summary.js`, `dist/smur.css` | Six rubriques compactes et présentation mobile/tablette |
 | `dist/administration.js`, `dist/smur-sheets.js` | Voies, durées et fiches |
 | `tests/` | Régressions des calculs, réglages, imports et interactions |
 
-Les tests couvrent les doses initiales, seuils, annulation/confirmation, changement de patient, unités, durées, configurations, erreurs de stockage et migration. Ils vérifient également les deux doses de triphosadénine, le volume final du magnésium, la concentration du lévétiracétam après arrondi et le palier du phénobarbital. Des tests d’interaction chargent les modules d’interface avec un DOM minimal : ouverture des 65 fiches d’administration, édition, sauvegarde, verrouillage, boutons de dose et regroupement de la triphosadénine. Ils ne vérifient pas la mise en page. Le contrôle visuel dans un navigateur réel et l’impression restent à réaliser, l’accès au serveur local ayant été refusé par le navigateur disponible.
+Les 100 tests couvrent les doses initiales, seuils, annulation/confirmation, changement de patient, unités, durées, configurations, erreurs de stockage et migration. Ils vérifient également les deux doses de triphosadénine, le volume final du magnésium, la concentration du lévétiracétam après arrondi et le palier du phénobarbital.
+
+Des tests d’interaction chargent les modules d’interface avec un DOM minimal : ouverture des 65 fiches d’administration, édition, sauvegarde, verrouillage, boutons de dose et regroupement de la triphosadénine. `tests/quick-ui.test.mjs` couvre les six rubriques, la distinction prélèvement/préparation/administration, l’effacement après une saisie invalide, la conservation des détails ouverts et leur restauration après impression.
+
+Ces tests ne vérifient pas la mise en page. Le contrôle visuel sur smartphone et tablette, le parcours clavier et le rendu imprimé restent à réaliser dans un navigateur réel ; aucun rendu navigateur n’a pu être validé dans cet environnement.
+

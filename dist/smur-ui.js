@@ -5,6 +5,7 @@ import { buildMedicationSheet, volumeText, concentrationText } from './smur-shee
 import { setPatientInput, subscribePatientInput } from './patient-state.js';
 import { doseControls } from './dose-controls.js';
 import { withCurrentDose, clearDoseSettings, subscribeDoseSettings } from './dose-adjustments.js';
+import { quickMedicationDetails } from './quick-summary.js';
 
 const byId = id => document.getElementById(id);
 const format = (number, digits = 6) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: digits }).format(number);
@@ -30,6 +31,36 @@ let results = calculateAllRecords(smurRecords, null);
 let cards = new Map();
 let renderedPatientVisibility = '';
 let sheets = new Map(smurRecords.map(record => [record.id, buildMedicationSheet(record)]));
+const openDisclosures = new Set();
+let printSnapshot = null;
+
+function disclosure(key, label, className) {
+  const details = make('details', '', className);
+  details.open = openDisclosures.has(key);
+  details.append(make('summary', label));
+  details.addEventListener('toggle', () => {
+    if (!printSnapshot) {
+      if (details.open) openDisclosures.add(key);
+      else openDisclosures.delete(key);
+    }
+  });
+  return details;
+}
+
+function metric(container, label, value, highlighted = false) {
+  const item = make('div', '', `dose-metric${highlighted ? ' dose-metric-volume' : ''}`);
+  item.append(make('span', label, 'dose-value-label'), make('strong', value));
+  container.append(item);
+}
+
+function renderCompactDetails(container, record, result) {
+  container.replaceChildren(...quickMedicationDetails(withCurrentDose(record, context), result, context, sheets.get(record.id)).map(field => {
+    const row = make('div', '', 'dose-detail-row');
+    row.dataset.field = field.key;
+    row.append(make('dt', field.label), make('dd', field.value));
+    return row;
+  }));
+}
 
 function sourceLink(source) {
   const anchor = make('a', source.title);
@@ -102,19 +133,25 @@ function makeCard(record) {
   card.dataset.recordId = record.id;
   const info = make('div', '', 'dose-info');
   const heading = make('h3', record.name);
-  info.append(heading, make('p', 'Fiche de validation · tous les paliers affichés', 'dose-coefficient'));
+  heading.id = `quick-medication-${record.id}`;
+  card.setAttribute('aria-labelledby', heading.id);
+  info.append(heading);
   const values = make('div', '', 'dose-values');
   const controls=make('div','','dose-controls');
   const notes = make('p', '', 'dose-notes');
-  const details = make('div', '', 'dose-details');
-  addPreparation(details, record);
-  const calculationDetails = make('details', '', 'patient-calculation');
-  calculationDetails.append(make('summary', 'Détail de la simulation pour le poids retenu'));
+  const details = disclosure(record.id, 'Préparation et administration', 'dose-details');
+  const compact = make('dl', '', 'dose-detail-rows');
+  const review = disclosure(`${record.id}:review`, 'Paliers, précisions et sources', 'dose-review');
+  const reference = make('div', '', 'dose-reference');
+  addPreparation(reference, record);
+  const calculationDetails = disclosure(`${record.id}:calculation`, 'Détail du calcul pour le poids retenu', 'patient-calculation');
   const calculation = make('div', '', 'dose-calculation');
   calculationDetails.append(calculation);
-  details.append(calculationDetails);
+  reference.append(calculationDetails);
+  review.append(reference);
+  details.append(compact, review);
   card.append(info, values, controls, notes, details);
-  cards.set(record.id, { values, notes, calculation, controls });
+  cards.set(record.id, { values, notes, calculation, controls, compact, details, review, calculationDetails });
   return card;
 }
 
@@ -122,14 +159,19 @@ function updateCard(record) {
   const elements = cards.get(record.id);
   if (!elements) return;
   const result = results.get(record.id);
-  const { values, notes, calculation, controls } = elements;
+  const { values, notes, calculation, controls, compact } = elements;
   const control=doseControls(record,context,'quick');
   controls.replaceChildren(...(control ? [control] : [])); controls.hidden=!control;
   values.replaceChildren();
   calculation.replaceChildren();
   notes.textContent = '';
+  notes.className = 'dose-notes';
+  renderCompactDetails(compact, record, result);
   if (result.status !== 'calculated') {
-    values.append(make('strong', '—'));
+    if (result.status !== 'instruction') {
+      metric(values, record.model.unit === 'J' ? 'Énergie' : 'Dose calculée', '—');
+      if (record.model.unit !== 'J') metric(values, 'Volume / débit', '—', true);
+    }
     notes.textContent = result.message;
     notes.className = `dose-notes ${result.status === 'blocked' ? 'dose-blocked' : ''}`;
     return;
@@ -139,7 +181,11 @@ function updateCard(record) {
     for(const [label,dose]of [['1re dose',result],['2e dose',result.secondDose]]){
       const group=make('div','','dose-sequence');
       group.append(make('span',label,'dose-value-label'),make('strong',`${display(dose.dose)} ${unitLabel(dose.unit)}`));
-      if(dose.volumeMl!==null)group.append(make('span',`${preparationVolume(dose.volumeMl)} mL`,'dose-volume'));
+      if(dose.volumeMl!==null){
+        const volume=make('span',`${preparationVolume(dose.volumeMl)} mL`,'dose-volume');
+        volume.setAttribute('aria-label',`Volume de la ${label} : ${volume.textContent}`);
+        group.append(volume);
+      }
       if(dose.rateMlH!==null)group.append(make('span',`${format(dose.rateMlH,1)} mL/h`,'dose-volume'));
       if(dose.maximumApplied)group.append(make('small','Plafond appliqué'));
       values.append(group);
@@ -147,21 +193,35 @@ function updateCard(record) {
     }
     if(result.concentration!==null)calculation.append(make('p',`Concentration commune : ${concentrationText(result.concentration,result.unit)}.`));
     const questions=sheets.get(record.id).questions.length;
-    notes.textContent=questions?`${questions} question(s) à résoudre ci-dessous.`:'';
+    notes.textContent=questions?`${questions} point(s) de relecture dans les détails.`:'';
     return;
   }
-  const primary = result.rateMlH ?? result.dose ?? result.hourlyAmount;
-  const primaryUnit = result.rateMlH !== null ? 'mL/h' : `${unitLabel(result.unit)}${result.dose===null && result.hourlyAmount!==null ? '/h' : ''}`;
-  values.append(make('span', result.rateKind==='glucose' ? `Débit du G${format((record.model.glucoseConcentrationMgMl??100)/10,2)} %` : 'Simulation · poids retenu', 'dose-value-label'));
-  values.append(make('strong', `${result.rateMlH !== null ? format(primary, 1) : result.unit === 'mL' ? preparationVolume(primary) : display(primary)} ${primaryUnit}`));
-  if (result.volumeMl !== null && result.unit !== 'mL') values.append(make('span', `${result.rateKind==='glucose' ? `G${format((record.model.glucoseConcentrationMgMl??100)/10,2)} %` : 'Volume final à administrer'} : ${preparationVolume(result.volumeMl)} mL`, 'dose-volume'));
-  if(result.rateKind==='glucose') values.append(make('span',`Insuline rapide : ${display(result.dose)} UI`,'dose-volume'));
-  if (result.withdrawalMl !== null) values.append(make('span', `Produit à prélever : ${preparationVolume(result.withdrawalMl)} mL`, 'dose-volume'));
+  const infusion = ['infusion', 'fixed-rate', 'fixed-duration-mixture'].includes(record.model.type);
+  const volumeDose = result.unit === 'mL' && record.model.volumeKind !== 'withdrawal';
+  if (volumeDose) {
+    metric(values, record.model.limitToOneBag ? 'Volume prescrit · max. 1 poche' : 'Volume à administrer', `${preparationVolume(result.dose)} mL`, true);
+  } else {
+    const quantity = result.dose ?? result.hourlyAmount;
+    const doseLabel = result.unit === 'J' ? 'Énergie' : result.rateKind === 'glucose' ? 'Insuline rapide' : result.dose === null ? 'Dose horaire' : record.model.volumeKind === 'withdrawal' && result.unit === 'mL' ? 'Produit à prélever' : 'Dose calculée';
+    const unit = `${unitLabel(result.unit)}${result.dose === null && result.hourlyAmount !== null ? '/h' : ''}`;
+    metric(values, doseLabel, quantity === null ? '—' : `${result.unit === 'mL' ? preparationVolume(quantity) : display(quantity)} ${unit}`);
+    if (result.unit !== 'J') {
+      const label = infusion ? 'Débit' : result.rateKind === 'glucose' ? `Volume de G${format((record.model.glucoseConcentrationMgMl ?? 100) / 10, 2)} %` : 'Volume à administrer';
+      const value = infusion ? result.rateMlH === null ? '—' : `${format(result.rateMlH, 1)} mL/h` : result.volumeMl === null ? '—' : `${preparationVolume(result.volumeMl)} mL`;
+      metric(values, label, value, true);
+    }
+  }
+  if (!infusion && result.rateMlH !== null) {
+    const label = result.rateKind === 'glucose' ? `Débit du G${format((record.model.glucoseConcentrationMgMl ?? 100) / 10, 2)} %` : 'Débit';
+    values.append(make('span', `${label} : ${format(result.rateMlH, 1)} mL/h`, 'dose-extra'));
+  }
+  if (record.model.durationHours && result.dose !== null && result.rateKind !== 'glucose') values.append(make('span', `Dose sur ${format(record.model.durationHours)} h`, 'dose-extra'));
+  if (result.withdrawalMl !== null) values.append(make('span', `Produit à prélever : ${preparationVolume(result.withdrawalMl)} mL`, 'dose-extra'));
   const messages = [];
   if (record.model.type==='infusion' && result.rateMlH===null) messages.push('Débit indisponible : concentration finale à préciser.');
   if (result.volumeMl === null && record.model.type === 'dose' && record.model.preparationMode!=='dose-only' && record.category !== 'antibiotiques' && !['J', 'mL'].includes(result.unit)) messages.push('Volume indisponible : concentration finale non documentée.');
   const sheet = sheets.get(record.id);
-  if (sheet.questions.length) messages.push(`${sheet.questions.length} question${sheet.questions.length > 1 ? 's' : ''} à résoudre ci-dessous.`);
+  if (sheet.questions.length) messages.push(`${sheet.questions.length} point${sheet.questions.length > 1 ? 's' : ''} de relecture dans les détails.`);
   if (sheet.pendingCeiling !== null && result.dose > sheet.pendingCeiling) messages.push('La simulation dépasse le plafond du tableau encore à valider : voir la posologie ci-dessous.');
   if (result.maximumApplied) messages.push('Plafond du modèle appliqué : voir son statut dans la fiche.');
   notes.textContent = messages.join(' ');
@@ -179,6 +239,13 @@ function updateCard(record) {
 }
 
 function renderGroups() {
+  if (!printSnapshot) for (const [id, elements] of cards) {
+    for (const [name, suffix] of [['details', ''], ['review', ':review'], ['calculationDetails', ':calculation']]) {
+      const key = id + suffix;
+      if (elements[name].open) openDisclosures.add(key);
+      else openDisclosures.delete(key);
+    }
+  }
   const query = normalize(searchInput.value.trim());
   const visible = smurRecords.filter(record => isRecordVisibleForPatient(record, context));
   renderedPatientVisibility = visible.map(record => record.id).join(',');
@@ -195,7 +262,9 @@ function renderGroups() {
     title.id = `quick-group-${category.id}`;
     title.append(make('span', String(records.length), 'count'));
     section.setAttribute('aria-labelledby', title.id);
-    section.append(title, ...records.map(makeCard));
+    const grid = make('div', '', 'dose-card-grid');
+    grid.append(...records.map(makeCard));
+    section.append(title, grid);
     sections.push(section);
   }
   byId('quick-groups').replaceChildren(...sections);
@@ -246,6 +315,8 @@ byId('quick-clear-weight').addEventListener('click', () => {
   weightInput.focus();
 });
 function resetPatient() {
+  openDisclosures.clear();
+  for (const elements of cards.values()) for (const name of ['details', 'review', 'calculationDetails']) elements[name].open = false;
   clearDoseSettings();
   form.reset();
   updatePatient();
@@ -255,6 +326,20 @@ byId('quick-reset').addEventListener('click', () => { resetPatient(); ageInput.f
 searchInput.addEventListener('input', renderGroups);
 categoryInput.addEventListener('change', renderGroups);
 byId('quick-print').addEventListener('click', () => window.print());
+window.addEventListener('beforeprint', () => {
+  if (printSnapshot) return;
+  printSnapshot = new Map();
+  for (const elements of cards.values()) for (const name of ['details', 'review']) {
+    const details = elements[name];
+    printSnapshot.set(details, details.open);
+    details.open = true;
+  }
+});
+window.addEventListener('afterprint', () => {
+  if (!printSnapshot) return;
+  for (const [details, open] of printSnapshot) details.open = open;
+  printSnapshot = null;
+});
 window.addEventListener('pageshow', event => { if (event.persisted) resetPatient(); });
 window.addEventListener('ampoules-updated', () => {
   smurRecords = getConfiguredRecords();
@@ -270,3 +355,4 @@ subscribePatientInput((value, source) => {
 renderGroups();
 resetPatient();
 subscribeDoseSettings(updatePatient);
+
