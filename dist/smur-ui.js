@@ -114,7 +114,7 @@ function addPreparation(details, record) {
     list.append(...sheet.particulars.map(text => make('li', text)));
     block.append(list); details.append(block);
   }
-  const block = section('Questions à résoudre');
+  const block = section('Points à relire');
   block.classList.add('protocol-questions');
   if (sheet.questions.length) {
     const list = make('ul');
@@ -141,7 +141,7 @@ function makeCard(record) {
   const notes = make('p', '', 'dose-notes');
   const details = disclosure(record.id, 'Préparation et administration', 'dose-details');
   const compact = make('dl', '', 'dose-detail-rows');
-  const review = disclosure(`${record.id}:review`, 'Paliers, précisions et sources', 'dose-review');
+  const review = disclosure(`${record.id}:review`, 'Paliers, relecture et sources', 'dose-review');
   const reference = make('div', '', 'dose-reference');
   addPreparation(reference, record);
   const calculationDetails = disclosure(`${record.id}:calculation`, 'Détail du calcul pour le poids retenu', 'patient-calculation');
@@ -167,12 +167,15 @@ function updateCard(record) {
   notes.textContent = '';
   notes.className = 'dose-notes';
   renderCompactDetails(compact, record, result);
+  const sheet = sheets.get(record.id);
+  const questionCount = sheet.questions.length;
+  const reviewNote = questionCount ? `${questionCount} point${questionCount > 1 ? 's' : ''} à relire dans les détails.` : '';
   if (result.status !== 'calculated') {
     if (result.status !== 'instruction') {
       metric(values, record.model.unit === 'J' ? 'Énergie' : 'Dose calculée', '—');
       if (record.model.unit !== 'J') metric(values, 'Volume / débit', '—', true);
     }
-    notes.textContent = result.message;
+    notes.textContent = [result.message, reviewNote].filter(Boolean).join(' ');
     notes.className = `dose-notes ${result.status === 'blocked' ? 'dose-blocked' : ''}`;
     return;
   }
@@ -192,8 +195,7 @@ function updateCard(record) {
       calculation.append(make('p',`${label} : ${display(dose.dose)} ${unitLabel(dose.unit)}${dose.volumeMl!==null?` = ${preparationVolume(dose.volumeMl)} mL`:''}${dose.maximumApplied?' après plafond':''}.`));
     }
     if(result.concentration!==null)calculation.append(make('p',`Concentration commune : ${concentrationText(result.concentration,result.unit)}.`));
-    const questions=sheets.get(record.id).questions.length;
-    notes.textContent=questions?`${questions} point(s) de relecture dans les détails.`:'';
+    notes.textContent = reviewNote;
     return;
   }
   const infusion = ['infusion', 'fixed-rate', 'fixed-duration-mixture'].includes(record.model.type);
@@ -220,9 +222,8 @@ function updateCard(record) {
   const messages = [];
   if (record.model.type==='infusion' && result.rateMlH===null) messages.push('Débit indisponible : concentration finale à préciser.');
   if (result.volumeMl === null && record.model.type === 'dose' && record.model.preparationMode!=='dose-only' && record.category !== 'antibiotiques' && !['J', 'mL'].includes(result.unit)) messages.push('Volume indisponible : concentration finale non documentée.');
-  const sheet = sheets.get(record.id);
-  if (sheet.questions.length) messages.push(`${sheet.questions.length} point${sheet.questions.length > 1 ? 's' : ''} de relecture dans les détails.`);
-  if (sheet.pendingCeiling !== null && result.dose > sheet.pendingCeiling) messages.push('La simulation dépasse le plafond du tableau encore à valider : voir la posologie ci-dessous.');
+  if (reviewNote) messages.push(reviewNote);
+  if (sheet.pendingCeiling !== null && result.dose > sheet.pendingCeiling) messages.push('La dose calculée dépasse le plafond du tableau qui reste à valider. Voir les détails de la fiche.');
   if (result.maximumApplied) messages.push('Plafond du modèle appliqué : voir son statut dans la fiche.');
   notes.textContent = messages.join(' ');
   calculation.append(make('p', `Poids retenu : ${format(result.weightKg)} kg (${result.weightSource === 'measured' ? 'saisi' : 'estimé'}).`));

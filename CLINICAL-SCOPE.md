@@ -53,7 +53,7 @@ Pour le lévétiracétam, la plage de préparation fournie par l’utilisateur e
 
 ## Réglages v0.10
 
-Les dix triplets pas/départ/seuil fournis par l’utilisateur sont repris dans le [tableau du README](./README.md#posologies-réglables). Le seuil est un avertissement dépassable après confirmation, renouvelée pour chaque augmentation au-delà. Annuler conserve le réglage précédent. Les deux vues partagent les réglages et le changement de patient restaure les doses de départ.
+Les dix triplets pas/départ/seuil fournis par l’utilisateur sont repris dans le [tableau du README](./README.md#posologies-réglables). Le seuil est un avertissement dépassable après confirmation, renouvelée pour chaque augmentation au-delà. Annuler conserve le réglage précédent. Le changement de patient restaure les doses de départ dans « Calculs rapides ».
 
 Les catécholamines démarrent aux doses fournies (0,1 mcg/kg/min pour adrénaline/noradrénaline, 5 pour dopamine/dobutamine), en remplacement du débit poids/3. Les anciens plafonds de posologie d’isoprénaline, nicardipine entretien et salbutamol sont remplacés par les seuils demandés le 28 septembre.
 
@@ -62,6 +62,8 @@ Atracurium IVSE, clonazépam IVSE, charge de nicardipine et tranexamique entreti
 Le tableau d’administration permet de modifier les paramètres de calcul, ampoules, unités, durées, voies, préparations, paliers, pas et limites. Les configurations sont enregistrées localement et transférables par JSON. Les textes libres ne remplacent pas les paramètres numériques et doivent être tenus cohérents avec eux.
 
 ## Points encore ouverts
+
+Ces points figurent dans les détails des fiches concernées dans « Calculs rapides ».
 
 - Gluconate : spécialité exacte, dilution finale et durée. Le calcul utilise le volume de produit à 10 % ; la teneur exacte en sels ou calcium élément dépend de la spécialité.
 - Insuline rapide : concentration nécessaire pour son prélèvement. Dose en UI et volume/débit du G10 % sont calculables indépendamment.

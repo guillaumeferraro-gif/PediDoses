@@ -212,7 +212,9 @@ export function buildMedicationSheet(record) {
   const presentation = record.ampoule?.description || presentations[record.id] || record.sourceCells[0] || 'Ampoule/flacon, quantité et concentration à renseigner.';
   if (!presentations[record.id] && !record.sourceCells[0]) questions.push('Renseigner la présentation disponible et sa reconstitution éventuelle.');
   if (containerUnknown.has(record.id) && !record.ampoule?.volumeMl) questions.push('Préciser le volume du contenant disponible ; la concentration seule est renseignée.');
-  if (['midazolam-iv','midazolam-ij'].includes(record.id) && record.ampoule?.status !== 'confirmé') questions.push('Confirmer la présentation de l’onglet Ampoules par rapport au stock effectivement embarqué.');
+  if (['midazolam-iv','midazolam-ij'].includes(record.id) && record.ampoule?.status !== 'confirmé') questions.push('Confirmer la présentation renseignée dans Administration par rapport au stock embarqué.');
+  if (m.adjustmentStatus === 'suspended') questions.push('Confirmer les paramètres du réglage de posologie avant son activation.');
+  if (record.id === 'calcium-gluconate') questions.push('Confirmer la spécialité exacte du stock embarqué.');
   let administration = administrationText(record);
   if (administration === 'IV' && record.category !== 'antibiotiques') {
     administration = 'IV — durée ou vitesse non précisée';

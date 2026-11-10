@@ -9,15 +9,11 @@
   <title>PediDoses · Calculs pédiatriques</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./catalog.css">
   <link rel="stylesheet" href="./smur.css">
-  <link rel="stylesheet" href="./simulation.css">
   <link rel="stylesheet" href="./admin.css">
   <script type="module" src="./admin-ui.js"></script>
   <script type="module" src="./app.js"></script>
-  <script type="module" src="./catalog-ui.js"></script>
   <script type="module" src="./smur-ui.js"></script>
-  <script type="module" src="./simulation-ui.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Aller au référentiel</a>
@@ -37,15 +33,12 @@
     </div>
     <details class="notice">
       <summary>Support de validation · informations d’utilisation</summary>
-      <p>Chaque fiche donne accès aux posologies, préparations et questions restantes dans « Paliers, précisions et sources ». Les simulations ne constituent pas une validation clinique.</p>
+      <p>Chaque fiche donne accès aux posologies, préparations et questions restantes dans « Paliers, relecture et sources ». La validation clinique des fiches reste à finaliser.</p>
       <p>Le statut de chaque plafond est précisé dans sa fiche. Les volumes sont affichés à 0,01 mL ; les coefficients en mL/kg gardent leur précision. Seuls les débits de pompe sont arrondis à 0,1 mL/h, sans arrondi en chaîne.</p>
     </details>
     <nav class="tabs" role="tablist" aria-label="Espace de travail">
       <button type="button" id="quick-tab" role="tab" aria-selected="true" aria-controls="quick-panel" class="tab active">Calculs rapides <span class="count">65</span></button>
       <button type="button" id="ampoules-tab" role="tab" aria-selected="false" aria-controls="ampoules-panel" tabindex="-1" class="tab">Administration</button>
-      <button type="button" id="catalog-tab" role="tab" aria-selected="false" aria-controls="catalog-panel" tabindex="-1" class="tab">Tableau source <span class="count catalog-count">62</span></button>
-      <button type="button" id="protocols-tab" role="tab" aria-selected="false" aria-controls="protocols-panel" tabindex="-1" class="tab">Relecture <span class="count" id="issue-count"></span></button>
-      <button type="button" id="calculator-tab" role="tab" aria-selected="false" aria-controls="calculator-panel" tabindex="-1" class="tab">Simulation logicielle</button>
     </nav>
 
     <section id="quick-panel" role="tabpanel" aria-labelledby="quick-tab">
@@ -70,13 +63,13 @@
         <div class="quick-patient-actions"><p id="quick-formula" class="quick-formula"></p><button type="button" class="button button-plain" id="quick-clear-weight">Effacer le poids</button></div>
         <p id="quick-error" class="quick-error" role="alert" hidden></p>
       </form>
-      <div class="catalog-toolbar quick-toolbar">
+      <div class="quick-toolbar">
         <div class="search-field"><label for="quick-search">Rechercher un médicament</label><input type="search" id="quick-search" placeholder="Adrénaline, kétamine, Isofundine…" maxlength="100" autocomplete="off"></div>
         <div class="category-field"><label for="quick-category">Groupe</label><select id="quick-category"><option value="all">Tous les groupes</option></select></div>
       </div>
       <div class="quick-counter-row"><p id="quick-calculation-status" role="status" aria-live="polite"></p><p id="quick-counter"></p></div>
       <div id="quick-groups"></div>
-      <p id="quick-empty" class="catalog-empty" hidden>Aucun médicament trouvé. Modifiez la recherche ou le groupe.</p>
+      <p id="quick-empty" class="quick-empty" hidden>Aucun médicament trouvé. Modifiez la recherche ou le groupe.</p>
       <div class="review-actions"><p>Tous les paliers restent accessibles dans les détails des fiches.</p><button type="button" class="button button-soft" id="quick-print">Imprimer les fiches affichées</button></div>
       <details class="quick-estimation"><summary>Estimation du poids</summary><p>Avant 1 an : table mensuelle locale (0 à 11 mois). À partir de 1 an : (âge en années + 4) × 2. Le poids saisi reste prioritaire.</p><p>Changer « mois » en « ans », ou inversement, ne modifie jamais la valeur saisie : seul son sens change pour les calculs.</p><p>Estimation approximative de secours : privilégier le poids connu. Aucune adaptation au poids idéal, à l’obésité ou aux particularités du patient n’est automatisée. Les valeurs restent uniquement en mémoire dans cette page.</p></details>
     </section>
@@ -98,54 +91,6 @@
       <dialog id="admin-editor" class="admin-editor" aria-labelledby="admin-editor-title"><div class="admin-heading"><h2 id="admin-editor-title"></h2><button id="admin-editor-close" type="button" class="button button-soft">Fermer les détails</button></div><p>Ces modifications restent dans le tableau jusqu’à l’enregistrement.</p><div id="admin-editor-fields"></div></dialog>
     </section>
 
-    <section id="catalog-panel" role="tabpanel" aria-labelledby="catalog-tab" hidden>
-      <div class="catalog-toolbar">
-        <div class="search-field"><label for="medication-search">Rechercher une ligne</label><input type="search" id="medication-search" placeholder="Médicament, présentation, voie…" maxlength="100" autocomplete="off"></div>
-        <div class="category-field"><label for="category-filter">Rubrique du tableau</label><select id="category-filter"><option value="all">Toutes les rubriques</option></select></div>
-        <p class="catalog-counter" id="catalog-counter" role="status"></p>
-      </div>
-      <div class="catalog-workspace">
-        <section class="panel catalog-list" aria-label="Lignes du tableau fourni">
-          <div class="table-scroll"><table class="medication-table"><caption class="sr-only">Lignes importées et état de relecture. Sélectionnez un nom pour consulter la source et son contrôle.</caption><thead><tr><th scope="col">Ligne du tableau</th><th scope="col">Posologie indiquée</th><th scope="col">Relecture</th></tr></thead><tbody id="catalog-rows"></tbody></table></div>
-          <p id="catalog-empty" class="catalog-empty" hidden>Aucune ligne ne correspond. Essayez un autre nom ou une autre rubrique.</p>
-        </section>
-        <aside class="panel record-detail" id="record-detail" aria-labelledby="record-title">
-          <p class="eyebrow" id="record-category"></p><h2 id="record-title" tabindex="-1"></h2>
-          <div class="record-badges"><span id="record-state" class="review-badge"></span><span class="source-badge">Source utilisateur</span></div>
-          <h3 class="detail-section-title">Valeurs du tableau fourni</h3>
-          <dl id="record-source" class="record-source"></dl>
-          <section class="record-issues" id="record-issues-section"><h3>À clarifier pour cette ligne</h3><ul id="record-issues"></ul></section>
-          <details class="audit-details" id="audit-details"><summary>Contrôler l’exemple de 10 kg <span>Hypothèse à confirmer</span></summary><p class="audit-note">Contrôle du tableau à poids fixe, sans données patient. Les résultats ci-dessous ne sont pas des consignes de préparation ou d’administration.</p><div id="record-audit"></div></details>
-          <div class="clinical-lock"><strong>Exemple source conservé à 10 kg</strong><p>Les calculs au poids saisi sont dans « Calculs rapides ». Protocole daté, indications, plafonds et validation clinique restent à compléter.</p></div>
-        </aside>
-      </div>
-    </section>
-
-    <section id="calculator-panel" role="tabpanel" aria-labelledby="calculator-tab" hidden>
-      <div class="simulation-banner"><strong>Simulation logicielle</strong><span>Validation en cours · valeurs provisoires incluses†</span></div>
-      <form id="simulation-patient-form" class="simulation-patient" autocomplete="off" novalidate>
-        <div class="field"><label for="simulation-age">Âge</label><div class="age-inputs"><input id="simulation-age" type="text" inputmode="decimal" maxlength="24" placeholder="Ex. 3" aria-describedby="simulation-error"><label for="simulation-age-unit" class="sr-only">Unité d’âge</label><select id="simulation-age-unit"><option value="years">ans</option><option value="months">mois</option></select></div></div>
-        <div class="field"><label for="simulation-weight">Poids connu · prioritaire</label><div class="input-with-unit"><input id="simulation-weight" type="text" inputmode="decimal" maxlength="12" placeholder="Facultatif" aria-describedby="simulation-error"><span>kg</span></div></div>
-        <div class="simulation-weight" role="status" aria-live="polite"><strong id="simulation-used-weight">— kg</strong><span id="simulation-weight-source">Âge ou poids</span></div>
-        <button id="simulation-reset" type="button" class="button button-soft">Nouveau patient</button>
-      </form>
-      <p id="simulation-error" class="quick-error" role="alert" hidden></p>
-      <div class="simulation-toolbar">
-        <label class="sr-only" for="simulation-search">Rechercher un médicament</label><input id="simulation-search" type="search" maxlength="100" placeholder="Rechercher un médicament…" autocomplete="off">
-        <label class="sr-only" for="simulation-category">Groupe de médicaments</label><select id="simulation-category"><option value="all">Tous les groupes</option></select>
-      </div>
-      <div id="simulation-list" class="simulation-list"></div>
-      <p id="simulation-empty" class="catalog-empty" hidden>Aucune ligne ne correspond à la recherche.</p>
-      <p class="simulation-footnote"><span>† Valeur du tableau utilisée pour la simulation, encore à valider. Une préparation manquante reste à préciser.</span><span id="simulation-count" role="status" aria-live="polite"></span></p>
-    </section>
-
-    <section id="protocols-panel" role="tabpanel" aria-labelledby="protocols-tab" hidden>
-      <div class="reference-grid">
-        <section class="panel reference-main"><div class="panel-heading"><span class="step">R</span><h2>Provenance du référentiel</h2><span class="tiny-badge neutral">NON VALIDÉ</span></div><h3><span class="catalog-count">62</span> lignes importées</h3><p>Médicaments, gestes électriques, perfusions, hyperkaliémie et produits sanguins. Aucune ligne n’est présentée comme cliniquement approuvée.</p><dl class="reference-list"><div><dt>Pays / juridiction</dt><dd>France</dd></div><div><dt>Source</dt><dd>Tableau transmis dans la conversation</dd></div><div><dt>Version de transcription</dt><dd>FR-IMPORT-1</dd></div><div><dt>Poids de référence</dt><dd>10 kg présumés, à confirmer</dd></div><div><dt>Service et protocole daté</dt><dd>À fournir</dd></div><div><dt>Relecture clinique et pharmaceutique</dt><dd>Non effectuée</dd></div></dl><p class="reference-bottom">Les calculs portent seulement sur la cohérence de l’exemple source. Aucun plafond, intervalle ou usage clinique n’est ajouté par déduction.</p></section>
-        <aside class="panel reference-aside"><h2>Écarts numériques de l’exemple</h2><p class="review-explainer">Sous l’hypothèse de 10 kg et avec les concentrations écrites. Les valeurs sources ne sont pas remplacées.</p><div id="discrepancy-list"></div><details class="sources-details"><summary>Documents consultés pour la relecture</summary><p>Vérifications ciblées de présentations et d’unités. Ces documents ne constituent pas une validation complète du tableau ni un protocole pédiatrique du service.</p><div id="reference-links"></div></details></aside>
-      </div>
-      <section class="panel outstanding-review"><div class="panel-heading"><h2>Autres points à préciser</h2><span id="outstanding-count" class="count"></span></div><div id="outstanding-list"></div></section>
-    </section>
     <noscript><p class="notice">Activez JavaScript pour utiliser ce prototype.</p></noscript>
     <footer class="footer"><div class="institution-logos" aria-label="CHU de Toulouse et SAMU 31"><img class="chu-logo" src="./assets/chu-toulouse.webp" alt="CHU de Toulouse" width="150" height="76"><img class="samu-logo" src="./assets/samu-31.jpg" alt="SAMU 31" width="66" height="66"></div><span>PediDoses <span class="footer-divider">/</span> France · v0.11</span><span>Validation clinique à finaliser · Aucune prescription générée</span></footer>
   </main>

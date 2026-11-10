@@ -1,11 +1,10 @@
 const byId = id => document.getElementById(id);
-const tabs = [byId('quick-tab'), byId('ampoules-tab'), byId('catalog-tab'), byId('protocols-tab'), byId('calculator-tab')];
+const tabs = [byId('quick-tab'), byId('ampoules-tab')];
 function activateTab(tab) {
   if (byId('ampoules-tab').getAttribute('aria-selected') === 'true' && tab.id !== 'ampoules-tab') {
     const event = new Event('admin-leave', {cancelable:true});
-    if (!window.dispatchEvent(event)) return;
+    if (!window.dispatchEvent(event)) return false;
   }
-  document.body.classList.toggle('simulation-active', tab.id === 'calculator-tab');
   for (const item of tabs) {
     const active = item === tab;
     item.setAttribute('aria-selected', String(active));
@@ -13,6 +12,7 @@ function activateTab(tab) {
     item.classList.toggle('active', active);
     byId(item.getAttribute('aria-controls')).hidden = !active;
   }
+  return true;
 }
 for (const tab of tabs) {
   tab.addEventListener('click', () => activateTab(tab));
@@ -24,8 +24,7 @@ for (const tab of tabs) {
     if (event.key === 'End') next = tabs.at(-1);
     if (next) {
       event.preventDefault();
-      activateTab(next);
-      next.focus();
+      if (activateTab(next)) next.focus();
     }
   });
 }
