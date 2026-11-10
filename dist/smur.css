@@ -44,6 +44,8 @@
 .quick-toolbar .search-field,.quick-toolbar .category-field{max-width:none;min-width:0}
 .quick-toolbar label{font-size:.75rem;margin-bottom:6px}
 .quick-toolbar input,.quick-toolbar select{min-height:48px;border-color:#718b9b;font-size:1rem;padding:10px}
+.quick-toolbar input[type=search]{width:100%;border:1px solid #718b9b;border-radius:7px;background:var(--paper);color:var(--ink)}
+.quick-empty{padding:20px 12px;color:var(--muted);font-size:.875rem}
 .quick-toolbar input::placeholder{font-size:.8125rem}
 .quick-counter-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:start;gap:4px 12px;margin:12px 0 16px;font-size:.75rem;color:var(--muted)}
 .quick-counter-row #quick-counter{white-space:nowrap}

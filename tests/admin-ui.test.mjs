@@ -11,7 +11,6 @@ adminAccess.expectedDigest=createHash('sha256').update('87654321').digest('hex')
 await import('../dist/admin-ui.js');
 await import('../dist/app.js');
 await import('../dist/smur-ui.js');
-await import('../dist/simulation-ui.js');
 const {protocolStore}=await import('../dist/ampoules-ui.js');
 const {currentDose,changeDose,clearDoseSettings}=await import('../dist/dose-adjustments.js');
 const {doseControls}=await import('../dist/dose-controls.js');
@@ -21,12 +20,11 @@ const drug=id=>protocolStore.getRecords().find(r=>r.id===id);
 const adminRow=id=>byId('admin-table-body').children.find(r=>r.dataset.recordId===id);
 const field=(root,label)=>descendants(root).find(e=>e.tagName==='LABEL'&&e._text===label)?.children[0];
 
-test('une seule ligne de triphosadénine dans chaque vue ; ses deux doses restent éditables ensemble',async()=>{
+test('une seule ligne de triphosadénine dans Calculs rapides ; ses deux doses restent éditables ensemble',async()=>{
  byId('quick-weight').value='3';byId('quick-age').value='3';await byId('quick-weight').emit('input');
- for(const root of ['quick-groups','simulation-list']){
-  assert.equal(descendants(byId(root)).filter(e=>e.dataset?.recordId==='triphosadenine').length,1);
-  assert.equal(descendants(byId(root)).filter(e=>['triphosadenine-2','atracurium-bolus'].includes(e.dataset?.recordId)).length,0);
- }
+ const cards=descendants(byId('quick-groups'));
+ assert.equal(cards.filter(e=>e.dataset?.recordId==='triphosadenine').length,1);
+ assert.equal(cards.filter(e=>['triphosadenine-2','atracurium-bolus'].includes(e.dataset?.recordId)).length,0);
  const quick=()=>descendants(byId('quick-groups')).find(e=>e.dataset?.recordId==='triphosadenine');
  const doses=()=>descendants(quick()).filter(e=>e.className==='dose-sequence');
  assert.equal(doses().length,2);assert.match(doses()[0].textContent,/1re dose3 mg0,30 mL/);assert.match(doses()[1].textContent,/2e dose6 mg0,60 mL/);
@@ -34,16 +32,13 @@ test('une seule ligne de triphosadénine dans chaque vue ; ses deux doses resten
  const second=field(adminRow('triphosadenine'),'2e dose par kg');assert.ok(second);second.value='3';await second.emit('input');
  await byId('admin-save').emit('click');assert.equal(drug('triphosadenine').model.secondCoefficient,3);
  assert.match(doses()[0].textContent,/3 mg0,30 mL/);assert.match(doses()[1].textContent,/9 mg0,90 mL/);
- const simulation=descendants(byId('simulation-list')).find(e=>e.dataset?.recordId==='triphosadenine');
- const values=descendants(simulation).find(e=>e.className==='sim-list-values');assert.match(values.textContent,/2e dose9 mg/);
  const resetSecond=field(adminRow('triphosadenine'),'2e dose par kg');resetSecond.value='2';await resetSecond.emit('input');await byId('admin-save').emit('click');
  assert.equal(drug('triphosadenine').model.secondCoefficient,2);
  await byId('admin-lock').emit('click');
 });
 
-test('interface administration : verrou, édition, sauvegarde et recalcul effectifs dans les deux vues',async()=>{
+test('interface administration : verrou, édition, sauvegarde et recalcul effectifs dans Calculs rapides',async()=>{
  byId('quick-weight').value='10';byId('quick-age').value='3';await byId('quick-weight').emit('input');
- assert.equal(byId('simulation-weight').value,'10');
  await byId('ampoules-tab').emit('click');
  await login('00000000');assert.equal(adminAccess.unlocked,false);assert.equal(byId('admin-unlocked').hidden,true);
  await login('87654321');assert.equal(adminAccess.unlocked,true);assert.equal(byId('admin-table-body').children.length,65);
@@ -52,9 +47,7 @@ test('interface administration : verrou, édition, sauvegarde et recalcul effect
  await byId('admin-save').emit('click');assert.equal(drug('sufentanil').model.coefficient,.3);assert.match(byId('admin-status').textContent,/enregistrés/);
  assert.equal(byId('admin-save').disabled,true);
  const quick=descendants(byId('quick-groups')).find(e=>e.dataset?.recordId==='sufentanil');
- const simulation=descendants(byId('simulation-list')).find(e=>e.dataset?.recordId==='sufentanil');
  assert.match(descendants(quick).find(e=>e.className==='dose-values').textContent,/3 mL\/h/);
- assert.match(descendants(simulation).find(e=>e.className==='sim-list-values').textContent,/3 mcg\/h/);
  const broken=field(adminRow('sufentanil'),'Pas (unité de posologie)');broken.value='-1';await broken.emit('input');await byId('admin-save').emit('click');
  assert.match(byId('admin-status').textContent,/refusé/);assert.equal(drug('sufentanil').model.doseStep,.1);
  window.confirm=()=>false;await byId('quick-tab').emit('click');assert.equal(adminAccess.unlocked,true);assert.equal(byId('ampoules-tab').getAttribute('aria-selected'),'true');
@@ -84,4 +77,22 @@ test('bouton + : annulation conserve le débit, confirmation applique la hausse 
  controls=doseControls(r,c,'test');assert.match(controls.textContent,/Dépassement confirmé/);
  assert.equal(doseControls(drug('clonazepam-ivc'),c,'test'),null);
  assert.doesNotMatch(doseControls(drug('morphine-ivc'),c,'test').textContent,/\+/);
+});
+
+test('les points ouverts restent accessibles dans les fiches de Calculs rapides, avant la saisie patient', async () => {
+ await byId('quick-reset').emit('click');
+ for (const [id, question] of [
+  ['calcium-gluconate', /spécialité exacte/],
+  ['insuline-glucose', /concentration de l’insuline rapide/],
+  ['tranexamique-bolus', /dilution et la durée/],
+  ['tranexamique-ivc', /concentration finale/],
+  ['atracurium-ivc', /conditionnement disponible/],
+  ['nicardipine-charge', /durée de la dose de charge/],
+  ['morphine-ivc', /réglage de posologie/],
+ ]) {
+  const card = descendants(byId('quick-groups')).find(element => element.dataset?.recordId === id);
+  const nodes = descendants(card);
+  assert.match(nodes.find(element => element.className?.includes('dose-notes')).textContent, /à relire/);
+  assert.match(nodes.find(element => element.className === 'dose-review').textContent, question);
+ }
 });

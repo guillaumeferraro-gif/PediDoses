@@ -6,10 +6,10 @@ Les paramètres suivent les décisions de l’utilisateur des 26–28 septembre 
 
 ## Utilisation
 
-- L’âge et le poids sont partagés entre « Calculs rapides » et « Simulation logicielle ». Chaque modification recalcule toutes les lignes et rétablit les doses de départ.
+- « Calculs rapides » rassemble toutes les fiches. Modifier l’âge ou le poids recalcule les résultats et rétablit les doses de départ.
 - Le poids connu valide est prioritaire. Sans poids, l’âge permet l’estimation locale. Une saisie invalide efface les résultats.
 - « Nouveau patient » efface les saisies, volumes de poche et réglages. Aucune donnée patient n’est enregistrée ni transmise.
-- Les deux vues partagent les mêmes réglages de posologie. Changer d’onglet conserve le patient et ses réglages.
+- Changer d’onglet conserve le patient et ses réglages. Les points à relire se trouvent dans « Préparation et administration » → « Paliers, relecture et sources », dans chaque fiche.
 - Les prélèvements et volumes finaux sont distincts. Aucun débit d’injection n’est déduit d’un prélèvement si la dilution finale manque.
 - Les débits sont arrondis à 0,1 mL/h à l’affichage ; les volumes de préparation à 0,01 mL. Les calculs utilisent les valeurs exactes, sauf les arrondis prescrits de dose pour l’amoxicilline/clavulanate et de diluant pour le lévétiracétam.
 
@@ -57,7 +57,7 @@ Ouvrir **Administration**, saisir le code fixe transmis au responsable, modifier
 
 Le tableau donne accès aux doses, unités, pas, seuils, ampoules, voies et durées. **Détails** donne également accès aux limites, préparations, diluants, concentrations finales, volumes, paliers d’âge et de poids, filtres et textes de chaque fiche. Les valeurs numériques structurées alimentent les calculs ; les textes libres servent aux explications et doivent rester cohérents avec ces valeurs.
 
-- Les modifications restent en brouillon jusqu’à l’enregistrement. Elles actualisent ensuite les deux vues et rétablissent les doses de départ.
+- Les modifications restent en brouillon jusqu’à l’enregistrement. Elles actualisent ensuite les calculs et rétablissent les doses de départ.
 - Les unités massiques et les périodes minute/heure sont converties en conservant la dose physique. Modifier la valeur numérique modifie la prescription.
 - La concentration de l’ampoule est calculée par quantité ÷ volume, ou par la concentration déclarée si ces données manquent. La dilution dépend des volumes ou de la concentration finale renseignés. Après un changement de stock, contrôler aussi la préparation souhaitée.
 - Le tableau refuse les nombres invalides, unités incompatibles, dilutions impossibles, paliers discontinus, seuils inférieurs au départ et données contradictoires. Un échec d’enregistrement conserve les calculs actifs.
@@ -77,7 +77,7 @@ Le tableau donne accès aux doses, unités, pas, seuils, ampoules, voies et dur�
 | Isofundine | 10 mL/kg, maximum 500 mL par bolus, IVD le plus rapidement possible |
 | CGR, PFC, CPA | Volume prescrit limité à une poche si son volume est renseigné ; aucune vitesse ajoutée |
 
-Les anciens plafonds en attente de kétamine analgésique et de midazolam IJ sont résolus par les décisions du 1er octobre ; le bolus d’atracurium est retiré. Les deux vues utilisent les mêmes plafonds actifs.
+Les anciens plafonds en attente de kétamine analgésique et de midazolam IJ sont résolus par les décisions du 1er octobre ; le bolus d’atracurium est retiré.
 
 L’audit initial reste dans `catalog-data.js`, [TABLEAU-IMPORTE.md](./TABLEAU-IMPORTE.md) et [REVUE-DU-TABLEAU.md](./REVUE-DU-TABLEAU.md). Les fichiers historiques, dont l’ancien classeur d’ampoules, ne définissent pas les règles actives de cette version.
 
@@ -104,7 +104,7 @@ Les tests GitHub Actions se lancent sur les pushes de `main` et les pull request
 | `dist/protocol-config.js`, `dist/protocol-store.js`, `dist/configuration-updates.js` | Variables, validation, conversion, persistance et migration |
 | `dist/admin-access.js`, `dist/admin-ui.js`, `dist/admin.css` | Code fixe et tableau intégré |
 | `dist/dose-adjustments.js`, `dist/dose-controls.js` | Réglages et confirmation des dépassements |
-| `dist/smur-ui.js`, `dist/simulation-ui.js`, `dist/simulation-data.js` | Deux vues des résultats |
+| `dist/smur-ui.js`, `dist/quick-summary.js` | Calculs rapides et fiches compactes |
 | `dist/quick-summary.js`, `dist/smur.css` | Six rubriques compactes et présentation mobile/tablette |
 | `dist/administration.js`, `dist/smur-sheets.js` | Voies, durées et fiches |
 | `tests/` | Régressions des calculs, réglages, imports et interactions |
