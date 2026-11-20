@@ -1,29 +1,29 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="PediDoses : âge, poids connu prioritaire et calculs automatiques du tableau pédiatrique, classés par groupe. Prototype non validé cliniquement.">
-  <meta name="robots" content="noindex,nofollow">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
-  <title>PediDoses · Calculs pédiatriques</title>
-  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./smur.css">
-  <link rel="stylesheet" href="./admin.css">
-  <script type="module" src="./admin-ui.js"></script>
-  <script type="module" src="./app.js"></script>
-  <script type="module" src="./smur-ui.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="PediDose Atelier : visualisation des médicaments et administration du référentiel.">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#17354c">
+<title>PediDoses — Médicaments d’urgence</title>
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./visual/styles.css" id="visual-base-style">
+<link rel="stylesheet" href="./visual/smur.css" id="visual-smur-style">
+<link rel="stylesheet" href="./styles.css" id="administration-style" disabled>
+<link rel="stylesheet" href="./shell.css">
+<link rel="stylesheet" href="./visual/print.css">
+<link rel="stylesheet" href="./clinical-blue.css" media="screen">
 </head>
 <body>
+<section id="visualisation-screen" aria-label="Visualisation des médicaments" tabindex="-1">
+
   <a class="skip-link" href="#main">Aller au référentiel</a>
   <header class="header">
     <div class="header-inner">
-      <a class="brand" href="./" aria-label="PediDoses, accueil">
+      <a class="brand" href="#visualisation" data-screen="visualisation" aria-label="PediDoses, accueil">
         <span class="brand-symbol" aria-hidden="true">Pd</span>
         <span>Pedi<strong>Doses</strong><small>URGENCES PÉDIATRIQUES</small></span>
       </a>
-      <span class="version-badge">France <span>v0.11</span></span>
+      <div class="visual-header-actions"><span class="version-badge">Atelier <span>Test</span></span><button type="button" class="button button-soft" id="open-administration" data-screen="administration">Administration</button></div>
     </div>
   </header>
   <main id="main" class="workspace">
@@ -36,12 +36,7 @@
       <p>Chaque fiche donne accès aux posologies, préparations et questions restantes dans « Paliers, relecture et sources ». La validation clinique des fiches reste à finaliser.</p>
       <p>Le statut de chaque plafond est précisé dans sa fiche. Les volumes sont affichés à 0,01 mL ; les coefficients en mL/kg gardent leur précision. Seuls les débits de pompe sont arrondis à 0,1 mL/h, sans arrondi en chaîne.</p>
     </details>
-    <nav class="tabs" role="tablist" aria-label="Espace de travail">
-      <button type="button" id="quick-tab" role="tab" aria-selected="true" aria-controls="quick-panel" class="tab active">Calculs rapides <span class="count">65</span></button>
-      <button type="button" id="ampoules-tab" role="tab" aria-selected="false" aria-controls="ampoules-panel" tabindex="-1" class="tab">Administration</button>
-    </nav>
-
-    <section id="quick-panel" role="tabpanel" aria-labelledby="quick-tab">
+    <section id="quick-panel" aria-label="Médicaments et calculs">
       <p id="quick-ampoules-status" class="quick-limit"></p>
       <form id="quick-patient-form" class="quick-patient" autocomplete="off" novalidate aria-label="Âge et poids pour le calcul">
         <div class="quick-patient-heading"><h2>Patient</h2><button type="button" class="button button-plain" id="quick-reset">Nouveau patient</button></div>
@@ -54,7 +49,7 @@
           <div class="field">
             <label for="quick-age">Âge</label>
             <div class="age-inputs"><input id="quick-age" name="quick-age" type="text" inputmode="decimal" placeholder="Ex. 3" maxlength="24" aria-describedby="quick-age-help quick-error"><label class="sr-only" for="quick-age-unit">Unité de l’âge</label><select id="quick-age-unit" name="quick-age-unit"><option value="years">ans</option><option value="months">mois</option></select></div>
-            <p id="quick-age-help" class="field-help">Estimation si poids inconnu.</p>
+            <p id="quick-age-help" class="field-help">Repères vitaux, sondes et estimation du poids.</p>
           </div>
           <div id="quick-weight-summary" class="quick-weight-summary" role="status" aria-live="polite" aria-atomic="true">
             <span>Poids retenu</span><strong id="quick-used-weight">— kg</strong><span id="quick-weight-source">En attente de saisie</span>
@@ -63,6 +58,10 @@
         <div class="quick-patient-actions"><p id="quick-formula" class="quick-formula"></p><button type="button" class="button button-plain" id="quick-clear-weight">Effacer le poids</button></div>
         <p id="quick-error" class="quick-error" role="alert" hidden></p>
       </form>
+      <section class="quick-references" aria-labelledby="quick-references-title">
+        <div class="quick-references-heading"><h2 id="quick-references-title">Repères vitaux et intubation</h2><p id="quick-references-source"></p></div>
+        <div id="quick-reference-cards" class="quick-reference-grid" aria-live="polite" aria-atomic="true"></div>
+      </section>
       <div class="quick-toolbar">
         <div class="search-field"><label for="quick-search">Rechercher un médicament</label><input type="search" id="quick-search" placeholder="Adrénaline, kétamine, Isofundine…" maxlength="100" autocomplete="off"></div>
         <div class="category-field"><label for="quick-category">Groupe</label><select id="quick-category"><option value="all">Tous les groupes</option></select></div>
@@ -70,30 +69,59 @@
       <div class="quick-counter-row"><p id="quick-calculation-status" role="status" aria-live="polite"></p><p id="quick-counter"></p></div>
       <div id="quick-groups"></div>
       <p id="quick-empty" class="quick-empty" hidden>Aucun médicament trouvé. Modifiez la recherche ou le groupe.</p>
-      <div class="review-actions"><p>Tous les paliers restent accessibles dans les détails des fiches.</p><button type="button" class="button button-soft" id="quick-print">Imprimer les fiches affichées</button></div>
+      <div class="review-actions"><p id="quick-print-help">Médicaments affichés · A4 portrait · recto verso, bord long · échelle 100 %, sans en-têtes du navigateur.</p><button type="button" class="button button-soft" id="quick-print" aria-describedby="quick-print-help">Imprimer recto verso</button></div>
+      <p id="quick-print-status" class="quick-limit" role="status" aria-live="polite"></p>
       <details class="quick-estimation"><summary>Estimation du poids</summary><p>Avant 1 an : table mensuelle locale (0 à 11 mois). À partir de 1 an : (âge en années + 4) × 2. Le poids saisi reste prioritaire.</p><p>Changer « mois » en « ans », ou inversement, ne modifie jamais la valeur saisie : seul son sens change pour les calculs.</p><p>Estimation approximative de secours : privilégier le poids connu. Aucune adaptation au poids idéal, à l’obésité ou aux particularités du patient n’est automatisée. Les valeurs restent uniquement en mémoire dans cette page.</p></details>
     </section>
 
-    <section id="ampoules-panel" role="tabpanel" aria-labelledby="ampoules-tab" hidden>
-      <form id="admin-login" class="admin-login" autocomplete="off">
-        <h2>Administration</h2><p>Saisissez le code pour accéder au tableau des médicaments et modifier les calculs.</p>
-        <label for="admin-code">Code d’accès</label><input id="admin-code" type="password" inputmode="numeric" minlength="8" maxlength="8" pattern="[0-9]{8}" required autocomplete="off" aria-describedby="admin-login-error">
-        <button type="submit" class="button button-soft">Ouvrir l’administration</button><p id="admin-login-error" role="alert" class="quick-error"></p>
-      </form>
-      <div id="admin-unlocked" hidden>
-        <div class="admin-heading"><div><h2>Tableau des médicaments</h2><p>Ampoules, posologies, avertissements, voies et préparations.</p></div><button id="admin-lock" type="button" class="button button-plain">Verrouiller</button></div>
-        <p>Les modifications s’appliquent <strong>sur cet appareil après enregistrement</strong>. Exportez la configuration pour la transférer sur un autre appareil. Les boutons « Détails » donnent accès aux dilutions, paliers d’âge et de poids, limites et textes de chaque fiche.</p>
-        <div class="admin-actions"><button id="admin-save" type="button" class="button button-soft" disabled>Enregistrer les modifications</button><button id="admin-export" type="button" class="button button-plain">Exporter les réglages enregistrés</button><label class="admin-field">Importer une configuration<input id="admin-import" type="file" accept=".json,application/json"></label><button id="admin-reset" type="button" class="button button-plain">Rétablir cette version</button></div>
-        <p id="admin-status" role="status" aria-live="polite"></p>
-        <div class="admin-actions"><label class="admin-field">Rechercher<input id="admin-search" type="search" placeholder="Médicament…"></label><label class="admin-field">Groupe<select id="admin-category"><option value="all">Tous les groupes</option></select></label><span id="admin-count"></span></div>
-        <div class="admin-table-scroll" role="region" aria-label="Tableau d’administration, défilement horizontal et vertical" tabindex="0"><table class="admin-table"><thead><tr><th scope="col">Médicament</th><th scope="col">Posologie de départ</th><th scope="col">Pas</th><th scope="col">Seuils et plafonds</th><th scope="col">Ampoule</th><th scope="col">Dilution</th><th scope="col">Administration</th><th scope="col">Tous les paramètres</th></tr></thead><tbody id="admin-table-body"></tbody></table></div>
-      </div>
-      <dialog id="admin-editor" class="admin-editor" aria-labelledby="admin-editor-title"><div class="admin-heading"><h2 id="admin-editor-title"></h2><button id="admin-editor-close" type="button" class="button button-soft">Fermer les détails</button></div><p>Ces modifications restent dans le tableau jusqu’à l’enregistrement.</p><div id="admin-editor-fields"></div></dialog>
-    </section>
-
     <noscript><p class="notice">Activez JavaScript pour utiliser ce prototype.</p></noscript>
-    <footer class="footer"><div class="institution-logos" aria-label="CHU de Toulouse et SAMU 31"><img class="chu-logo" src="./assets/chu-toulouse.webp" alt="CHU de Toulouse" width="150" height="76"><img class="samu-logo" src="./assets/samu-31.jpg" alt="SAMU 31" width="66" height="66"></div><span>PediDoses <span class="footer-divider">/</span> France · v0.11</span><span>Validation clinique à finaliser · Aucune prescription générée</span></footer>
+    <footer class="footer"><div class="institution-logos" aria-label="CHU de Toulouse et SAMU 31"><img class="chu-logo" src="./assets/chu-toulouse.webp" alt="CHU de Toulouse" width="150" height="76"><img class="samu-logo" src="./assets/samu-31.jpg" alt="SAMU 31" width="66" height="66"></div><span>PediDoses <span class="footer-divider">/</span> France · Atelier</span><span>Validation clinique à finaliser · Aucune prescription générée</span></footer>
   </main>
-</body>
-</html>
 
+<div id="quick-print-document" aria-label="Synthèse imprimable"></div>
+</section>
+<section id="administration-screen" aria-label="Administration du référentiel" tabindex="-1" hidden>
+
+ <a class="skip" href="#workspace">Aller à la fiche</a>
+ <header class="topbar">
+  <a class="brand" href="#visualisation" data-screen="visualisation" aria-label="Retour à la visualisation"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z"/></svg></span><span>PediDose <b>Atelier</b><small>GESTION DU RÉFÉRENTIEL</small></span></a>
+  <nav aria-label="Navigation principale" class="main-nav"><button class="nav active" data-view="editor">Médicaments / usages <span id="total-count">65</span></button><button class="nav" data-view="stocks">Ampoules</button><button class="nav" data-view="references">Repères vitaux</button><button class="nav" data-view="history">Historique</button></nav>
+  <div class="top-actions"><button class="return-visual" data-screen="visualisation">← Visualisation</button><span class="test-tag"><span></span>Projet test</span><button class="icon-button" id="settings-btn" aria-label="Sauvegardes et informations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="currentColor"/><circle cx="15" cy="17" r="3" fill="currentColor"/></svg></button></div>
+ </header>
+ <div class="test-notice"><span class="notice-dot"></span><strong>Votre espace d’essai indépendant.</strong><span>Copie des paramètres PediDose · Hors usage clinique</span><button id="about-btn">En savoir plus <span aria-hidden="true">↗</span></button></div>
+ <main>
+  <section class="page-heading"><div><div class="eyebrow">ADMINISTRATION</div><h1>Gestion du référentiel</h1><p>Médicaments, ampoules et repères vitaux. Les réglages enregistrés s’appliquent à la visualisation.</p></div><div class="summary-stat"><span id="review-count">65</span><div>fiches à relire<small id="revision-count">Référentiel de test</small></div></div></section>
+  <div id="global-error" role="alert" hidden></div>
+  <div id="editor-view" class="app-grid">
+   <aside class="catalog" aria-label="Liste des médicaments">
+    <div class="catalog-head"><div class="catalog-title">Médicaments <span id="filtered-count">65</span></div><button class="button secondary new-medication" id="new-medication">+ Nouveau médicament</button><label class="search-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Rechercher un médicament" aria-label="Rechercher un médicament"></label><label class="sr-only" for="category">Groupe</label><select id="category"><option value="all">Tous les groupes</option></select><label class="catalog-toggle"><input type="checkbox" id="only-pending">À relire uniquement</label></div>
+    <div id="med-list" class="med-list"></div>
+    <div class="catalog-foot"><span class="small-dot"></span>Paramètres issus de PediDose<small>Les essais restent dans cet atelier.</small></div>
+   </aside>
+   <section id="workspace" class="workspace" tabindex="-1" aria-label="Fiche du médicament">
+    <div id="record-heading"></div>
+    <div class="mobile-switch" role="group" aria-label="Affichage"><button id="show-editor" class="active">Modifier la fiche</button><button id="show-preview">Voir l’aperçu</button></div>
+    <div class="work-columns">
+     <div class="edit-column"><div class="section-kicker"><span>PARAMÈTRES DE LA FICHE</span><span id="draft-indicator">Enregistré</span></div><form id="editor-form" novalidate></form><div class="savebar"><div id="save-status" role="status">Aucune modification</div><button class="button secondary" id="discard-btn" disabled>Annuler</button><button class="button primary" id="save-btn" disabled>Enregistrer la fiche</button></div></div>
+     <aside class="preview-column" aria-label="Aperçu des calculs"><div class="section-kicker"><span>APERÇU EN DIRECT</span><span class="live-tag"><i></i>Essai</span></div><div class="preview-sticky">
+      <section class="patient-panel"><div class="panel-heading"><strong>Patient d’essai</strong><span>Aucune donnée réelle</span></div><div class="patient-inputs"><label>Poids <span class="input-with-unit"><input id="patient-weight" type="text" inputmode="decimal" value="10" aria-label="Poids d’essai en kilogrammes"><b>kg</b></span></label><label>Âge <span class="input-with-unit"><input id="patient-age" type="text" inputmode="decimal" value="24" aria-label="Âge d’essai"><select id="patient-age-unit" aria-label="Unité d’âge"><option value="months">mois</option><option value="years">ans</option></select></span></label></div><div class="patient-presets"><button data-preset="3,0">3 kg</button><button data-preset="10,24" class="active">10 kg</button><button data-preset="20,72">20 kg</button><button data-preset="50,180">50 kg</button></div><label id="bag-label" hidden>Volume de la poche (mL)<input id="patient-bag" type="text" inputmode="decimal" placeholder="À renseigner"></label></section>
+      <div id="preview-result"></div><div id="generated-text"></div><button class="text-button" id="check-cases-btn">Vérifier les paliers et les cas d’essai <span aria-hidden="true">→</span></button>
+      <p class="preview-footnote">Les contrôles vérifient les calculs et la cohérence des paramètres. Ils ne remplacent pas la relecture clinique.</p>
+     </div></aside>
+    </div>
+   </section>
+  </div>
+  <section id="stocks-view" class="collection-view" hidden></section>
+  <section id="references-view" class="collection-view" hidden></section>
+  <section id="history-view" class="collection-view" hidden></section>
+ </main>
+ <div class="toast" id="toast" role="status" hidden></div>
+ <dialog id="dialog"><div id="dialog-content"></div></dialog>
+ <input id="import-input" type="file" accept=".json,application/json" hidden>
+
+
+</section>
+<script type="module" src="./app.js"></script>
+<script type="module" src="./visual/smur-ui.js"></script>
+<script type="module" src="./navigation.js"></script>
+</body></html>

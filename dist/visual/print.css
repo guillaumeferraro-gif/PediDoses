@@ -1,0 +1,15 @@
+@font-face{font-family:AtelierPrint;src:url('../assets/print-fonts/regular.woff') format('woff');font-weight:400;font-style:normal;font-display:block}
+@font-face{font-family:AtelierPrint;src:url('../assets/print-fonts/bold.woff') format('woff');font-weight:700;font-style:normal;font-display:block}
+#quick-print-document{display:none}
+#quick-print-status:empty{display:none}
+@media print{
+ @page{size:A4 portrait;margin:7mm}
+ html,body{margin:0!important;padding:0!important;background:#fff!important;min-width:0!important}
+ body::before{display:none!important}
+ #visualisation-screen>:not(#quick-print-document){display:none!important}
+ #quick-print-document{display:block;width:196mm;margin:0;padding:0;color:#17242c}
+ #quick-print-document .print-sheet{display:block;width:196mm;height:282mm;margin:0;padding:0;break-inside:avoid;page-break-inside:avoid;break-after:page;page-break-after:always}
+ #quick-print-document .print-sheet:last-child{break-after:auto;page-break-after:auto}
+ #quick-print-document svg{display:block;width:196mm;height:282mm;overflow:visible;font-family:AtelierPrint,sans-serif;letter-spacing:normal;font-kerning:none;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+ #quick-print-document text{font-family:AtelierPrint,sans-serif;font-kerning:none}
+}

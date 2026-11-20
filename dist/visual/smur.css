@@ -1,0 +1,166 @@
+/* Clinique: patient first, visible results, compact native disclosures. */
+.header{background:var(--paper);color:var(--ink);border-bottom:1px solid var(--line)}
+.header-inner{max-width:1200px;padding:16px 20px;gap:16px}
+.brand{font-size:1.25rem;gap:10px}
+.brand-symbol{width:33px;height:33px;border:0;border-radius:8px;background:var(--primary);color:var(--paper);font-size:1rem}
+.brand small{display:block;font-size:.6875rem;letter-spacing:.08em;color:var(--muted);margin-top:2px}
+.version-badge{color:var(--muted);border:0;padding:0;font-size:.75rem}
+.version-badge span{display:inline;color:var(--muted)}
+.workspace{max-width:1200px;padding:20px 16px 24px}
+.page-heading{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.page-heading h1{font-size:1.375rem;letter-spacing:-.025em}
+.page-heading .mode-badge{margin:0;padding:4px 7px;font-size:.75rem}
+.notice{display:block;padding:0 12px;font-size:.8125rem}
+.notice summary{min-height:44px;padding:11px 0;cursor:pointer;font-weight:550}
+.notice p{margin:0 0 12px}
+.tabs{flex-wrap:wrap;overflow:visible;gap:0 14px;margin:12px 0 18px}
+.tab{font-size:.8125rem;white-space:normal;min-height:44px;padding:10px 2px;gap:6px}
+.tabs .count{font-size:.6875rem}
+
+.quick-patient{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:16px;min-width:0}
+.quick-patient-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.quick-patient-heading h2{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase}
+.quick-patient-heading .button{min-height:44px;padding:8px;color:var(--accent);font-size:.75rem}
+.quick-patient-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.quick-patient .field+.field{margin:0}
+.quick-patient .field label{font-size:.8125rem;margin-bottom:6px}
+.quick-patient .field-help{font-size:.75rem;line-height:1.4;margin-top:6px}
+.quick-patient input,.quick-patient select{min-height:48px;border-color:#718b9b}
+.quick-patient input{font-size:1.25rem;font-weight:600;padding:8px 10px}
+.quick-patient .input-with-unit input{padding-right:36px}
+.quick-patient .input-with-unit>span{right:10px}
+.quick-patient .age-inputs{grid-template-columns:minmax(0,1fr) 66px;gap:6px}
+.quick-patient .age-inputs select{font-size:1rem;padding:8px 4px}
+.quick-weight-summary{grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;padding:8px 10px;background:#e6f3f0;color:var(--accent);border-radius:7px}
+.quick-weight-summary>span:first-child{font-size:.75rem}
+.quick-weight-summary strong{font-size:1rem;font-variant-numeric:tabular-nums}
+.quick-weight-summary>span:last-child{font-size:.75rem;margin-left:auto}
+.quick-weight-summary.estimated{background:var(--amber-bg);color:var(--amber)}
+.quick-patient-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+.quick-patient-actions .button{min-height:44px;flex-shrink:0;padding:8px 4px;font-size:.75rem;color:var(--accent)}
+.quick-formula{font-size:.75rem;line-height:1.4;color:var(--muted)}
+.quick-error{margin-top:8px;border-left:3px solid #a52d37;padding:8px 10px;background:#fff2f1;color:#8b2530;font-size:.8125rem}
+.quick-toolbar{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:12px;margin-bottom:12px;align-items:end}
+.quick-toolbar .search-field,.quick-toolbar .category-field{max-width:none;min-width:0}
+.quick-toolbar label{font-size:.75rem;margin-bottom:6px}
+.quick-toolbar input,.quick-toolbar select{min-height:48px;border-color:#718b9b;font-size:1rem;padding:10px}
+.quick-toolbar input[type=search]{width:100%;border:1px solid #718b9b;border-radius:7px;background:var(--paper);color:var(--ink)}
+.quick-empty{padding:20px 12px;color:var(--muted);font-size:.875rem}
+.quick-toolbar input::placeholder{font-size:.8125rem}
+.quick-counter-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:start;gap:4px 12px;margin:12px 0 16px;font-size:.75rem;color:var(--muted)}
+.quick-counter-row #quick-counter{white-space:nowrap}
+.quick-limit{font-size:.8125rem;color:var(--amber);background:var(--amber-bg);border:1px solid #e9d6b2;border-radius:6px;padding:9px 12px;margin-bottom:12px}
+.quick-limit:empty{display:none}
+.quick-estimation{font-size:.8125rem;margin:16px 0;color:var(--muted)}
+.quick-estimation summary{min-height:44px;padding:10px 0;cursor:pointer;font-weight:600}
+.quick-estimation p{margin-top:8px}
+
+.dose-group{margin-bottom:24px;min-width:0}
+.dose-group-title{display:flex;align-items:center;gap:8px;font-size:1rem;line-height:1.4;margin:0 0 12px;color:var(--primary)}
+.dose-group-title .count{font-size:.75rem}
+.dose-card-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
+.dose-card{container-type:inline-size;background:var(--paper);border:1px solid var(--line);border-radius:12px;min-width:0}
+.dose-info{padding:14px 14px 12px}
+.dose-info h3{font-size:1.0625rem;line-height:1.35;letter-spacing:-.02em;overflow-wrap:anywhere}
+.dose-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;padding:0 14px 12px;font-variant-numeric:tabular-nums}
+.dose-values:empty{display:none}
+.dose-metric{min-width:0;padding:8px 0;display:flex;flex-direction:column;gap:4px}
+.dose-metric:only-child{grid-column:1/-1}
+.dose-metric-volume{background:#e6f3f0;color:var(--accent);border-radius:8px;padding:8px 10px}
+.dose-value-label{font-size:.75rem;color:var(--muted);line-height:1.4}
+.dose-metric-volume .dose-value-label{color:var(--accent)}
+.dose-values strong{font-size:1.5rem;font-weight:650;letter-spacing:-.025em;line-height:1.3;overflow-wrap:anywhere}
+.dose-extra{grid-column:1/-1;font-size:.8125rem;line-height:1.4;color:var(--muted)}
+.dose-sequence{display:flex;flex-direction:column;gap:4px;padding:8px 10px;background:#e6f3f0;border-radius:8px;color:var(--accent);min-width:0}
+.dose-sequence .dose-value-label{color:var(--accent);font-weight:600}
+.dose-sequence .dose-volume{font-size:1.125rem;font-weight:600;overflow-wrap:anywhere}
+.dose-sequence small{font-size:.75rem;color:var(--amber)}
+.dose-controls{padding:0 14px 8px}
+.dose-adjustment{gap:8px;margin:0}
+.dose-adjustment button{min-width:44px;min-height:44px;border-color:#718b9b}
+.dose-adjustment small{flex-basis:100%;line-height:1.4}
+.dose-notes{padding:0 14px 12px;font-size:.8125rem;line-height:1.4;color:var(--amber)}
+.dose-notes:empty{display:none}
+.dose-blocked{color:#963a28}
+
+/* Six rows: dense read-only content, 44 px disclosure control. */
+.dose-details{border-top:1px solid var(--line);font-size:.8125rem}
+.dose-details>summary{min-height:44px;padding:11px 14px;cursor:pointer;color:var(--accent);font-weight:600;border-radius:0 0 12px 12px}
+.dose-details[open]>summary{background:#e6f3f0;border-radius:0}
+.dose-detail-rows{margin:0;padding:5px 14px 7px}
+.dose-detail-row{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.35fr);gap:10px;padding:4px 0;align-items:baseline;font-size:.8125rem;line-height:1.4}
+.dose-detail-row+.dose-detail-row{border-top:1px solid var(--line)}
+.dose-detail-row dt{color:var(--muted);overflow-wrap:anywhere}
+.dose-detail-row dd{margin:0;text-align:right;font-weight:550;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.dose-detail-row[data-field=withdrawal] dd,.dose-detail-row[data-field=final-volume] dd{color:var(--accent)}
+.dose-review{border-top:1px solid var(--line)}
+.dose-review>summary{min-height:44px;padding:11px 14px;font-size:.75rem;color:var(--muted);cursor:pointer}
+.dose-reference{display:grid;gap:10px;padding:0 12px 12px;font-size:.8125rem;min-width:0}
+.protocol-block{padding:10px;background:var(--canvas);border:1px solid var(--line);border-radius:6px;min-width:0}
+.protocol-block h4{font-size:.8125rem;color:var(--primary);margin:0 0 6px}
+.protocol-block p{margin:0;overflow-wrap:anywhere}
+.protocol-block ul{margin:0;padding-left:18px}
+.protocol-block li+li{margin-top:5px}
+.protocol-questions{background:var(--amber-bg);border-left:3px solid #d09a39;color:var(--amber)}
+.protocol-ceiling{margin-top:10px!important;padding-left:8px;border-left:3px solid #d09a39;color:var(--amber)}
+.preparation-row+.preparation-row{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.dosage-table{width:100%;border-collapse:collapse;table-layout:fixed;margin-top:8px;font-variant-numeric:tabular-nums;line-height:1.45}
+.dosage-table th,.dosage-table td{text-align:left;vertical-align:top;padding:8px;border:1px solid var(--line);overflow-wrap:anywhere;font-size:.75rem}
+.dosage-table thead th{background:#eaf1f5;color:var(--primary)}
+.dosage-table tbody th{background:#f2f7f9;font-weight:600}
+.dosage-table td:last-child{background:#e6f3f0;color:var(--accent)}
+.sheet-sources{font-size:.75rem;color:var(--muted);margin:0}
+.sheet-sources a{display:block;color:var(--accent);overflow-wrap:anywhere;min-height:44px;padding:10px 0}
+.patient-calculation{border-top:1px solid var(--line)}
+.patient-calculation summary{min-height:44px;padding:11px 0;font-weight:600;color:var(--primary);cursor:pointer}
+.dose-calculation{color:var(--primary)}
+.dose-calculation:not(:empty){padding:10px;background:var(--canvas);border-radius:6px}
+.dose-calculation p{margin:0}
+.dose-calculation p+p{margin-top:6px}
+.review-actions{display:flex;align-items:center;flex-wrap:wrap;justify-content:space-between;gap:12px;font-size:.8125rem;color:var(--muted);margin:16px 0}
+.review-actions .button{min-height:44px;font-size:.8125rem}
+.footer{align-items:center;flex-wrap:wrap}
+.institution-logos{display:flex;align-items:center;gap:16px;background:var(--paper);padding:4px 10px;border-radius:6px}
+.institution-logos img{object-fit:contain;display:block;flex-shrink:0}
+.chu-logo{width:90px;height:46px}.samu-logo{width:40px;height:40px}
+
+@media(min-width:720px){
+  .workspace{padding:24px}
+  .header-inner{padding:18px 24px}
+  .page-heading h1{font-size:1.5rem}
+  .quick-patient{padding:12px 18px}
+  .quick-patient-grid{grid-template-columns:1fr 1fr 1.15fr;gap:18px;align-items:center}
+  .quick-weight-summary{grid-column:auto;display:grid;grid-template-columns:1fr auto;padding:12px}
+  .quick-weight-summary strong{grid-column:2;grid-row:1/3;font-size:1.5rem}
+  .quick-weight-summary>span:last-child{grid-column:1;margin-left:0}
+  .quick-toolbar{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+  .dose-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+}
+@container (max-width:420px){
+  .dosage-table,.dosage-table tbody,.dosage-table tr,.dosage-table th,.dosage-table td{display:block;width:100%}
+  .dosage-table thead{position:absolute;clip-path:inset(50%);width:1px;height:1px;overflow:hidden}
+  .dosage-table td{border-top:0}
+  .dosage-table td::before{content:attr(data-label);display:block;color:var(--muted);font-weight:600;margin-bottom:2px}
+  .dosage-table tr+tr{margin-top:10px}
+}
+@media(prefers-reduced-motion:reduce){.dose-card *{transition:none!important}}
+@media print{
+  body:before{content:"PEDIDOSES v0.11 — FICHES À VALIDER AVANT PRODUCTION";font-size:16px;padding:12px}
+  .quick-patient-heading .button,.quick-patient-actions,.quick-toolbar,.quick-estimation,.review-actions,.patient-calculation,.dose-controls{display:none}
+  .dose-card-grid{display:block}
+  .dose-card{container-type:normal;break-inside:auto;margin:12px 0;box-shadow:none}
+  .dose-info,.dose-values{break-after:avoid}
+  .dose-group-title{color:#000;background:#fff}
+  .dose-details>summary,.dose-review>summary{display:none}
+  .dose-detail-row,.protocol-block,.dosage-table tr{break-inside:avoid}
+  .dose-reference{display:block}
+  .protocol-block{margin:8px 0}
+  .dose-metric-volume,.dose-sequence,.quick-weight-summary{background:#fff;color:#000;border:1px solid #bbb}
+}
+
+
+
+/* Patient references share the validated age with the medication calculations. */
+.quick-references{border:1px solid #cbdad9;border-radius:14px;background:#f5f9f8;padding:18px;margin:18px 0 24px}.quick-references-heading{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:14px}.quick-references-heading h2{font-size:17px;margin:0;color:#223c3a}.quick-references-heading p{font-size:12px;line-height:1.5;color:#526b69;margin:0}.quick-reference-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.quick-reference-card{min-width:0;background:#fff;border:1px solid #d9e4e1;border-radius:9px;padding:14px}.quick-reference-card h3{font-size:12px;line-height:1.5;margin:0 0 9px;color:#405d58}.quick-reference-value{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin:0 0 8px;min-height:28px}.quick-reference-value strong{font-size:23px;line-height:1.2;font-weight:700;color:#16483e;font-variant-numeric:tabular-nums}.quick-reference-value span{font-size:12px;color:#526b69}.quick-reference-card .quick-reference-detail{font-size:11px;line-height:1.5;color:#526b69;margin:0}
+@media(max-width:900px){.quick-reference-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.quick-references-heading{display:block}.quick-references-heading p{margin-top:6px}}
+@media(max-width:600px){.quick-references{padding:13px;margin:15px 0 20px}.quick-reference-grid{gap:9px}.quick-reference-card{padding:12px}.quick-reference-value strong{font-size:20px}.quick-references-heading h2{font-size:16px}}

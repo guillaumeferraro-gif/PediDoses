@@ -1,0 +1,459 @@
+/* Bleu clinique — approved visual treatment.
+ * Screen-only stylesheet: existing layout, type metrics and print styles remain authoritative.
+ * The legacy reading and administration stylesheets are enabled independently by navigation.
+ */
+:root {
+  color-scheme: light;
+  --canvas: #eef2f6;
+  --paper: #ffffff;
+  --ink: #172b3e;
+  --muted: #536779;
+  --line: #d4dfe8;
+  --primary: #173e5e;
+  --accent: #175b8c;
+  --aqua: #e5f1fb;
+  --amber: #7c5116;
+  --amber-bg: #fff7e8;
+  --pd-warning-line: #decba6;
+  --pd-header: #17354c;
+  --pd-header-ink: #f5faff;
+  --pd-header-muted: #bdd0df;
+  --pd-header-line: #3f6078;
+  --pd-header-button: #244c6a;
+  --pd-header-button-hover: #315e7e;
+  --pd-mark-bg: #f1f7fb;
+  --pd-mark-ink: #163d5b;
+  --pd-input: #ffffff;
+  --pd-input-line: #7b91a3;
+  --pd-placeholder: #5d7385;
+  --pd-subtle: #edf3f8;
+  --pd-soft-line: #d4e0eb;
+  --pd-ref-panel: #e7eef5;
+  --pd-volume-bg: #e2f0fb;
+  --pd-volume-ink: #16557f;
+  --pd-open-bg: #f0f6fb;
+  --pd-hover: #e3edf6;
+  --pd-radius-card: 8px;
+  --pd-radius-input: 6px;
+  --pd-radius-inner: 5px;
+  --pd-radius-reference: 10px;
+  --pd-shadow: 0 1px 2px rgb(18 44 64 / 4%), 0 4px 12px rgb(18 44 64 / 3%);
+  --pd-selected-line: #175b8c;
+  --pd-focus-soft: #175b8c25;
+  --pd-danger-bg: #fff2f1;
+  --pd-danger-line: #e5b7bc;
+  --pd-success-bg: #e5f5ee;
+  --pd-success-ink: #216954;
+
+  /* Administration aliases keep all existing component and state bindings. */
+  --bg: var(--canvas);
+  --faint: var(--muted);
+  --navy: var(--pd-header);
+  --teal: var(--accent);
+  --teal-dark: var(--primary);
+  --teal-soft: var(--pd-volume-bg);
+  --amber-soft: var(--amber-bg);
+  --red: #9a2837;
+  --shadow: var(--pd-shadow);
+  --radius: var(--pd-radius-card);
+}
+
+/* Consultation: same selectors and dimensions as the approved proposal. */
+#visualisation-screen .header {
+  background: var(--pd-header);
+  color: var(--pd-header-ink);
+  border-bottom-color: var(--pd-header-line);
+}
+#visualisation-screen .brand small,
+#visualisation-screen .version-badge,
+#visualisation-screen .version-badge span { color: var(--pd-header-muted); }
+#visualisation-screen .brand-symbol {
+  background: var(--pd-mark-bg);
+  color: var(--pd-mark-ink);
+  border-radius: var(--pd-radius-input);
+}
+#visualisation-screen .button-soft {
+  background: var(--pd-subtle);
+  color: var(--accent);
+  border-color: var(--pd-soft-line);
+}
+#visualisation-screen .button-plain { background: transparent; }
+#visualisation-screen .header .button-soft {
+  background: var(--pd-header-button);
+  color: var(--pd-header-ink);
+  border-color: var(--pd-header-line);
+}
+#visualisation-screen .mode-badge,
+#visualisation-screen .notice,
+#visualisation-screen .quick-limit {
+  background: var(--amber-bg);
+  border-color: var(--pd-warning-line);
+  color: var(--amber);
+  border-radius: var(--pd-radius-input);
+}
+#visualisation-screen .quick-patient,
+#visualisation-screen .dose-card {
+  border-radius: var(--pd-radius-card);
+  border-color: var(--line);
+  box-shadow: var(--pd-shadow);
+}
+#visualisation-screen .quick-patient input,
+#visualisation-screen .quick-patient select,
+#visualisation-screen .quick-toolbar input[type="search"],
+#visualisation-screen .quick-toolbar select {
+  background: var(--pd-input);
+  border-color: var(--pd-input-line);
+  color: var(--ink);
+  border-radius: var(--pd-radius-input);
+}
+#visualisation-screen input::placeholder { color: var(--pd-placeholder); }
+#visualisation-screen .quick-weight-summary,
+#visualisation-screen .dose-metric-volume,
+#visualisation-screen .dose-sequence {
+  background: var(--pd-volume-bg);
+  color: var(--pd-volume-ink);
+  border-radius: var(--pd-radius-inner);
+}
+#visualisation-screen .dose-metric-volume .dose-value-label,
+#visualisation-screen .dose-sequence .dose-value-label { color: var(--pd-volume-ink); }
+#visualisation-screen .quick-weight-summary.estimated {
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+#visualisation-screen .quick-references {
+  background: var(--pd-ref-panel);
+  border-color: var(--pd-soft-line);
+  border-radius: var(--pd-radius-reference);
+}
+#visualisation-screen .quick-reference-card {
+  background: var(--paper);
+  border-color: var(--line);
+  border-radius: var(--pd-radius-inner);
+}
+#visualisation-screen .quick-references-heading h2 { color: var(--ink); }
+#visualisation-screen .quick-references-heading p,
+#visualisation-screen .quick-reference-card h3,
+#visualisation-screen .quick-reference-value span,
+#visualisation-screen .quick-reference-card .quick-reference-detail { color: var(--muted); }
+#visualisation-screen .quick-reference-value strong { color: var(--primary); }
+#visualisation-screen .count {
+  background: var(--pd-subtle);
+  color: var(--muted);
+  border-radius: 4px;
+}
+#visualisation-screen .dose-details > summary {
+  border-radius: 0 0 var(--pd-radius-card) var(--pd-radius-card);
+}
+#visualisation-screen .dose-details[open] > summary {
+  background: var(--pd-open-bg);
+  border-radius: 0;
+}
+#visualisation-screen .dose-review > summary { color: var(--muted); }
+#visualisation-screen .protocol-block {
+  background: var(--pd-subtle);
+  border-color: var(--line);
+  border-radius: var(--pd-radius-input);
+}
+#visualisation-screen .protocol-questions {
+  background: var(--amber-bg);
+  color: var(--amber);
+  border-left-color: var(--pd-warning-line);
+}
+#visualisation-screen .protocol-ceiling {
+  color: var(--amber);
+  border-left-color: var(--pd-warning-line);
+}
+#visualisation-screen .dosage-table thead th,
+#visualisation-screen .dosage-table tbody th {
+  background: var(--pd-subtle);
+  color: var(--primary);
+}
+#visualisation-screen .dosage-table td:last-child {
+  background: var(--pd-volume-bg);
+  color: var(--pd-volume-ink);
+}
+#visualisation-screen .dose-adjustment button {
+  background: var(--paper);
+  border-color: var(--pd-input-line);
+  border-radius: var(--pd-radius-input);
+  color: var(--accent);
+}
+#visualisation-screen .quick-patient input[aria-invalid="true"] {
+  background: var(--pd-danger-bg);
+  border-color: var(--red);
+}
+#visualisation-screen .quick-error { color: var(--red); border-left-color: var(--red); }
+#visualisation-screen .footer { color: var(--muted); border-color: var(--line); }
+#visualisation-screen .footer-divider { color: var(--muted); }
+
+/* Administration: carry the approved palette through the existing editor. */
+#administration-screen .topbar { background: var(--pd-header); color: var(--pd-header-ink); }
+#administration-screen .brand { color: var(--pd-header-ink); }
+#administration-screen .brand b { color: #c6e2f6; }
+#administration-screen .brand small { color: var(--pd-header-muted); }
+#administration-screen .brand-mark {
+  background: var(--pd-mark-bg);
+  color: var(--pd-mark-ink);
+  border-radius: var(--pd-radius-input);
+}
+#administration-screen .brand-mark svg { fill: currentColor; }
+#administration-screen .nav { color: var(--pd-header-muted); }
+#administration-screen .nav.active { color: var(--pd-header-ink); border-bottom-color: #a6d4f3; }
+#administration-screen .nav span { background: var(--pd-header-button); }
+#administration-screen .return-visual,
+#administration-screen .icon-button {
+  background: transparent;
+  border-color: var(--pd-header-line);
+  color: var(--pd-header-ink);
+  border-radius: var(--pd-radius-input);
+}
+#administration-screen .test-tag { border-color: var(--pd-header-line); color: var(--pd-header-ink); }
+#administration-screen .test-notice {
+  background: var(--pd-subtle);
+  border-color: var(--pd-soft-line);
+  color: var(--muted);
+}
+#administration-screen .test-notice button { color: var(--accent); }
+#administration-screen .notice-dot,
+#administration-screen .small-dot { background: var(--accent); }
+#administration-screen .summary-stat { border-color: var(--line); }
+#administration-screen .catalog,
+#administration-screen .form-section,
+#administration-screen .record-identity,
+#administration-screen .med-preview,
+#administration-screen .collection-view {
+  background: var(--paper);
+  border-color: var(--line);
+  border-radius: var(--pd-radius-card);
+}
+#administration-screen .med-preview { box-shadow: var(--pd-shadow); }
+#administration-screen .catalog-title > span,
+#administration-screen .badge.neutral {
+  background: var(--pd-subtle);
+  color: var(--muted);
+}
+#administration-screen .med-item { background: var(--paper); }
+#administration-screen .med-item.active {
+  background: var(--pd-volume-bg);
+  border-color: var(--pd-selected-line);
+}
+#administration-screen .section-kicker,
+#administration-screen .field,
+#administration-screen .input-with-unit b { color: var(--muted); }
+#administration-screen .section-number {
+  background: var(--pd-subtle);
+  color: var(--accent);
+  border-color: var(--pd-soft-line);
+  border-radius: var(--pd-radius-input);
+}
+#administration-screen .chevron { border-color: var(--pd-input-line); }
+#administration-screen input,
+#administration-screen select,
+#administration-screen textarea {
+  background: var(--pd-input);
+  border-color: var(--pd-input-line);
+  border-radius: var(--pd-radius-input);
+}
+#administration-screen input::placeholder,
+#administration-screen textarea::placeholder { color: var(--pd-placeholder); }
+#administration-screen .field-unit {
+  background: var(--pd-input);
+  border-color: var(--pd-input-line);
+  border-radius: var(--pd-radius-input);
+}
+#administration-screen .field-unit input,
+#administration-screen .input-with-unit select { background: transparent; border-radius: 0; }
+#administration-screen .field-unit b {
+  background: var(--pd-subtle);
+  color: var(--muted);
+  border-color: var(--line);
+}
+#administration-screen input:focus,
+#administration-screen textarea:focus,
+#administration-screen select:focus,
+#administration-screen .field-unit:focus-within {
+  outline-color: var(--pd-focus-soft);
+  border-color: var(--accent);
+}
+#administration-screen .button { border-radius: var(--pd-radius-input); }
+#administration-screen .primary { background: var(--accent); color: var(--paper); }
+#administration-screen .secondary {
+  background: var(--paper);
+  border-color: var(--pd-input-line);
+  color: var(--accent);
+}
+#administration-screen .new-medication {
+  background: var(--pd-subtle);
+  border-color: var(--pd-input-line);
+  color: var(--accent);
+}
+#administration-screen .savebar {
+  background: #ffffffec;
+  border-color: var(--line);
+  border-radius: var(--pd-radius-card);
+  box-shadow: var(--pd-shadow);
+}
+#administration-screen .calculated,
+#administration-screen .shared-note,
+#administration-screen .amp-readonly {
+  background: var(--pd-open-bg);
+  border-color: var(--pd-soft-line);
+  color: var(--muted);
+  border-radius: var(--pd-radius-input);
+}
+#administration-screen .calculated strong,
+#administration-screen .shared-note strong,
+#administration-screen .automatic-note,
+#administration-screen .amp-readonly > div > span:last-child:not(.eyebrow),
+#administration-screen .tier-title strong,
+#administration-screen .band-dose h4 { color: var(--accent); }
+#administration-screen .shared-note p { color: var(--muted); }
+#administration-screen .tier-box,
+#administration-screen .option-panel .tier-box,
+#administration-screen .dose-step .tier-box {
+  background: var(--pd-open-bg);
+  border-color: var(--pd-soft-line);
+  border-radius: var(--pd-radius-input);
+}
+#administration-screen .dose-step { border-color: var(--line); border-radius: var(--pd-radius-card); }
+#administration-screen .dose-index { border-color: var(--pd-soft-line); }
+#administration-screen .patient-panel,
+#administration-screen .amp-library {
+  background: var(--pd-ref-panel);
+  border-color: var(--pd-soft-line);
+  border-radius: var(--pd-radius-card);
+}
+#administration-screen .patient-presets button {
+  background: transparent;
+  color: var(--muted);
+  border-color: var(--pd-input-line);
+}
+#administration-screen .patient-presets button.active {
+  background: var(--paper);
+  color: var(--accent);
+  border-color: var(--pd-selected-line);
+}
+#administration-screen .route-badge {
+  background: var(--pd-open-bg);
+  border-color: var(--pd-soft-line);
+  color: var(--accent);
+}
+#administration-screen .main-result { border-radius: var(--pd-radius-inner); }
+#administration-screen .main-result > div + div { border-color: var(--pd-soft-line); }
+#administration-screen .result-label,
+#administration-screen .result-number,
+#administration-screen .result-sub { color: var(--pd-volume-ink); }
+#administration-screen .preview-line { border-color: var(--line); }
+#administration-screen .preview-line > span:first-child { color: var(--muted); }
+#administration-screen .preview-bottom {
+  background: var(--pd-open-bg);
+  color: var(--muted);
+  border-color: var(--line);
+}
+#administration-screen .preview-adjustment { background: var(--pd-open-bg); }
+#administration-screen .generated-panel summary { color: var(--muted); }
+#administration-screen .generated-panel p { background: var(--pd-open-bg); border-color: var(--pd-input-line); }
+#administration-screen .generated-panel strong { color: var(--accent); }
+#administration-screen .usage-option {
+  background: var(--paper);
+  border-color: var(--pd-input-line);
+  border-radius: var(--pd-radius-input);
+}
+#administration-screen .usage-option.checked {
+  background: var(--pd-volume-bg);
+  border-color: var(--pd-selected-line);
+}
+#administration-screen .usage-option.unavailable {
+  background: var(--pd-subtle);
+  border-color: var(--line);
+  color: var(--muted);
+}
+#administration-screen .usage-option.unavailable small { color: var(--muted); }
+#administration-screen .amp-list-item { background: transparent; }
+#administration-screen .amp-list-item.active {
+  background: var(--paper);
+  border-color: var(--pd-selected-line);
+  box-shadow: var(--pd-shadow);
+}
+#administration-screen .assignment-row { border-color: var(--line); }
+#administration-screen .assignment-row.selected { background: var(--pd-volume-bg); }
+#administration-screen .amp-section h3 > span,
+#administration-screen .stock-links button,
+#administration-screen .history-item .history-symbol {
+  background: var(--pd-subtle);
+  border-color: var(--pd-soft-line);
+  color: var(--accent);
+}
+#administration-screen .reference-month {
+  background: var(--pd-subtle);
+  border-color: var(--line);
+  border-radius: var(--pd-radius-input);
+}
+#administration-screen .reference-month.selected {
+  background: var(--pd-volume-bg);
+  border-color: var(--pd-selected-line);
+}
+#administration-screen .reference-panel {
+  background: var(--pd-open-bg);
+  border-color: var(--pd-soft-line);
+  border-radius: var(--pd-radius-card);
+}
+#administration-screen .reference-formulas { border-radius: var(--pd-radius-card); }
+#administration-screen .reference-formulas dl > div { background: var(--pd-subtle); border-radius: var(--pd-radius-input); }
+#administration-screen .mobile-switch { background: var(--pd-ref-panel); border-color: var(--pd-soft-line); }
+#administration-screen .mobile-switch button { color: var(--muted); }
+#administration-screen .mobile-switch .active { color: var(--accent); box-shadow: var(--pd-shadow); }
+#administration-screen dialog { background: var(--paper); border-color: var(--line); border-radius: var(--pd-radius-reference); }
+#administration-screen dialog::backdrop { background: #17354c88; }
+#administration-screen .dialog-close { background: var(--pd-subtle); color: var(--muted); border-radius: var(--pd-radius-input); }
+#administration-screen .storage-note { background: var(--pd-subtle); }
+
+/* Status colors retain their meaning. Invalid fields stay identifiable after recoloring. */
+#administration-screen .badge.reviewed,
+#administration-screen .success-info { background: var(--pd-success-bg); color: var(--pd-success-ink); }
+#administration-screen .state-dot.reviewed { background: var(--pd-success-ink); }
+#administration-screen .badge.reviewing { background: var(--pd-volume-bg); color: var(--accent); }
+#administration-screen .state-dot.reviewing { background: var(--accent); }
+#administration-screen .danger,
+#administration-screen .error-box { background: var(--pd-danger-bg); color: var(--red); border-color: var(--pd-danger-line); }
+#administration-screen input.invalid,
+#administration-screen select.invalid,
+#administration-screen textarea.invalid,
+#administration-screen input[aria-invalid="true"],
+#administration-screen select[aria-invalid="true"],
+#administration-screen textarea[aria-invalid="true"] { border-color: var(--red); }
+#administration-screen #global-error { background: var(--amber-bg); color: var(--amber); border-color: var(--pd-warning-line); }
+
+/* Pointer and keyboard states: color-only feedback, with no moving controls. */
+#visualisation-screen .button,
+#visualisation-screen .dose-details > summary,
+#visualisation-screen .dose-review > summary,
+#administration-screen button {
+  transition: background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
+}
+#visualisation-screen :is(button, a, input, select, summary):focus-visible,
+#administration-screen :is(button, a, input, select, textarea, summary):focus-visible {
+  outline-color: var(--accent);
+}
+@media (hover: hover) {
+  #visualisation-screen .button-soft:not(:disabled):hover,
+  #visualisation-screen .button-plain:not(:disabled):hover,
+  #visualisation-screen .dose-adjustment button:not(:disabled):hover,
+  #visualisation-screen .dose-details > summary:hover,
+  #visualisation-screen .dose-review > summary:hover { background: var(--pd-hover); }
+  #visualisation-screen .header .button-soft:not(:disabled):hover,
+  #administration-screen .return-visual:hover,
+  #administration-screen .icon-button:hover { background: var(--pd-header-button-hover); }
+  #administration-screen .nav:hover { color: var(--pd-header-ink); }
+  #administration-screen .primary:not(:disabled):hover { background: var(--primary); }
+  #administration-screen .secondary:not(:disabled):hover,
+  #administration-screen .dialog-close:hover,
+  #administration-screen .med-item:not(.active):hover,
+  #administration-screen .amp-list-item:not(.active):hover,
+  #administration-screen .patient-presets button:not(.active):hover { background: var(--pd-hover); }
+  #administration-screen .reference-month:not(.selected):hover { border-color: var(--pd-input-line); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #visualisation-screen *,
+  #administration-screen * { transition: none !important; }
+}

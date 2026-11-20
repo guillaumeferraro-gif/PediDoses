@@ -1,0 +1,15 @@
+/* The clinical reading layout keeps its original styles. Admin styles activate separately. */
+[hidden]{display:none!important}
+#visualisation-screen,#administration-screen{outline:none}
+.visual-header-actions{display:flex;align-items:center;gap:16px}
+.visual-header-actions .button{min-height:44px;font-size:13px}
+.saved-sources{display:block;white-space:pre-wrap;margin-top:8px}
+.return-visual{background:transparent;border:1px solid #8197a2;border-radius:7px;color:#fff;padding:8px 12px;font-size:12px;min-height:44px;white-space:nowrap}
+.return-visual:hover{background:#ffffff16}
+.amp-association{margin-bottom:16px;border:1px solid #cfddd6;border-radius:10px;background:white;padding:14px}
+.amp-association>.field{margin-bottom:12px}
+.amp-association .amp-readonly{margin-bottom:0;border:0;border-radius:7px}
+.amp-association .field small{font-size:11px;color:#5e6e7d}
+@media(max-width:800px){.return-visual{font-size:11px;padding:8px}.top-actions .test-tag{display:none}}
+@media(max-width:600px){.visual-header-actions{gap:8px}.visual-header-actions .version-badge{display:none}.visual-header-actions .button{font-size:12px;padding:8px 12px}.amp-association{padding:12px}.amp-association .field select{font-size:16px}.topbar .brand{min-width:0;font-size:18px}.return-visual{font-size:11px;padding:8px 10px}.topbar .top-actions{gap:5px}.topbar .brand small{letter-spacing:1.1px}}
+@media print{.visual-header-actions,.return-visual{display:none!important}}
