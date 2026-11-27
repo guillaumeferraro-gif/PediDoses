@@ -46,7 +46,8 @@ test('les doses et volumes imprimés viennent exactement des résultats de la vi
    for(const value of r.sequence||[r,...(r.secondDose?[r.secondDose]:[])]){
     if(value.dose!==null)assert.ok(row.cells[1].includes(`${value.unit==='mL'?printMl(value.dose):numberText(value.dose)} ${value.unit}`),row.id);
     if(value.hourlyAmount!==null)assert.ok(row.cells[1].includes(`${numberText(value.hourlyAmount)} ${value.unit}/h`),row.id);
-    if(value.volumeMl!==null)assert.ok(row.cells[3].includes(`${printMl(value.volumeMl)} mL`),row.id);
+    if(row.id==='cgr')assert.equal(row.cells[3],'Une poche maximum');
+    else if(value.volumeMl!==null)assert.ok(row.cells[3].includes(`${printMl(value.volumeMl)} mL`),row.id);
     if(value.rateMlH!==null)assert.ok(row.cells[3].includes(`${numberText(value.rateMlH,1)} mL/h`),row.id);
    }
   }
@@ -85,7 +86,25 @@ test('insuline, prélèvement seul, poche et énergie gardent leurs significatio
  const {rows}=prepare(newState(),{...ctx,weightKg:200}),find=id=>rows.find(r=>r.id===id).cells;
  assert.match(find('insuline-glucose')[2],/Insuline : prélèvement à préciser/);assert.equal(find('insuline-glucose')[3],'G10% : 250 mL ; 500 mL/h');
  assert.match(find('gentamicine')[2],/Prélever/);assert.equal(find('gentamicine')[3],'À préciser');
- assert.match(find('cgr')[2],/max. 1 poche/);assert.equal(find('cardioversion')[3],'—');assert.equal(find('cardioversion')[4],'—');
+ assert.match(find('cgr')[2],/volume sur l’étiquette/);assert.equal(find('cardioversion')[3],'—');assert.equal(find('cardioversion')[4],'—');
+});
+test('papier : le rappel d’une poche est renforcé uniquement pour un CGR de plus de 200 mL',()=>{
+ const state=newState();
+ for(const [weightKg,volume,enhanced] of [[19.9,'199 mL',false],[20,'200 mL',false],[20.1,'201 mL',true],[41,'410 mL',true]]){
+  const {rows,document}=prepare(state,{...ctx,weightKg},{visibleIds:['cgr','pfc','cpa']});
+  const cgr=rows.find(row=>row.id==='cgr');
+  assert.equal(cgr.cells[1],volume);
+  assert.equal(cgr.cells[2],'Vérifier le volume sur l’étiquette');
+  assert.equal(cgr.cells[3],'Une poche maximum');
+  const label=document.pages[0].ops.find(op=>op.type==='text'&&op.text==='Une poche maximum');
+  assert.ok(label);
+  assert.equal(label.fill==='#ffffff',enhanced);
+  for(const row of rows.filter(row=>row.id!=='cgr')){
+   assert.equal(row.highlightBagLimit,false);
+   assert.match(row.cells[2],/max\. 1 poche/);
+   assert.equal(row.cells[3],row.cells[1]);
+  }
+ }
 });
 test('les nouvelles fiches longues restent complètes : pages supplémentaires plutôt que texte coupé',()=>{
  let state=newState();const d=createMedicationDraft();d.record.name='Fiche supplémentaire';d.record.model.unit='mg';d.record.model.coefficient=1;d.record.protocol.administrationNote='Consigne complète à conserver. '.repeat(8);assignStock(state,d,state.links.propofol);state=commitSave(state,d);
@@ -134,7 +153,8 @@ test('le total de la somme disparaît, le prélèvement, le diluant et le volume
     assert.ok(row.cells[2].includes(`${printMl(take)} mL + ${printMl(add)} mL`),row.id);
     assert.doesNotMatch(row.cells[2],/=/,row.id);
    }
-   if(Number.isFinite(result.volumeMl))assert.ok(row.cells[3].includes(`${printMl(result.volumeMl)} mL`),row.id);
+   if(row.id==='cgr')assert.equal(row.cells[3],'Une poche maximum');
+   else if(Number.isFinite(result.volumeMl))assert.ok(row.cells[3].includes(`${printMl(result.volumeMl)} mL`),row.id);
   }
  }
  const {rows}=prepare();assert.equal(rows.find(r=>r.id==='adrenaline-iv').cells[2],'1 mg/1 mL · 1 mL + 9 mL NaCl 0,9 %');

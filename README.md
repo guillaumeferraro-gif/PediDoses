@@ -1,10 +1,14 @@
 # PediDoses — version Atelier · Bleu clinique
 
-Version publiée de l’Atelier **10**, style **Bleu clinique**, reprise à l’identique depuis le commit `d68ca1f39be9b2a079687f0a65907d8f8588f123`.
+Version **6.1.1**, issue de l’Atelier **12**, commit `0598031d34d4b891c9b0568fe2ea8cc3ba31cb81`.
 
 Adresse conservée : https://guillaumeferraro-gif.github.io/PediDoses/
 
-Le dossier `dist/` contient exactement l’application validée dans l’Atelier, avec le marqueur GitHub Pages `.nojekyll`. Les textes « Atelier / Test » et les mentions de validation clinique sont conservés. Aucun paramètre clinique ni aucune disposition n’a été modifié pour ce transfert.
+Le dossier `dist/` contient l’application de l’Atelier et le marqueur GitHub Pages `.nojekyll`. L’application conserve son statut de prototype en attente de validation clinique.
+
+Pour les CGR, le volume calculé au poids figure à l’écran et sur la feuille. Le rappel d’une poche maximum et de la vérification du volume sur l’étiquette est renforcé lorsque le volume calculé dépasse strictement 200 mL. À 200 mL exactement, le rappel reste ordinaire.
+
+Après la mise à jour, recharger les anciens onglets avant de modifier le référentiel. Les enregistrements entre onglets sont désormais coordonnés. Les anciennes sauvegardes GitHub peuvent être examinées dans **Sauvegardes**, puis importées après confirmation. Les relectures importées sont contrôlées et une fiche renommée ou déplacée dans un autre groupe repasse à relire.
 
 La visualisation est l’écran d’entrée. Elle reprend les cartes, les détails compacts et les styles de la vue PediDose existante. Les anciens onglets Calculs rapides / Administration sont supprimés. Un bouton Administration, en haut à droite, ouvre la gestion en six cartes ; Visualisation permet de revenir. Les deux écrans restent montés pour conserver le patient en mémoire, la recherche et les détails ouverts. Les réglages enregistrés sont transmis au lecteur, les brouillons restent dans l’administration.
 
@@ -43,7 +47,7 @@ Exécuter :
     npm test
     npm run check
 
-90 tests vérifient notamment la comparaison des 65 fiches sur quatre contextes avec le moteur original, la propagation des présentations, les modifications isolées, les unités, les préparations, les paliers, la relecture, la restauration et la sauvegarde.
+122 tests couvrent notamment les calculs des 65 fiches, les présentations partagées, la relecture, les sauvegardes et le rappel CGR à 199, 200 et 201 mL.
 
 Les modules dist/engine proviennent de la copie des sources PediDose. Le validateur local a été étendu pour les nouveaux médicaments et pour contrôler les préparations dans leurs tranches applicables ; le moteur arithmétique copié reste inchangé. Les tests arithmétiques ne constituent pas une validation clinique. Interface d'essai hors usage clinique.
 

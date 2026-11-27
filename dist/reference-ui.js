@@ -4,8 +4,8 @@ const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;
 const shown=value=>value===null?'Non renseigné':referenceNumber(value);
 
 export class ReferenceEditor{
-  constructor({getState,persist,onCommit,dialog,notify}){
-    Object.assign(this,{getState,persist,onCommit,dialog,notify});
+  constructor({getState,getToken,persist,onCommit,dialog,notify}){
+    Object.assign(this,{getState,getToken,persist,onCommit,dialog,notify});
     this.root=document.getElementById('references-view');
     this.draft=null;this.month=0;this.invalid=new Map();
     this.root.addEventListener('input',e=>this.onInput(e));
@@ -106,8 +106,9 @@ export class ReferenceEditor{
       this.dialog('Enregistrer les repères',`${changes.length} valeur${changes.length>1?'s':''} modifiée${changes.length>1?'s':''}`,
         '<p>Ces valeurs seront utilisées à l’écran et à l’impression.</p><div class="change-row change-header"><span>Paramètre</span><span>Avant</span><span>Après</span></div>'+changes.map(c=>`<div class="change-row"><span>${esc(c.label)}</span><del>${esc(shown(c.before))}</del><ins>${esc(shown(c.after))}</ins></div>`).join(''),
         '<button class="button secondary" data-close>Continuer à modifier</button><button class="button primary" id="reference-confirm-save">Enregistrer les repères</button>');
-      document.getElementById('reference-confirm-save').onclick=()=>{
-        try{this.persist(commitReferences(this.getState(),config));this.reset();document.getElementById('dialog').close();this.onCommit();this.render();this.notify('Repères enregistrés et disponibles à l’impression.');}
+      const saveBase=this.getToken?.(),saved=commitReferences(this.getState(),config);
+      document.getElementById('reference-confirm-save').onclick=async()=>{
+        try{document.getElementById('reference-confirm-save').disabled=true;await this.persist(saved,{expectedBase:saveBase});this.reset();document.getElementById('dialog').close();this.onCommit();this.render();this.notify('Repères enregistrés et disponibles à l’impression.');}
         catch(error){document.getElementById('dialog').close();this.showError(error.message);}
       };
     }catch(error){this.showError(error.message);}

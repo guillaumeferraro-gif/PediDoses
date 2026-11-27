@@ -1,5 +1,6 @@
 import {defaultConfiguration,validateConfiguration,modelFields} from './engine/protocol-config.js';
 import {smurRecords,smurCategories,smurSources} from './engine/smur-data.js';
+import {isCgrBag} from './engine/cgr-reminder.js';
 import {stockConcentration,ampouleDescription} from './engine/ampoules.js';
 import {calculateRecordForPatient,resolvePatientContext,isRecordVisibleForPatient} from './engine/patient-calculator.js';
 import {buildMedicationSheet} from './engine/smur-sheets.js';
@@ -156,7 +157,7 @@ export function posologyText(r){
  if(m.minimumAgeMonthsExclusive!==undefined)t+=' · après '+fmt(m.minimumAgeMonthsExclusive)+' mois';
  if(m.type==='fixed-duration-mixture')t+=' sur '+fmt(m.durationHours)+' h';
  if(m.type==='insulin-glucose')t+=' + glucose '+fmt(m.glucoseMlPerKg)+' mL/kg (max. '+fmt(m.maximumGlucoseMl)+' mL) sur '+fmt(m.durationHours*60)+' min';
- if(m.limitToOneBag)t+=' · limité à une poche si son volume est renseigné';
+ if(m.limitToOneBag)t+=isCgrBag(r)?' · une poche maximum':' · limité à une poche si son volume est renseigné';
  return t;
 }
 function mixText(mix,diluent){return mix?fmt(mix.takeMl)+' mL de produit + '+fmt(mix.addMl)+' mL de '+(diluent||'diluant à préciser'):'Sans dilution';}
@@ -209,7 +210,7 @@ export function preview(s,d,input={weight:'10',age:'24',ageUnit:'months',bag:''}
   }
  }
  details.find(x=>x.key==='posology').value=posologyText(r);
- if(r.model.limitToOneBag&&result.status==='calculated'){
+ if(r.model.limitToOneBag&&!isCgrBag(r)&&result.status==='calculated'){
   const bag=input.bag===''?null:Number(String(input.bag).replace(',','.'));
   if(bag!==null&&(!Number.isFinite(bag)||bag<=0))throw Error('Volume de poche : saisir un nombre positif.');
   result.bagVolumeMl=bag;
@@ -246,7 +247,19 @@ export function differences(a,b,prefix=''){
  }
  return changes;
 }
-const clinicalPart=d=>d&&({model:d.record.model,doses:d.record.doses,patientRules:d.record.patientRules,particulars:d.record.protocol.particulars,hideBelow:d.record.hideBelowAgeMonths,hideAbove:d.record.hideAboveAgeMonths,route:d.record.protocol.route,duration:d.record.protocol.durationMinutes,administrationNote:d.record.protocol.administrationNote,stock:d.stock,stockId:d.stockId});
+const clinicalPart=d=>d&&({name:d.record.name,category:d.record.category,model:d.record.model,doses:d.record.doses,patientRules:d.record.patientRules,particulars:d.record.protocol.particulars,hideBelow:d.record.hideBelowAgeMonths,hideAbove:d.record.hideAboveAgeMonths,route:d.record.protocol.route,duration:d.record.protocol.durationMinutes,administrationNote:d.record.protocol.administrationNote,stock:d.stock,stockId:d.stockId});
+export function validateReview(v,label='Fiche'){
+ const fail=message=>{throw Error(label+' : '+message);};
+ if(!v||!['todo','reviewing','reviewed'].includes(v.status)||typeof v.reviewer!=='string'||typeof v.sources!=='string'||typeof v.notes!=='string'||!Array.isArray(v.questions)||v.questions.some(q=>typeof q!=='string'))fail('Relecture invalide.');
+ const checks=['posology','preparation','administration'];
+ if(!v.checks||!checks.every(k=>typeof v.checks[k]==='boolean'))fail('Les trois contrôles de relecture doivent être des booléens.');
+ if(v.status==='reviewed'){
+  if(!v.reviewer.trim())fail('Indiquer le nom du relecteur.');
+  if(!checks.every(k=>v.checks[k]===true))fail('Cocher les trois contrôles de relecture avant de marquer la fiche relue.');
+  if(typeof v.reviewedAt!=='string'||!v.reviewedAt.trim()||!Number.isFinite(Date.parse(v.reviewedAt)))fail('Date de relecture absente ou invalide.');
+ }
+ return v;
+}
 export function prepareSave(s,d){
  const creating=!s.records.some(r=>r.id===d.record.id),before=creating?null:draftFor(s,d.record.id);
  if(d.stockId!==null&&!s.stocks[d.stockId])throw Error('Ampoule inconnue.');
@@ -260,10 +273,9 @@ export function prepareSave(s,d){
  for(const id of affected){
   if(clinical||stockChanged){next.reviews[id].status='todo';next.reviews[id].reviewedAt=null;next.reviews[id].checks={posology:false,preparation:false,administration:false};}
   else if(next.reviews[id].status==='reviewed'){
-   if(!next.reviews[id].reviewer.trim())throw Error('Indiquer le nom du relecteur.');
-   if(!Object.values(next.reviews[id].checks).every(Boolean))throw Error('Cocher les trois points de relecture avant de marquer la fiche relue.');
    next.reviews[id].reviewedAt=new Date().toISOString();
   }
+  validateReview(next.reviews[id],next.records.find(r=>r.id===id).name);
   next.revisions[id]=(next.revisions[id]||0)+1;
  }
  synchronizeTexts(next,affected);validateAtelier(next);
@@ -273,7 +285,8 @@ export function prepareSave(s,d){
 }
 export function commitSave(s,d,prepared,kind='edit'){
  const p=prepared||prepareSave(s,d),next=p.next;
- const snapshot={records:s.records.filter(r=>p.affected.includes(r.id)).map(clone),links:Object.fromEntries(p.affected.map(id=>[id,s.links[id]])),stocks:clone(s.stocks),reviews:Object.fromEntries(p.affected.map(id=>[id,clone(s.reviews[id])]))};
+ const previousIds=p.affected.filter(id=>s.records.some(r=>r.id===id));
+ const snapshot={records:s.records.filter(r=>previousIds.includes(r.id)).map(clone),links:Object.fromEntries(previousIds.map(id=>[id,s.links[id]])),stocks:clone(s.stocks),reviews:Object.fromEntries(previousIds.map(id=>[id,clone(s.reviews[id])]))};
  next.history.unshift({id:crypto.randomUUID(),at:new Date().toISOString(),kind:p.creating?'create':kind,recordId:d.record.id,name:d.record.name,affected:p.affected,stockIds:[],changes:p.changes,snapshot,checks:p.checks.length});
  next.history=next.history.slice(0,60);
  return next;
@@ -308,7 +321,7 @@ export function validateState(s){
  if(s.version<3){s=clone(s);for(const r of s.records||[])migrateUsage(r);for(const e of s.history||[])for(const r of e.snapshot?.records||[])migrateUsage(r);s.version=3;}
  if(s.version<4){s=clone(s);s.clinicalReferences=referenceDefaults();s.version=4;}
  if(!Array.isArray(s.records)||!s.stocks||!s.links||!s.reviews||!s.revisions||!Array.isArray(s.history))throw Error('Sauvegarde incomplète.');
- for(const r of s.records){if((s.links[r.id]!==null&&!s.stocks[s.links[r.id]])||!s.reviews[r.id])throw Error('Ampoule ou relecture manquante.');const v=s.reviews[r.id];if(!['todo','reviewing','reviewed'].includes(v.status)||typeof v.reviewer!=='string'||typeof v.sources!=='string'||typeof v.notes!=='string'||!v.checks||!Array.isArray(v.questions)||v.questions.some(q=>typeof q!=='string')||!['posology','preparation','administration'].every(k=>typeof v.checks[k]==='boolean')||!Number.isInteger(s.revisions[r.id]))throw Error('Relecture invalide.');}
+ for(const r of s.records){if((s.links[r.id]!==null&&!s.stocks[s.links[r.id]])||!s.reviews[r.id])throw Error('Ampoule ou relecture manquante.');validateReview(s.reviews[r.id],r.name);if(!Number.isInteger(s.revisions[r.id]))throw Error(r.name+' : révision invalide.');}
  if(s.history.length>60)throw Error('Historique trop volumineux.');
  for(const e of s.history){
   const knownId=id=>originals.has(id)||typeof id==='string'&&/^custom-[a-zA-Z0-9-]{8,80}$/.test(id);
@@ -316,6 +329,11 @@ export function validateState(s){
   if(e.kind==='references'){
    if(e.recordId!==null||e.affected.length||e.stockIds?.length||!Array.isArray(e.snapshot.records)||e.snapshot.records.length)throw Error('Historique des repères invalide.');
    validateReferences(e.snapshot.clinicalReferences);
+  }
+  for(const [id,review] of Object.entries(e.snapshot.reviews)){
+   // Earlier creation events stored a null placeholder for the absent prior review.
+   if(review==null&&e.kind==='create'&&e.affected.includes(id)&&!e.snapshot.records.some(r=>r.id===id))continue;
+   validateReview(review,'Historique · '+(s.records.find(r=>r.id===id)?.name||id));
   }
  }
  validateAtelier(s);return s;

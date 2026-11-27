@@ -1,4 +1,5 @@
 import { smurCategories, smurSources } from '../engine/smur-data.js';
+import {getCgrReminder} from '../engine/cgr-reminder.js';
 import {getConfiguredRecords,getConfiguredReferences,calculateAllRecords,buildMedicationSheet,withCurrentDose,quickMedicationDetails} from './data.js';
 import { resolvePatientContext, isRecordVisibleForPatient } from '../engine/patient-calculator.js';
 import { volumeText, concentrationText } from '../engine/smur-sheets.js';
@@ -207,7 +208,10 @@ function updateCard(record) {
   }
   const infusion = ['infusion', 'fixed-rate', 'fixed-duration-mixture'].includes(record.model.type);
   const volumeDose = result.unit === 'mL' && record.model.volumeKind !== 'withdrawal';
-  if (volumeDose) {
+  const cgrReminder = getCgrReminder(record, result);
+  if (cgrReminder) {
+    metric(values, 'Volume calculé au poids', `${preparationVolume(result.dose)} mL`, true);
+  } else if (volumeDose) {
     metric(values, record.model.limitToOneBag ? 'Volume prescrit · max. 1 poche' : 'Volume à administrer', `${preparationVolume(result.dose)} mL`, true);
   } else {
     const quantity = result.dose ?? result.hourlyAmount;
@@ -232,14 +236,19 @@ function updateCard(record) {
   if (reviewNote) messages.push(reviewNote);
   if (sheet.pendingCeiling !== null && result.dose > sheet.pendingCeiling) messages.push('La dose calculée dépasse le plafond du tableau qui reste à valider. Voir les détails de la fiche.');
   if (result.maximumApplied) messages.push('Plafond du modèle appliqué : voir son statut dans la fiche.');
-  notes.textContent = messages.join(' ');
+  if (cgrReminder) {
+    notes.append(make(cgrReminder.enhanced ? 'strong' : 'span', cgrReminder.text));
+    if (messages.length) notes.append(document.createTextNode(' ' + messages.join(' ')));
+  } else {
+    notes.textContent = messages.join(' ');
+  }
   calculation.append(make('p', `Poids retenu : ${format(result.weightKg)} kg (${result.weightSource === 'measured' ? 'saisi' : 'estimé'}).`));
   if (result.dose !== null) calculation.append(make('p', `Quantité calculée${record.model.durationHours ? ` sur ${record.model.durationHours} h` : ''} : ${display(result.dose)} ${unitLabel(result.unit)}${result.maximumApplied ? ' après plafond' : ''}.`));
   if (result.hourlyAmount !== null) calculation.append(make('p', `Quantité par heure : ${display(result.hourlyAmount)} ${unitLabel(result.unit)}/h.`));
   if (result.rateMlH !== null) calculation.append(make('p', `${result.rateKind==='glucose' ? `Débit du G${format((record.model.glucoseConcentrationMgMl??100)/10,2)} %` : 'Débit final'} : ${format(result.rateMlH, 1)} mL/h (arrondi final à 0,1 mL/h).`));
   if (result.concentration !== null) calculation.append(make('p', `Concentration finale : ${concentrationText(result.concentration, result.unit)}.`));
   if (result.mass !== null) calculation.append(make('p', `Quantité correspondante : ${display(result.mass)} ${unitLabel(result.massUnit)}.`));
-  if (result.volumeMl !== null) calculation.append(make('p', `${result.rateKind==='glucose' ? `Volume de G${format((record.model.glucoseConcentrationMgMl??100)/10,2)} %` : 'Volume de la solution finale à administrer'} : ${preparationVolume(result.volumeMl)} mL.`));
+  if (result.volumeMl !== null && !cgrReminder) calculation.append(make('p', `${result.rateKind==='glucose' ? `Volume de G${format((record.model.glucoseConcentrationMgMl??100)/10,2)} %` : 'Volume de la solution finale à administrer'} : ${preparationVolume(result.volumeMl)} mL.`));
   if (result.withdrawalMl !== null) calculation.append(make('p', `Volume de produit à prélever : ${preparationVolume(result.withdrawalMl)} mL${result.stockConcentration!==null ? ` à ${concentrationText(result.stockConcentration, result.unit)}` : ' de produit avant dilution'}.`));
   if (result.addMl !== null) calculation.append(make('p', `Diluant à ajouter : ${preparationVolume(result.addMl)} mL (${record.model.diluent}).`));
   if (result.mixtureVolumeMl !== null) calculation.append(make('p', `Volume final : ${preparationVolume(result.mixtureVolumeMl)} mL.`));

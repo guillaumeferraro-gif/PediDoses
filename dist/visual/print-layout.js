@@ -97,9 +97,11 @@ export function layoutPrintDocument(rows,{error='',references=null}={}){
     if(index%2===1)rect(0,y,PRINT.width,entry.height,colors.stripe);
     let x=0;
     entry.cells.forEach((c,i)=>{
-     const baseline=(entry.height-c.lines.length*PRINT.line)/2+8;
-     c.lines.forEach((value,j)=>text(value,x+PRINT.padding,y+baseline+j*PRINT.line,c.size,c.bold));
      const width=entry.spanMessage&&i===1?PRINT.width-COLUMNS[0].width:COLUMNS[i].width;
+     const highlightLimit=entry.highlightBagLimit&&i===3;
+     if(highlightLimit)rect(x,y,width,entry.height,colors.ink);
+     const baseline=(entry.height-c.lines.length*PRINT.line)/2+8;
+     c.lines.forEach((value,j)=>text(value,x+PRINT.padding,y+baseline+j*PRINT.line,c.size,c.bold,highlightLimit?'#ffffff':colors.ink));
      x+=width;if(x<PRINT.width-.1)line(x,y,x,y+entry.height);
     });
     index++;

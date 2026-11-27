@@ -2,6 +2,7 @@
 import {smurCategories} from '../engine/smur-data.js';
 import {numberText,volumeText,concentrationText} from '../engine/smur-sheets.js';
 import {administrationMinutes} from '../engine/administration.js';
+import {getCgrReminder} from '../engine/cgr-reminder.js';
 import {withCurrentDose} from './data.js';
 import {doseModel} from '../usage-options.js';
 import {modelForSecondDose} from '../engine/smur-preparation.js';
@@ -93,13 +94,14 @@ export function buildPrintRows(records,results,context,{visibleIds=null}={}){
   }
   const sequence=v.sequence||[v,...(v.secondDose?[v.secondDose]:[])];
   const variants=sequence.map((value,i)=>({value,record:i===0?r:{...r,model:r.doses?doseModel(r,r.doses[i]):modelForSecondDose(m)}}));
-  const prep=steps(variants.map(({record,value})=>preparation(record,value)),true);
+  const cgrReminder=getCgrReminder(r,v);
+  const prep=cgrReminder?'Vérifier le volume sur l’étiquette':steps(variants.map(({record,value})=>preparation(record,value)),true);
   const source=presentation(r);
-  const values=steps(variants.map(({record,value})=>toAdminister(record,value)));
+  const values=cgrReminder?'Une poche maximum':steps(variants.map(({record,value})=>toAdminister(record,value)));
   let admin=printAdministration(r,v);
   const pending=known(m.pendingCeiling)&&sequence.some(x=>known(x.dose)&&x.dose>m.pendingCeiling);
   if(pending)admin+=' ; plafond à valider dépassé';
-  return {...common,cells:[name,steps(variants.map(({record,value})=>dose(record,value))),source==='—'||m.limitToOneBag||m.type==='insulin-glucose'&&source==='Présentation à préciser'?prep:join([source,prep]),values,admin]};
+  return {...common,highlightBagLimit:cgrReminder?.enhanced===true,cells:[name,steps(variants.map(({record,value})=>dose(record,value))),source==='—'||m.limitToOneBag||m.type==='insulin-glucose'&&source==='Présentation à préciser'?prep:join([source,prep]),values,admin]};
  }));
 }
 

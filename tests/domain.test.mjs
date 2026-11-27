@@ -83,10 +83,20 @@ test('les paliers triphosadénine, magnésium et âge restent présents',()=>{
  const p=preview(s,draftFor(s,'phenobarbital'),{weight:'3',age:'0.99',ageUnit:'months'});assert.equal(p.result.dose,60);
  const p2=preview(s,draftFor(s,'phenobarbital'),{weight:'3',age:'1',ageUnit:'months'});assert.equal(p2.result.dose,45);
 });
-test('volume des poches requis, puis plafonnement ; saisie patient invalide bloquée',()=>{
- const s=newState(),d=draftFor(s,'cgr');assert.equal(preview(s,d).result.volumeMl,null);
- assert.equal(preview(s,d,{weight:'10',age:'24',ageUnit:'months',bag:'60'}).result.volumeMl,60);
- assert.throws(()=>preview(s,d,{weight:'abc',age:'24',ageUnit:'months',bag:''}));
+test('aperçu des poches : volume calculé pour le CGR, volume de poche requis pour le PFC et le CPA',()=>{
+ const state=newState(), patient={weight:'21',age:'24',ageUnit:'months',bag:''};
+ const cgr=draftFor(state,'cgr');
+ for(const bag of ['', '60', 'invalide']){
+  const {result}=preview(state,cgr,{...patient,bag});
+  assert.equal(result.volumeMl,210);
+  assert.equal(result.dose,210);
+ }
+ for(const id of ['pfc','cpa']){
+  const draft=draftFor(state,id);
+  assert.equal(preview(state,draft,patient).result.volumeMl,null);
+  assert.equal(preview(state,draft,{...patient,bag:'60'}).result.volumeMl,60);
+ }
+ assert.throws(()=>preview(state,cgr,{...patient,weight:'abc'}));
 });
 test('persistance indépendante, import validé et erreur de stockage explicite',()=>{
  const mem=new Map(),storage={getItem:k=>mem.get(k)||null,setItem:(k,v)=>mem.set(k,v)},s=newState();persistState(storage,s);

@@ -1,10 +1,13 @@
-import {newState,draftFor,clone,equal,fmt,normal,categoryName,smurCategories,modelFields,STORAGE_KEY,SOURCE_SHA,originals,stockConcentration,linkedRecords,draftChanged,withDraft,prepMode,prepNames,changePrep,posologyText,preparationText,preview,checkCases,prepareSave,commitSave,canRestore,restoreEvent,loadState,persistState,validateState,configuration,compileRecord,validateAtelier,createMedicationDraft,compatibleStocks,assignStock} from './domain.js';
+import {newState,draftFor,clone,equal,fmt,normal,categoryName,smurCategories,modelFields,STORAGE_KEY,SOURCE_SHA,originals,stockConcentration,linkedRecords,draftChanged,withDraft,prepMode,prepNames,changePrep,posologyText,preparationText,preview,checkCases,prepareSave,commitSave,canRestore,restoreEvent,loadState,validateState,configuration,compileRecord,validateAtelier,createMedicationDraft,compatibleStocks,assignStock} from './domain.js';
 import {doseUnits,stockUnits,routes,convertDoseUnit,convertDosePeriod,convertStockUnit,validateConfiguration} from './engine/protocol-config.js';
 import {administrationMinutes} from './engine/administration.js';
+import {isCgrBag,getCgrReminder} from './engine/cgr-reminder.js';
 import {hasAgeDoses,usageEligibility,setMultipleDoses,addDose,removeDose,setAgeDoses,setContinuous,convertUsageUnit,convertUsagePeriod} from './usage-options.js';
 import {setPatientRule,addBand,removeBand,changeRuleAxis,bandLabel,ruleUnit,ruleEligibility,bandRecord,preparationOf,applyPreparation} from './patient-rules.js';
 import {AmpouleEditor} from './stock-ui.js';
 import {ReferenceEditor} from './reference-ui.js';
+import {createStateStore,referenceDifferences,draftRecovery} from './state-store.js';
+import {LEGACY_KEYS,prepareLegacyImport,migrationBackups} from './legacy-import.js';
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -16,8 +19,9 @@ const icons={
 };
 const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[name]||icons.file)+'</svg>';
 const statusLabels={todo:'À relire',reviewing:'En relecture',reviewed:'Relue dans le test'};
-let state,loadFailed=false;
-try{state=loadState(localStorage);}catch(error){state=newState();loadFailed=true;$('global-error').hidden=false;$('global-error').textContent='La sauvegarde locale ne peut pas être chargée : '+error.message+' Aucun remplacement automatique. Ouvrez les sauvegardes pour importer un fichier ou réinitialiser cet atelier.';}
+const stateStore=createStateStore(localStorage,{locks:globalThis.navigator?.locks});
+let state,loadFailed=false,savePending=false;
+try{state=stateStore.read();}catch(error){state=newState();loadFailed=true;$('global-error').hidden=false;$('global-error').textContent='La sauvegarde locale ne peut pas être chargée : '+error.message+' Aucun remplacement automatique. Ouvrez les sauvegardes pour importer un fichier ou réinitialiser cet atelier.';}
 let selected='ketamine-analgesie',draft=draftFor(state,selected),view='editor',toastTimer;
 const openSections=new Set(['posology','options']);
 let continuousBackup=null,previewAdjustment=0,rangeBackup=null;
@@ -42,9 +46,53 @@ function toggle(label,path,checked=getPath(draft,path),special=''){return '<labe
 function section(id,num,title,subtitle,content){return '<details class="form-section" data-section="'+id+'"'+(openSections.has(id)?' open':'')+'><summary><span class="section-number">'+num+'</span><span class="summary-text"><strong>'+title+'</strong><small>'+esc(subtitle)+'</small></span><span class="chevron" aria-hidden="true"></span></summary><div class="section-content">'+content+'</div></details>';}
 function sub(title,body){return '<details class="subsection"><summary>'+esc(title)+' <span aria-hidden="true">+</span></summary>'+body+'</details>';}
 function toast(text){clearTimeout(toastTimer);$('toast').textContent=text;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,4200);}
-function persist(next){
- if(loadFailed)throw Error('La sauvegarde existante doit être récupérée ou réinitialisée avant tout enregistrement.');
- persistState(localStorage,next);state=next;window.dispatchEvent(new Event('atelier-updated'));
+async function persist(next,{recover=false,...options}={}){
+ if(savePending)throw Error('Un enregistrement est déjà en cours.');
+ if(loadFailed&&!recover)throw Error('La sauvegarde existante doit être récupérée ou réinitialisée avant tout enregistrement.');
+ savePending=true;
+ $('dialog').setAttribute('aria-busy','true');
+ try{
+  const saved=await stateStore.save(next,options);state=saved;
+  loadFailed=false;$('global-error').hidden=true;$('storage-notice').hidden=true;
+  window.dispatchEvent(new Event('atelier-updated'));
+ }catch(error){if(error.code==='state-conflict')storageNotice(error.message);throw error;}
+ finally{savePending=false;$('dialog').removeAttribute('aria-busy');}
+}
+function hasDrafts(){return draftChanged(state,draft)||invalidInputs.size||ampEditor.dirty()||referenceEditor.dirty();}
+function downloadJson(value,filename){
+ const blob=new Blob([typeof value==='string'?value:JSON.stringify(value,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function recoverDrafts(){
+ downloadJson(draftRecovery({state,medication:draft,invalidValues:[...invalidValues],ampoule:ampEditor.draft,ampouleInvalid:[...ampEditor.invalidValues],references:referenceEditor.draft,referencesInvalid:[...referenceEditor.invalid]}),'pedidose-brouillons-'+new Date().toISOString().slice(0,10)+'.json');
+}
+function storageNotice(message){$('storage-message').textContent=message;$('storage-notice').hidden=false;}
+function reloadReference(){
+ try{const next=stateStore.read();state=next;loadFailed=false;$('global-error').hidden=true;resetDraft();ampEditor.reset();referenceEditor.reset();$('storage-notice').hidden=true;$('dialog').close();renderAll();if(view!=='editor')setView(view);window.dispatchEvent(new Event('atelier-updated'));}
+ catch(error){loadFailed=true;storageNotice('Référentiel indisponible : '+error.message);}
+}
+function compareStored(){
+ try{
+  const latest=stateStore.peek(),changes=referenceDifferences(state,latest);
+  dialog('Un autre onglet a enregistré des modifications','Votre brouillon est conservé.',
+   '<p>À gauche : votre base de travail. À droite : le référentiel actuellement enregistré. Récupérez vos brouillons avant de recharger ; leur fichier contient les saisies à reprendre, sans patient.</p>'+changeTable(changes),
+   '<button class="button secondary" data-close>Revenir au brouillon</button><button class="button secondary" id="recover-conflict">Récupérer mes brouillons</button><button class="button primary" id="reload-conflict">Recharger le référentiel</button>');
+  $('recover-conflict').onclick=recoverDrafts;
+  $('reload-conflict').onclick=()=>{if(hasDrafts()){
+   dialog('Recharger le référentiel','Les brouillons non enregistrés seront abandonnés.',
+    '<p>Vous pouvez d’abord récupérer un fichier contenant vos brouillons et vos saisies invalides.</p>',
+    '<button class="button secondary" data-close>Conserver mes brouillons</button><button class="button secondary" id="recover-before-reload">Récupérer mes brouillons</button><button class="button danger" id="confirm-reload">Abandonner et recharger</button>');
+   $('recover-before-reload').onclick=recoverDrafts;$('confirm-reload').onclick=reloadReference;
+  }else reloadReference();};
+ }catch(error){errorDialog(error.message);}
+}
+function externalChange(){
+ try{
+  if(!stateStore.changed())return;
+  window.dispatchEvent(new Event('atelier-updated'));
+  if(hasDrafts()||$('dialog').open||savePending)storageNotice('Un autre onglet a modifié le référentiel. Votre brouillon est conservé. Comparez les versions avant de continuer.');
+  else reloadReference();
+ }catch(error){storageNotice('Impossible de relire les réglages : '+error.message);}
 }
 function renderStats(){
  $('review-count').textContent=state.records.filter(r=>state.reviews[r.id].status!=='reviewed').length;
@@ -121,7 +169,7 @@ function renderOptions(){
 function renderConditions(){
  const r=draft.record,m=r.model;
  const special=['fixedDoseFromWeightKg','fixedDoseFromAgeMonths','fixedDose','fixedHourlyFromAgeMonths','fixedHourlyAmount','fixedDurationHours','preparedCoefficient','preparedMaximumDose','pendingCeiling','minimumAgeMonthsExclusive',...(m.adjustmentStatus!=='enabled'?['minimumCoefficient','warningCoefficient',...(m.type==='infusion'?[]:['maximumCoefficient'])]:[])].filter(k=>m[k]!==undefined);
- return '<div class="fields">'+field('Conditions et précautions — une par ligne','record.protocol.particulars',{kind:'lines',wide:true})+number('minimumAgeMonths','Âge minimal autorisé',{suffix:'mois'})+special.map(k=>number(k)).join('')+'</div>'+sub('Conditions d’affichage de la fiche','<div class="fields">'+field('Masquer avant cet âge','record.hideBelowAgeMonths',{kind:'number',suffix:'mois'})+field('Masquer après cet âge','record.hideAboveAgeMonths',{kind:'number',suffix:'mois'})+'</div>')+(m.unit==='mL'?toggle('Limiter au volume de la poche renseigné','record.model.limitToOneBag',m.limitToOneBag):'');
+ return '<div class="fields">'+field('Conditions et précautions — une par ligne','record.protocol.particulars',{kind:'lines',wide:true})+number('minimumAgeMonths','Âge minimal autorisé',{suffix:'mois'})+special.map(k=>number(k)).join('')+'</div>'+sub('Conditions d’affichage de la fiche','<div class="fields">'+field('Masquer avant cet âge','record.hideBelowAgeMonths',{kind:'number',suffix:'mois'})+field('Masquer après cet âge','record.hideAboveAgeMonths',{kind:'number',suffix:'mois'})+'</div>')+(m.unit==='mL'?toggle(r.id==='cgr'?'Afficher le rappel d’une poche maximum':'Limiter au volume de la poche renseigné','record.model.limitToOneBag',m.limitToOneBag):'');
 }
 function mixFields(path,title){
  const mix=getPath(draft,path);
@@ -192,7 +240,7 @@ function refreshLive(){
  $('save-btn').disabled=!dirty||!!n||loadFailed;$('discard-btn').disabled=!dirty;
  $('save-status').textContent=n?'Corriger les champs signalés':dirty?'Modifications non enregistrées':'Aucune modification';
  if($('stock-concentration'))$('stock-concentration').textContent=fmt(stockConcentration(draft.stock))+' '+draft.stock.unit+'/mL';
- $('bag-label').hidden=!draft.record.model.limitToOneBag;
+ $('bag-label').hidden=!draft.record.model.limitToOneBag||isCgrBag(draft.record);
  renderPreview();
 }
 function renderPreview(){
@@ -203,9 +251,14 @@ function renderPreview(){
   if(p.hidden){$('preview-result').innerHTML='<div class="muted-box">Cette fiche est masquée pour l’âge d’essai renseigné.</div>';return;}
   if(v.status==='empty'||v.status==='blocked'){ $('preview-result').innerHTML='<div class="muted-box">'+esc(v.message)+'</div>';return;}
   const resultBox=(label,value,unit,sub='')=>'<div><span class="result-label">'+label+'</span><div class="result-number">'+esc(value)+' <b>'+esc(unit)+'</b></div>'+(sub?'<div class="result-sub">'+esc(sub)+'</div>':'')+'</div>';
+  const cgrReminder=getCgrReminder(r,v);
   let result='';
   if(v.status==='instruction')result='<div class="main-result"><p>'+esc(v.message)+'</p></div>';
-  else{
+  else if(cgrReminder){
+   const reminder=esc(cgrReminder.text);
+   const message=cgrReminder.enhanced?'<strong>'+reminder+'</strong>':reminder;
+   result='<div class="main-result">'+resultBox('Volume calculé au poids',fmt(v.dose),v.unit,v.maximumApplied?'Plafond appliqué':'')+'<div>'+message+'</div></div>';
+  }else{
    result='<div class="main-result">'+resultBox(v.hourlyAmount!=null?'Dose horaire':'Dose calculée',fmt(v.hourlyAmount??v.dose),v.unit+(v.hourlyAmount!=null?'/h':''),v.maximumApplied?'Plafond appliqué':'');
    result+=v.rateMlH!=null?resultBox('Débit à administrer',fmt(v.rateMlH,1),'mL/h'):resultBox('Volume à administrer',v.volumeMl===null?'—':fmt(v.volumeMl,2),'mL',r.model.limitToOneBag&&v.bagVolumeMl===null?'Renseigner la poche':'');
    result+='</div>';
@@ -218,7 +271,7 @@ function renderPreview(){
 function dialog(title,description,body,footer=''){
  $('dialog-content').innerHTML='<div class="dialog-head"><div><h2>'+esc(title)+'</h2><p>'+esc(description)+'</p></div><button class="dialog-close" aria-label="Fermer" data-close>×</button></div><div class="dialog-body">'+body+'</div><div class="dialog-footer">'+(footer||'<button class="button secondary" data-close>Fermer</button>')+'</div>';
  if(!$('dialog').open)$('dialog').showModal();
- for(const btn of $('dialog').querySelectorAll('[data-close]'))btn.onclick=()=>$('dialog').close();
+ for(const btn of $('dialog').querySelectorAll('[data-close]'))btn.onclick=()=>{if(!savePending)$('dialog').close();};
 }
 function displayValue(v){
  if(v===null||v===undefined||v==='')return 'Non renseigné';
@@ -237,14 +290,14 @@ function changeTable(changes){
 function errorDialog(message){dialog('Impossible d’enregistrer','Les données actives sont conservées.','<div class="error-box">'+esc(message)+'</div>');}
 function saveDialog(){
  try{
-  const prepared=prepareSave(state,draft);
+  const prepared=prepareSave(state,draft),saveBase=stateStore.token(),savedDraft=clone(draft);
   dialog('Enregistrer cette fiche',draft.record.name+' · version '+((state.revisions[selected]||0)+1),
    '<div class="success-info">'+icon('check')+' '+(draft.stockId===null?'Fiche enregistrable. Affectez son ampoule ici ou depuis l’espace Ampoules.':prepared.checks.length+' cas de calcul vérifiés')+'</div>'+
    (prepared.stockChanged&&prepared.affected.length>1?'<div class="shared-note"><strong>Cette présentation est partagée.</strong><p>'+prepared.affected.map(id=>esc(state.records.find(r=>r.id===id).name)).join(' · ')+'</p><p>Les '+prepared.affected.length+' fiches seront actualisées et remises à relire.</p></div>':'')+
    (prepared.clinical?'<p>Les paramètres changent : la fiche repassera « À relire ». Vérifiez aussi les consignes libres importées.</p>':'')+
    changeTable(prepared.changes),
    '<button class="button secondary" data-close>Continuer à modifier</button><button class="button primary" id="confirm-save">Confirmer l’enregistrement</button>');
-  $('confirm-save').onclick=()=>{try{persist(commitSave(state,draft,prepared));resetDraft();$('dialog').close();renderAll();toast(prepared.affected.length>1?prepared.affected.length+' fiches mises à jour dans cet atelier.':'Fiche enregistrée dans cet atelier.');}catch(error){errorDialog(error.message);}};
+  $('confirm-save').onclick=async()=>{try{$('confirm-save').disabled=true;await persist(commitSave(state,savedDraft,prepared),{expectedBase:saveBase});resetDraft();$('dialog').close();renderAll();toast(prepared.affected.length>1?prepared.affected.length+' fiches mises à jour dans cet atelier.':'Fiche enregistrée dans cet atelier.');}catch(error){errorDialog(error.message);}};
  }catch(error){errorDialog(error.message);}
 }
 function guardLeave(action){
@@ -276,7 +329,8 @@ function renderHistory(){
 function restoreDialog(id){
  const event=state.history.find(e=>e.id===id);
  dialog('Restaurer la version précédente',event.name,(event.kind==='references'?'<p>Les valeurs mensuelles et la formule de la sonde avec ballonnet reviendront à leur état précédent.</p>':'<p>La restauration concerne '+event.affected.length+' fiche'+(event.affected.length>1?'s':'')+' et les présentations partagées associées. Ces fiches repasseront « À relire ».</p>')+'<p>Une nouvelle entrée sera ajoutée à l’historique.</p>','<button class="button secondary" data-close>Annuler</button><button class="button primary" id="confirm-restore">Restaurer cette version</button>');
- $('confirm-restore').onclick=()=>{try{persist(restoreEvent(state,event));resetDraft();$('dialog').close();ampEditor.reset();referenceEditor.reset();renderAll();renderHistory();toast(event.kind==='references'?'Repères restaurés.':'Version restaurée. Les fiches concernées sont à relire.');}catch(error){errorDialog(error.message);}};
+ const restoreBase=stateStore.token(),restored=restoreEvent(state,event);
+ $('confirm-restore').onclick=async()=>{try{$('confirm-restore').disabled=true;await persist(restored,{expectedBase:restoreBase});resetDraft();$('dialog').close();ampEditor.reset();referenceEditor.reset();renderAll();renderHistory();toast(event.kind==='references'?'Repères restaurés.':'Version restaurée. Les fiches concernées sont à relire.');}catch(error){errorDialog(error.message);}};
 }
 function checksDialog(){
  try{
@@ -287,14 +341,31 @@ function checksDialog(){
 }
 function settingsDialog(){
  dialog('Votre atelier de test','Un projet indépendant pour essayer la nouvelle gestion.',
- '<p>Les caractéristiques des ampoules se modifient dans leur espace dédié. Vous pouvez affecter une ampoule depuis une fiche médicament ou cocher les usages depuis une fiche ampoule. Les deux écrans partagent les mêmes affectations.<br><br>Les 65 fiches de départ proviennent d’une copie des paramètres de PediDose. Ce site ne modifie ni le dépôt ni l’application PediDose.</p><p class="storage-note">Vos essais et leur historique sont conservés uniquement dans ce navigateur. Exportez une sauvegarde pour les garder ou les transférer sur un autre appareil. Aucun patient d’essai n’est enregistré.</p><div class="settings-actions"><button class="button secondary" id="export-btn">Exporter ma sauvegarde<small>Fiches, ampoules, repères, relectures et historique · JSON</small></button><button class="button secondary" id="import-btn">Importer une sauvegarde de l’atelier<small>Un aperçu sera présenté avant remplacement.</small></button><button class="button danger" id="reset-btn">Réinitialiser cet atelier<small>Revenir à la copie initiale et effacer les essais de ce navigateur.</small></button></div><p>Source : <a href="https://github.com/guillaumeferraro-gif/PediDoses/tree/'+SOURCE_SHA+'" target="_blank" rel="noopener">PediDose · '+SOURCE_SHA.slice(0,8)+'</a></p><p>Prototype d’interface hors usage clinique. Les statuts de relecture ne constituent pas une validation de PediDose.</p>');
+ '<p>Les caractéristiques des ampoules se modifient dans leur espace dédié. Vous pouvez affecter une ampoule depuis une fiche médicament ou cocher les usages depuis une fiche ampoule. Les deux écrans partagent les mêmes affectations.<br><br>Les 65 fiches de départ proviennent d’une copie des paramètres de PediDose. Ce site ne modifie ni le dépôt ni l’application PediDose.</p><p class="storage-note">Vos essais et leur historique sont conservés uniquement dans ce navigateur. Exportez une sauvegarde pour les garder ou les transférer sur un autre appareil. Aucun patient d’essai n’est enregistré.</p><div class="settings-actions"><button class="button secondary" id="export-btn">Exporter ma sauvegarde<small>Fiches, ampoules, repères, relectures et historique · JSON</small></button><button class="button secondary" id="import-btn">Importer une sauvegarde<small>Atelier ou ancienne version GitHub · aperçu avant reprise.</small></button><button class="button danger" id="reset-btn">Réinitialiser cet atelier<small>Revenir à la copie initiale et effacer les essais de ce navigateur.</small></button></div><p>Source : <a href="https://github.com/guillaumeferraro-gif/PediDoses/tree/'+SOURCE_SHA+'" target="_blank" rel="noopener">PediDose · '+SOURCE_SHA.slice(0,8)+'</a></p><p>Prototype d’interface hors usage clinique. Les statuts de relecture ne constituent pas une validation de PediDose.</p>');
  $('export-btn').onclick=()=>{
   const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='pedidose-atelier-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Sauvegarde des versions enregistrées exportée.');
  };
+ if(loadFailed){
+  $('dialog-content').insertAdjacentHTML('beforeend','<p>La sauvegarde locale refusée est toujours conservée. Téléchargez son contenu original avant un import ou une réinitialisation.</p><button class="button secondary" id="recover-unreadable">Récupérer la sauvegarde refusée</button>');
+  $('recover-unreadable').onclick=()=>{try{downloadJson(localStorage.getItem(STORAGE_KEY),'pedidose-sauvegarde-refusee.json');}catch(error){errorDialog(error.message);}};
+ }
  $('import-btn').onclick=()=>$('import-input').click();
+ const found=LEGACY_KEYS.filter(key=>localStorage.getItem(key)!=null);
+ if(found.length){
+  $('dialog-content').insertAdjacentHTML('beforeend','<p>Anciens réglages GitHub détectés sur cet appareil. Leur reprise est facultative.</p><button class="button secondary" id="legacy-local-import">Examiner les anciens réglages</button>');
+  $('legacy-local-import').onclick=()=>{try{importText(localStorage.getItem(found[0]),'Anciens réglages de cet appareil');}catch(error){errorDialog(error.message);}};
+ }
+ const backups=[];for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key?.startsWith(STORAGE_KEY+'.backup.'))backups.push(key);}
+ if(backups.length){
+  $('dialog-content').insertAdjacentHTML('beforeend','<details><summary>Copies conservées avant reprise</summary>'+backups.map((key,i)=>'<p><button class="button secondary" id="backup-download-'+i+'">Télécharger '+esc(key.endsWith('.github-source')?'le fichier GitHub source':'le référentiel avant reprise')+' · '+(i+1)+'</button></p>').join('')+'</details>');
+  backups.forEach((key,i)=>$('backup-download-'+i).onclick=()=>downloadJson(localStorage.getItem(key),'pedidose-copie-'+(i+1)+'.json'));
+ }
+ $('dialog-content').insertAdjacentHTML('beforeend','<p>Les réglages sont locaux à ce navigateur. Fermez ou rechargez les anciennes pages avant de modifier le référentiel. L’historique conserve les 60 derniers événements.</p><button class="button secondary" id="settings-recover-drafts">Récupérer mes brouillons</button>');
+ $('settings-recover-drafts').onclick=recoverDrafts;
  $('reset-btn').onclick=()=>{
   dialog('Réinitialiser l’atelier','Les essais de ce navigateur seront effacés.','<p>Cette action rétablit les paramètres de départ, les relectures et l’historique. PediDose reste inchangé.</p>','<button class="button secondary" data-close>Conserver mes essais</button><button class="button danger" id="confirm-reset">Réinitialiser le projet test</button>');
-  $('confirm-reset').onclick=()=>{try{const next=newState();persistState(localStorage,next);state=next;window.dispatchEvent(new Event('atelier-updated'));loadFailed=false;$('global-error').hidden=true;resetDraft();$('dialog').close();renderAll();ampEditor.reset();referenceEditor.reset();if(view!=='editor')setView(view);toast('Atelier réinitialisé.');}catch(error){errorDialog(error.message);}};
+  const resetBase=stateStore.token();
+  $('confirm-reset').onclick=async()=>{try{$('confirm-reset').disabled=true;await persist(newState(),{recover:true,expectedBase:resetBase});loadFailed=false;$('global-error').hidden=true;resetDraft();$('dialog').close();renderAll();ampEditor.reset();referenceEditor.reset();if(view!=='editor')setView(view);toast('Atelier réinitialisé.');}catch(error){errorDialog(error.message);}};
  };
 }
 function renderAll(){renderStats();renderList();renderHeading();renderEditor();}
@@ -392,19 +463,44 @@ $('check-cases-btn').onclick=checksDialog;
 $('settings-btn').onclick=settingsDialog;$('about-btn').onclick=settingsDialog;
 $('show-preview').onclick=()=>{$('workspace').classList.add('preview-mode');$('show-preview').classList.add('active');$('show-editor').classList.remove('active');};
 $('show-editor').onclick=()=>{$('workspace').classList.remove('preview-mode');$('show-editor').classList.add('active');$('show-preview').classList.remove('active');};
+function importText(text,name='Sauvegarde'){
+ const value=JSON.parse(text),importBase=stateStore.token();
+ if(value?.format==='pedidose-atelier'){
+  const next=validateState(value);
+  dialog('Importer cette sauvegarde',name,'<p>'+next.records.length+' fiches et '+next.history.length+' entrées d’historique seront restaurées, ainsi que les repères vitaux et d’intubation.</p><p>Les essais actuels de ce navigateur seront remplacés, y compris les brouillons ouverts.</p>',
+   '<button class="button secondary" data-close>Annuler</button><button class="button primary" id="confirm-import">Remplacer les essais actuels</button>');
+  $('confirm-import').onclick=async()=>{try{$('confirm-import').disabled=true;await persist(next,{recover:true,expectedBase:importBase});afterImport('Sauvegarde de l’atelier importée.');}catch(error){errorDialog(error.message);}};
+  return;
+ }
+ if(loadFailed)throw Error('Récupérez la sauvegarde de l’Atelier avant de reprendre d’anciens réglages GitHub.');
+ const migration=prepareLegacyImport(state,value),previousText=importBase??JSON.stringify(state);
+ const upgraded=migration.upgraded?'<p>Cette sauvegarde ancienne nécessite aussi les conversions historiques du référentiel. Elles sont détaillées ci-dessous avant confirmation.</p><details><summary>Conversions de l’ancien format</summary>'+changeTable(migration.upgradeChanges)+'</details>':'';
+ dialog('Reprendre les réglages GitHub',name,
+  (migration.ampoulesOnly?'<p>Ce fichier contient seulement des ampoules. Les posologies et règles de préparation actuelles sont conservées ; les volumes seront recalculés avec les présentations importées.</p>':'')+'<p>'+migration.affected.length+' fiches seront mises à jour et remises à relire. Les fiches créées dans l’Atelier et les repères actuels sont conservés. Les brouillons ouverts seront abandonnés à la confirmation.</p><p>Le fichier source et le référentiel actuel seront copiés avant remplacement. Une entrée d’historique permettra de revenir en arrière.</p>'+upgraded+changeTable(migration.changes),
+  '<button class="button secondary" data-close>Annuler</button>'+(migration.affected.length?'<button class="button primary" id="confirm-legacy-import">Confirmer la reprise</button>':''));
+ if(migration.affected.length)$('confirm-legacy-import').onclick=async()=>{try{
+  $('confirm-legacy-import').disabled=true;
+  await persist(migration.next,{expectedBase:importBase,backups:migrationBackups(text,previousText)});
+  afterImport('Réglages GitHub repris. Les fiches modifiées sont à relire.');
+ }catch(error){errorDialog(error.message);}};
+}
+function afterImport(message){resetDraft();$('dialog').close();ampEditor.reset();referenceEditor.reset();renderAll();if(view!=='editor')setView(view);toast(message);}
 $('import-input').addEventListener('change',async()=>{
  const file=$('import-input').files[0];if(!file)return;
- try{
-  if(file.size>12000000)throw Error('La sauvegarde dépasse 12 Mo.');
-  const next=validateState(JSON.parse(await file.text()));
-  dialog('Importer cette sauvegarde',file.name,'<p>'+next.records.length+' fiches et '+next.history.length+' entrées d’historique seront restaurées, ainsi que les repères vitaux et d’intubation.</p><p>Les essais actuels de ce navigateur seront remplacés, y compris le brouillon ouvert.</p>','<button class="button secondary" data-close>Annuler</button><button class="button primary" id="confirm-import">Remplacer les essais actuels</button>');
-  $('confirm-import').onclick=()=>{try{persistState(localStorage,next);state=next;window.dispatchEvent(new Event('atelier-updated'));loadFailed=false;$('global-error').hidden=true;resetDraft();$('dialog').close();renderAll();ampEditor.reset();referenceEditor.reset();if(view!=='editor')setView(view);toast('Sauvegarde de l’atelier importée.');}catch(error){errorDialog(error.message);}};
- }catch(error){errorDialog(error.message);}finally{$('import-input').value='';}
+ try{if(file.size>12000000)throw Error('La sauvegarde dépasse 12 Mo.');importText(await file.text(),file.name);}
+ catch(error){errorDialog(error.message);}finally{$('import-input').value='';}
 });
-window.addEventListener('atelier-admin-leave',event=>{event.preventDefault();let proceeded=false;guardLeave(()=>{proceeded=true;event.detail.proceed();});if(!proceeded)$('dialog').addEventListener('close',()=>{if(!proceeded)event.detail.cancel?.();},{once:true});});
+window.addEventListener('atelier-admin-leave',event=>{event.preventDefault();if(savePending){event.detail.cancel?.();return;}let proceeded=false;guardLeave(()=>{proceeded=true;event.detail.proceed();});if(!proceeded)$('dialog').addEventListener('close',()=>{if(!proceeded)event.detail.cancel?.();},{once:true});});
 window.addEventListener('atelier-open-record',event=>selectRecord(event.detail.id));
-window.addEventListener('beforeunload',e=>{if(draftChanged(state,draft)||invalidInputs.size||ampEditor.dirty()||referenceEditor.dirty()){e.preventDefault();e.returnValue='';}});
-const ampEditor=new AmpouleEditor({getState:()=>state,persist,onCommit:()=>{resetDraft();renderAll();},dialog,notify:toast});
-const referenceEditor=new ReferenceEditor({getState:()=>state,persist,onCommit:()=>renderStats(),dialog,notify:toast});
+window.addEventListener('beforeunload',e=>{if(savePending||draftChanged(state,draft)||invalidInputs.size||ampEditor.dirty()||referenceEditor.dirty()){e.preventDefault();e.returnValue='';}});
+$('dialog').addEventListener('cancel',event=>{if(savePending)event.preventDefault();});
+const ampEditor=new AmpouleEditor({getState:()=>state,getToken:()=>stateStore.token(),persist,onCommit:()=>{resetDraft();renderAll();},dialog,notify:toast});
+const referenceEditor=new ReferenceEditor({getState:()=>state,getToken:()=>stateStore.token(),persist,onCommit:()=>renderStats(),dialog,notify:toast});
 for(const c of smurCategories)$('category').insertAdjacentHTML('beforeend',option(c.id,c.label,'all'));
 renderAll();
+
+$('storage-compare').onclick=compareStored;
+$('storage-recover').onclick=recoverDrafts;
+window.addEventListener('storage',event=>{if(event.key===STORAGE_KEY||event.key===null)externalChange();});
+window.addEventListener('focus',externalChange);
+if(!stateStore.writable)storageNotice('Ce navigateur ne permet pas l’enregistrement sécurisé entre onglets. La lecture et la récupération des brouillons restent disponibles.');

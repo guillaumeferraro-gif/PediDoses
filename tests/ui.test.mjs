@@ -13,7 +13,7 @@ async function runtime(){
  for(const match of source.matchAll(/import \{([^}]+)\} from '([^']+)';/g)){const mod=await import(new URL(match[2],file));for(const name of match[1].split(',').map(x=>x.trim()))bindings[name]=mod[name];}
  source=source.replace(/^import .*;\n/gm,'');const nodes=new Map(),get=id=>{if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id);},data=new Map();get('category').value='all';
  const doc=new Element();doc.getElementById=get;globalThis.document=doc;
- const ctx=vm.createContext({...bindings,document:doc,window:new Element(),localStorage:{getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)},crypto:webcrypto,structuredClone,console,Intl,Event,CustomEvent,setTimeout:()=>0,clearTimeout(){},innerWidth:1200,matchMedia:()=>({matches:false})});
+ const ctx=vm.createContext({...bindings,document:doc,window:new Element(),localStorage:{getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)},crypto:webcrypto,structuredClone,console,Intl,Event,CustomEvent,navigator:{locks:{request:async(name,options,fn)=>fn()}},setTimeout:()=>0,clearTimeout(){},innerWidth:1200,matchMedia:()=>({matches:false})});
  vm.runInContext(source,ctx);return {ctx,nodes,get,run:code=>vm.runInContext(code,ctx)};
 }
 test('toutes les fiches rendent six cartes, sans erreur de script ni identifiant HTML en double',async()=>{
@@ -30,12 +30,35 @@ test('les options masquent leurs champs et les affichent lorsqu’elles sont act
  ui.run("setMultipleDoses(draft.record,false);draft.record.model.adjustmentStatus='enabled';draft.record.model.doseStep=0.5;renderEditor();");assert.ok(ui.get('editor-form').innerHTML.includes('id="panel-adjustment"'));assert.ok(ui.get('preview-result').innerHTML.includes('data-adjust="1"'));
 });
 test('nouveau médicament : nom, dose, enregistrement puis fiche visible dans la liste',async()=>{
- const ui=await runtime();ui.run("newMedication();draft.record.name='Nouveau test';draft.record.model.unit='mg';draft.record.model.coefficient=1;renderEditor();saveDialog();");ui.get('confirm-save').onclick();assert.equal(ui.run('state.records.length'),66);assert.ok(ui.get('med-list').innerHTML.includes('Nouveau test'));assert.ok(ui.get('preview-result').innerHTML.includes('Aucune ampoule affectée'));
+ const ui=await runtime();ui.run("newMedication();draft.record.name='Nouveau test';draft.record.model.unit='mg';draft.record.model.coefficient=1;renderEditor();saveDialog();");await ui.get('confirm-save').onclick();assert.equal(ui.run('state.records.length'),66,ui.get('dialog-content').innerHTML);assert.ok(ui.get('med-list').innerHTML.includes('Nouveau test'));assert.ok(ui.get('preview-result').innerHTML.includes('Aucune ampoule affectée'));
 });
 test('abandonner une création vierge revient à une fiche existante',async()=>{
- const ui=await runtime();ui.run('newMedication();');ui.get('discard-btn').onclick();ui.get('discard-and-go').onclick();assert.equal(ui.run('state.records.length'),65);assert.ok(ui.run('state.records.some(r=>r.id===selected)'));
+ const ui=await runtime();ui.run('newMedication();');await ui.get('discard-btn').onclick();await ui.get('discard-and-go').onclick();assert.equal(ui.run('state.records.length'),65);assert.ok(ui.run('state.records.some(r=>r.id===selected)'));
 });
 test('dose et préparation : champs de seuil partagés sans doublon d’identifiant',async()=>{
  const ui=await runtime();ui.run("selected='propofol';resetDraft();setPatientRule(draft.record,'dose',true);draft.record.patientRules.bands[0].until=12;draft.record.patientRules.bands[1].doses[0].coefficient=1;setPatientRule(draft.record,'preparation',true);renderEditor();");
  const html=ui.get('editor-form').innerHTML,ids=[...html.matchAll(/\sid="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size);assert.ok(html.includes('range-boundary-dose'));assert.ok(html.includes('range-boundary-prep'));
+});
+
+test('aperçu CGR : rappel discret à 200 mL, renforcé au-dessus, sans saisie de poche',async()=>{
+ const ui=await runtime();
+ ui.run("selected='cgr';resetDraft();patient.bag='60';renderAll();");
+ for(const [weight,volume,enhanced] of [['19.9',199,false],['20',200,false],['20.1',201,true]]){
+  ui.run(`patient.weight=${JSON.stringify(weight)};renderPreview();`);
+  const html=ui.get('preview-result').innerHTML;
+  assert.equal(ui.get('bag-label').hidden,true);
+  assert.match(html,/Volume calculé au poids/);
+  assert.ok(html.includes(volume+' <b>mL</b>'));
+  assert.match(html,/Une poche maximum\. Vérifier le volume sur l’étiquette\./);
+  assert.equal(html.includes('<strong>Volume calculé supérieur à 200 mL.'),enhanced);
+  assert.doesNotMatch(html,/Volume à administrer|Renseigner la poche/);
+ }
+ ui.run("draft.record.model.limitToOneBag=false;renderEditor();");
+ assert.doesNotMatch(ui.get('preview-result').innerHTML,/Vérifier le volume sur l’étiquette/);
+ for(const id of ['pfc','cpa']){
+  ui.run(`selected=${JSON.stringify(id)};resetDraft();patient.weight='50';renderAll();`);
+  assert.equal(ui.get('bag-label').hidden,false);
+  assert.match(ui.get('preview-result').innerHTML,/Volume à administrer/);
+  assert.doesNotMatch(ui.get('preview-result').innerHTML,/supérieur à 200 mL|Vérifier le volume sur l’étiquette/);
+ }
 });

@@ -6,15 +6,15 @@ const field=(label,key,value,{number=false,wide=false,options,help=''}={})=>'<la
 const summary=a=>a.amount!==null?fmt(a.amount)+' '+a.unit+(a.volumeMl!==null?' / '+fmt(a.volumeMl)+' mL':' par contenant'):a.declaredConcentration!==null?fmt(a.declaredConcentration)+' '+a.unit+'/mL':a.volumeMl!==null?fmt(a.volumeMl)+' mL':'À renseigner';
 
 export class AmpouleEditor{
- constructor({getState,persist,onCommit,dialog,notify}){
-  Object.assign(this,{getState,persist,onCommit,dialog,notify});
-  this.root=document.getElementById('stocks-view');this.draft=null;this.query='';this.assignmentQuery='';this.invalid=new Set();
+ constructor({getState,getToken,persist,onCommit,dialog,notify}){
+  Object.assign(this,{getState,getToken,persist,onCommit,dialog,notify});
+  this.root=document.getElementById('stocks-view');this.draft=null;this.query='';this.assignmentQuery='';this.invalid=new Set();this.invalidValues=new Map();
   this.root.addEventListener('input',e=>this.onInput(e));
   this.root.addEventListener('change',e=>this.onChange(e));
   this.root.addEventListener('click',e=>this.onClick(e));
  }
  dirty(){return this.draft&&(stockDraftChanged(this.getState(),this.draft)||this.invalid.size>0);}
- reset(){if(this.draft&&this.getState().stocks[this.draft.id])this.draft=stockDraftFor(this.getState(),this.draft.id);else this.draft=null;this.invalid.clear();}
+ reset(){if(this.draft&&this.getState().stocks[this.draft.id])this.draft=stockDraftFor(this.getState(),this.draft.id);else this.draft=null;this.invalid.clear();this.invalidValues.clear();}
  show(id){
   if(id)this.draft=stockDraftFor(this.getState(),id);
   if(!this.draft)this.draft=stockDraftFor(this.getState(),this.getState().links['ketamine-analgesie']||Object.keys(this.getState().stocks)[0]);
@@ -30,6 +30,7 @@ export class AmpouleEditor{
   this.root.innerHTML='<div class="collection-heading"><div><div class="eyebrow">ESPACE AMPOULES</div><h2>Les ampoules se gèrent ici.</h2><p>Renseignez le contenant, puis cochez les médicaments / usages qui l’utilisent.</p></div><button class="button primary" data-amp-action="new">+ Nouvelle ampoule</button></div><div class="amp-layout"><aside class="amp-library"><label class="field">Rechercher une ampoule<input id="amp-search" placeholder="Nom, quantité…" value="'+esc(this.query)+'"></label><div id="amp-list"></div></aside><section class="amp-editor"><div class="amp-title"><div><span class="eyebrow">FICHE AMPOULE</span><h3 id="amp-name">'+esc(a.presentation||'Nouvelle ampoule')+'</h3></div><span class="badge neutral">Indépendante des usages</span></div><form id="amp-form" novalidate><div class="amp-section"><h3>1. Le contenant</h3><div class="fields">'+field('Nom de l’ampoule / présentation','presentation',a.presentation,{wide:true})+field('Quantité dans le contenant','amount',a.amount,{number:true})+field('Unité','unit',a.unit,{options:['',...stockUnits]})+field('Volume du contenant (mL)','volumeMl',a.volumeMl,{number:true,wide:true,help:'Laissez vide si la présentation est une poudre non reconstituée.'})+'</div><div class="calculated"><span>Concentration calculée</span><strong id="amp-concentration">'+fmt(stockConcentration(a))+' '+esc(a.unit)+'/mL</strong></div><details class="subsection"'+(a.declaredConcentration!==null?' open':'')+'><summary>Concentration connue sans détail du contenant</summary><div class="fields">'+field('Concentration connue ('+(a.unit||'unité')+'/mL)','declaredConcentration',a.declaredConcentration,{number:true,wide:true,help:'Uniquement si la quantité ou le volume du contenant manque.'})+'</div></details><details class="subsection"><summary>Source et précisions facultatives</summary><div class="fields">'+field('Source / référence','source',a.source,{wide:true})+field('Précision sur la quantité','expression',a.expression,{wide:true})+field('Commentaire','comment',a.comment,{wide:true})+field('Statut dans le référentiel','status',a.status,{options:['à confirmer','confirmé'],wide:true})+'</div></details></div><div class="amp-section"><h3>2. Les médicaments qui utilisent cette ampoule <span id="amp-assignment-count"></span></h3><p>Une ampoule peut servir à plusieurs usages. Chaque usage garde sa posologie.</p><label class="search-field"><input id="amp-assignment-search" aria-label="Filtrer les médicaments à affecter" placeholder="Rechercher un médicament / usage" value="'+esc(this.assignmentQuery)+'"></label><div id="amp-assignments" class="amp-assignments"></div><p class="hint">Cocher un usage remplace son ampoule actuelle. Le décocher le laisse sans ampoule : ses volumes restent indisponibles jusqu’à une nouvelle affectation.</p></div></form><div id="amp-errors" class="error-box" role="alert" hidden></div><div class="savebar"><div id="amp-draft-status"></div><button class="button secondary" data-amp-action="cancel">Annuler</button><button class="button primary" data-amp-action="save" id="amp-save">Enregistrer l’ampoule</button></div></section></div>';
   this.root.querySelector('form').addEventListener('submit',e=>e.preventDefault());
   this.renderList();this.renderAssignments();this.refresh();
+  for(const [key,value] of this.invalidValues){const input=this.root.querySelector('[data-amp-field="'+key+'"]');input.value=value;input.setAttribute('aria-invalid','true');input.classList.add('invalid');}
  }
  renderList(){
   const s=this.getState();
@@ -64,10 +65,10 @@ export class AmpouleEditor{
   if(el.hasAttribute('data-number')){
    const str=value.trim();value=str===''?null:Number(str.replace(',','.'));
    if(str&&!/^[+]?(?:\d+(?:[.,]\d*)?|[.,]\d+)(?:[eE][+-]?\d+)?$/.test(str)||value!==null&&(!Number.isFinite(value)||value<=0)){
-    this.invalid.add(key);el.setAttribute('aria-invalid','true');el.classList.add('invalid');this.refresh();return;
+    this.invalid.add(key);this.invalidValues.set(key,el.value);el.setAttribute('aria-invalid','true');el.classList.add('invalid');this.refresh();return;
    }
   }
-  this.invalid.delete(key);el.removeAttribute('aria-invalid');el.classList.remove('invalid');this.draft.stock[key]=value;
+  this.invalid.delete(key);this.invalidValues.delete(key);el.removeAttribute('aria-invalid');el.classList.remove('invalid');this.draft.stock[key]=value;
   if(['amount','volumeMl'].includes(key)&&this.draft.stock.amount!==null&&this.draft.stock.volumeMl!==null){this.draft.stock.declaredConcentration=null;this.root.querySelector('[data-amp-field="declaredConcentration"]').value='';}
   this.refresh();
  }
@@ -84,7 +85,7 @@ export class AmpouleEditor{
  }
  onClick(e){
   const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.ampId){this.guard(()=>{this.draft=stockDraftFor(this.getState(),b.dataset.ampId);this.assignmentQuery='';this.invalid.clear();this.render();});return;}
+  if(b.dataset.ampId){this.guard(()=>{this.draft=stockDraftFor(this.getState(),b.dataset.ampId);this.assignmentQuery='';this.invalid.clear();this.invalidValues.clear();this.render();});return;}
   if(b.dataset.ampAction==='new'){this.guard(()=>{this.draft=createStockDraft();this.assignmentQuery='';this.render();});return;}
   if(b.dataset.ampAction==='cancel'){this.guard(()=>{this.reset();this.show();});return;}
   if(b.dataset.ampAction==='save')this.save();
@@ -102,8 +103,9 @@ export class AmpouleEditor{
     (p.removed.length?'<p>Sans ampoule après cette modification : '+names(p.removed)+'. Les calculs de ces fiches seront suspendus.</p>':'')+
     '<p>Les fiches concernées repasseront « À relire ». Leurs posologies restent conservées.</p>',
     '<button class="button secondary" data-close>Continuer à modifier</button><button class="button primary" id="amp-confirm-save">Enregistrer l’ampoule</button>');
-   document.getElementById('amp-confirm-save').onclick=()=>{
-    try{this.persist(commitStockSave(s,d,p));this.draft=stockDraftFor(this.getState(),d.id);document.getElementById('dialog').close();this.onCommit();this.render();this.notify('Ampoule enregistrée · '+p.affected.length+' usage(s) actualisé(s).');}
+   const saveBase=this.getToken?.();
+      document.getElementById('amp-confirm-save').onclick=async()=>{
+    try{document.getElementById('amp-confirm-save').disabled=true;await this.persist(commitStockSave(s,d,p),{expectedBase:saveBase});this.draft=stockDraftFor(this.getState(),d.id);document.getElementById('dialog').close();this.onCommit();this.render();this.notify('Ampoule enregistrée · '+p.affected.length+' usage(s) actualisé(s).');}
     catch(error){document.getElementById('dialog').close();this.showError(error.message);}
    };
   }catch(error){this.showError(error.message);}
